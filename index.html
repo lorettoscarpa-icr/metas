@@ -127,14 +127,17 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .cat-bar-fg.ok{background:linear-gradient(90deg,#3a7a3a,#6dbf6d);}
 .cat-pct{font-size:9px;color:var(--cr3);text-align:right;margin-top:5px;letter-spacing:1px;}
 .cat-nums{text-align:right;flex-shrink:0;}
-.cat-acum{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--ou2);font-weight:300;line-height:1;}
-.cat-de{font-size:9px;color:var(--cr3);letter-spacing:1px;}
-.cat-ritmo{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:1px solid var(--oud2);}
-.cat-ritmo-info{font-size:9px;color:var(--cr3);letter-spacing:.5px;}
-.cat-ritmo-info strong{color:var(--cr2);font-weight:500;}
-.cat-ritmo-badge{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;padding:3px 9px;border:1px solid;flex-shrink:0;}
+.cat-acum{font-family:'Cormorant Garamond',serif;font-size:38px;color:var(--ou2);font-weight:300;line-height:1;}
+.cat-de{font-size:11px;color:var(--cr2);letter-spacing:1px;margin-top:3px;}
+.cat-ritmo{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:1px solid var(--oud2);gap:8px;}
+.cat-ritmo-info{font-size:11px;color:var(--cr2);letter-spacing:.5px;line-height:1.4;}
+.cat-ritmo-info strong{color:var(--cr);font-weight:600;font-size:12px;}
+.cat-ritmo-badge{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;padding:4px 10px;border:1px solid;flex-shrink:0;}
 .cat-ritmo-badge.ok{color:#6dbf6d;border-color:rgba(109,191,109,.35);background:rgba(109,191,109,.07);}
 .cat-ritmo-badge.er{color:#e07070;border-color:rgba(224,112,112,.35);background:rgba(224,112,112,.06);}
+.ritmo-num{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--ou2);line-height:1;margin:0 2px;}
+.ritmo-label{font-size:10px;color:var(--cr3);letter-spacing:.5px;}
+.ritmo-sep{font-size:10px;color:var(--cr3);margin:0 4px;}
 
 /* ── SELETOR DATA ── */
 .sel-data-wrap{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.025);border:1px solid var(--oud);padding:10px 16px;margin-bottom:10px;}
@@ -213,14 +216,14 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .conv-item .ci-nome{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cr3);margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;}
 .conv-item .ci-nome svg{width:12px;height:12px;stroke:var(--ou);stroke-width:1.5;fill:none;opacity:.5;}
 .conv-item .ci-val{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--ou2);line-height:1;}
-.conv-item .ci-sub{font-size:9px;color:var(--cr3);margin-top:3px;}
+.conv-item .ci-sub{font-size:15px;color:var(--cr);font-weight:500;margin-top:3px;}
 /* benchmark */
 /* conv-item redesenhado */
-.conv-itens{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:24px;}
+.conv-itens{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
 .conv-item{
   background:rgba(255,255,255,.025);border:1px solid var(--oud);
-  padding:16px 18px;position:relative;overflow:hidden;
-  transition:border-color .2s;
+  padding:20px 18px;position:relative;overflow:hidden;
+  transition:border-color .2s;display:flex;flex-direction:column;
 }
 .conv-item.st-acima{border-color:rgba(78,158,78,.4);background:rgba(78,158,78,.03);}
 .conv-item.st-media{border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.03);}
@@ -231,35 +234,39 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .conv-item.st-acima::before{background:var(--ok);}
 .conv-item.st-media::before{background:var(--ou);}
 .conv-item.st-abaixo::before{background:var(--er);}
-.ci-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.ci-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .ci-nome{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);display:flex;align-items:center;gap:6px;}
 .ci-nome svg{width:12px;height:12px;stroke:var(--ou);stroke-width:1.5;fill:none;opacity:.55;}
-.ci-indicador{
-  width:8px;height:8px;border-radius:50%;flex-shrink:0;
-}
+.ci-indicador{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .ci-indicador.acima{background:#6dbf6d;}
 .ci-indicador.media{background:var(--ou);}
 .ci-indicador.abaixo{background:#e07070;}
 .ci-indicador.sem{background:rgba(240,234,216,.2);}
 .ci-pct{
-  font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;
-  color:var(--ou2);line-height:1;margin-bottom:4px;
+  font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:300;
+  line-height:1;margin-bottom:6px;
 }
 .ci-pct.acima{color:#6dbf6d;}
 .ci-pct.media{color:var(--ou2);}
 .ci-pct.abaixo{color:#e07070;}
-.ci-sub{font-size:9px;color:var(--cr3);margin-bottom:10px;}
+.ci-pct.sem{color:var(--ou2);}
+.ci-sub{
+  font-size:15px;color:var(--cr);margin-bottom:14px;flex:1;
+  letter-spacing:.3px;font-weight:500;
+}
 .ci-meta-linha{
-  font-size:9px;color:var(--cr3);letter-spacing:.5px;
-  padding-top:9px;border-top:1px solid var(--oud2);
-  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--cr);letter-spacing:.5px;
+  padding-top:12px;border-top:1px solid var(--oud2);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;
 }
 .ci-meta-linha strong{
-  font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;
+  font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700;
 }
+.ci-meta-ref{font-size:13px;color:var(--cr);font-weight:500;}
 .ci-meta-linha strong.acima{color:#6dbf6d;}
 .ci-meta-linha strong.media{color:var(--ou);}
 .ci-meta-linha strong.abaixo{color:#e07070;}
+@media(max-width:640px){.conv-itens{grid-template-columns:repeat(2,1fr);}}
 .conv-rank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
 .conv-rk{background:rgba(255,255,255,.025);border:1px solid var(--oud);padding:18px 16px;}
 .conv-rk-tit{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--cr3);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
@@ -752,6 +759,8 @@ const VENDEDORA_EMAIL = {
 
 // ══ AUTH ══
 const auth = firebase.auth();
+// Persistência LOCAL — mantém login mesmo fechando o navegador
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 let vendedoraSelecionada = null; // quem clicou para entrar
 
 // ── Modal de login ──
