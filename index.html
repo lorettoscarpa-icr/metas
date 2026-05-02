@@ -18,6 +18,7 @@
   --ok:#4e9e4e;--er:#b84040;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
+html{zoom:1.2;}
 body{font-family:'Barlow',sans-serif;background:var(--v0);color:var(--cr);min-height:100vh;overflow-x:hidden;}
 
 /* ── SELEÇÃO ── */
@@ -357,6 +358,40 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .btn-ajuda{background:transparent;border:1px solid var(--oud);color:var(--ou);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-family:'Cormorant Garamond',serif;transition:all .2s;flex-shrink:0;}
 .btn-ajuda:hover{background:rgba(201,168,76,.1);}
 hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
+
+/* ── Card status de atualização ── */
+.status-card{
+  background:rgba(255,255,255,.025);border:1px solid var(--oud);
+  padding:18px 20px;margin-bottom:28px;
+}
+.status-card-titulo{
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cr3);
+  margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;
+}
+.status-card-titulo span{color:var(--cr3);}
+.status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.status-v{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:12px 8px;border:1px solid var(--oud2);text-align:center;
+}
+.status-v-avatar{
+  width:40px;height:40px;border-radius:50%;overflow:hidden;
+  border:2px solid var(--oud);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ou);
+  background:var(--v2);
+}
+.status-v-avatar img{width:100%;height:100%;object-fit:cover;object-position:center top;}
+.status-v-nome{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cr2);font-weight:500;}
+.status-v-data{font-size:10px;color:var(--cr3);margin-top:2px;}
+.status-v-badge{
+  font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;
+  padding:3px 10px;border:1px solid;
+}
+.status-v-badge.ok{color:#6dbf6d;border-color:rgba(109,191,109,.35);background:rgba(109,191,109,.07);}
+.status-v-badge.atencao{color:var(--ou);border-color:var(--oud);background:rgba(201,168,76,.07);}
+.status-v-badge.atrasada{color:#e07070;border-color:rgba(224,112,112,.35);background:rgba(224,112,112,.06);}
+@media(max-width:640px){.status-grid{grid-template-columns:repeat(2,1fr);}}
 svg{display:inline-block;vertical-align:middle;}
 
 @media(max-width:640px){
@@ -468,6 +503,14 @@ svg{display:inline-block;vertical-align:middle;}
     <div id="conteudo-principal">
       <div class="slbl" style="margin-bottom:14px;"><span>Resumo global · equipe</span></div>
       <div class="cards3" id="cards-top"></div>
+      <!-- Card status de atualização -->
+      <div class="status-card" id="status-atualizacao">
+        <div class="status-card-titulo">
+          <span>Última atualização · Vendedoras</span>
+        </div>
+        <div class="status-grid" id="status-grid"></div>
+      </div>
+
       <div class="slbl"><span>Metas por Categoria · Equipe</span></div>
       <div class="cats-grid" id="cats-grid"></div>
       <hr class="dv">
@@ -956,7 +999,7 @@ function render(){
   renderCards(ag,cfg);renderCats(ag,cfg,isG);
   document.getElementById('bloco-reg').style.display=isG?'none':'block';
   if(!isG){renderReg(ag,cfg);renderHist();}
-  renderRanking();renderConversao();
+  renderStatusAtualizacao();renderRanking();renderConversao();
 }
 
 function renderCards(ag,cfg){
@@ -1193,6 +1236,66 @@ async function zerarHist(){
   if(!confirm(`Zerar histórico de ${usuario} em ${MESES_NOMES[mesAtivo-1]}?`))return;
   loading(true);await saveHistMes(usuario,anoAtivo,mesAtivo,[]);loading(false);
   toast('Zerado.');
+}
+
+function renderStatusAtualizacao(){
+  const grid = document.getElementById('status-grid');
+  if(!grid) return;
+
+  const hoje_dt = hoje();
+  const ontem = (() => {
+    const d = new Date(); d.setDate(d.getDate()-1);
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+  })();
+
+  grid.innerHTML = VENDEDORAS.map(v => {
+    const hist = histAtualCache(v.id).filter(d => !d.especial);
+    const vObj = VENDEDORAS.find(x => x.id === v.id);
+
+    let ultimaData = null;
+    let diasStr = '—';
+    let badge = 'atrasada';
+    let badgeLabel = 'Sem registros';
+
+    if(hist.length > 0) {
+      // Pegar a data mais recente
+      const datas = hist.map(d => {
+        const [dd,mm] = d.data.split('/').map(Number);
+        return { str: d.data, ts: new Date(anoAtivo, mm-1, dd) };
+      }).sort((a,b) => b.ts - a.ts);
+
+      ultimaData = datas[0].str;
+
+      if(ultimaData === hoje_dt) {
+        badge = 'ok';
+        badgeLabel = 'Em dia ✓';
+        diasStr = 'hoje';
+      } else if(ultimaData === ontem) {
+        badge = 'atencao';
+        badgeLabel = 'Ontem';
+        diasStr = 'ontem';
+      } else {
+        // Calcular quantos dias atrás
+        const [dd,mm] = ultimaData.split('/').map(Number);
+        const dtUlt = new Date(anoAtivo, mm-1, dd);
+        const diff = Math.round((new Date() - dtUlt) / (1000*60*60*24));
+        badge = 'atrasada';
+        badgeLabel = `${diff}d sem atualizar`;
+        diasStr = ultimaData;
+      }
+    }
+
+    const avatarHtml = vObj?.foto
+      ? `<img src="${vObj.foto}" alt="${v.nome}">`
+      : v.nome[0];
+
+    return `<div class="status-v">
+      <div class="status-v-avatar">${avatarHtml}</div>
+      <div class="status-v-nome">${v.nome}</div>
+      <div class="status-v-data">${diasStr}</div>
+      <div class="status-v-badge ${badge}">${badgeLabel}</div>
+    </div>`;
+  }).join('');
 }
 
 function renderRanking(){
