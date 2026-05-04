@@ -383,6 +383,10 @@ hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
 .mv-btn{width:100%;background:var(--ou);color:var(--v0);border:none;padding:11px;font-family:'Barlow',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;cursor:pointer;margin-top:4px;transition:background .2s;}
 .mv-btn:hover{background:var(--ou2);}
 .mv-btn:disabled{opacity:.4;cursor:not-allowed;}
+.mv-btn-del{width:100%;background:transparent;border:1px solid rgba(192,80,74,.35);color:rgba(192,80,74,.7);padding:9px;font-family:'Barlow',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:all .2s;}
+.mv-btn-del:hover{border-color:rgba(192,80,74,.8);color:rgba(192,80,74,1);background:rgba(192,80,74,.06);}
+.mv-atual-header{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.mv-atual-info{flex:1;}
 .mv-ranking{background:rgba(255,255,255,.025);border:1px solid var(--oud2);padding:16px 18px;}
 .mv-ranking-titulo{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);margin-bottom:14px;}
 .mv-rank-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
@@ -611,9 +615,12 @@ svg{display:inline-block;vertical-align:middle;}
                 <input class="mv-inp" type="date" id="mv-data" color-scheme="dark">
               </div>
               <div class="mv-atual" id="mv-atual">
-                Seu registro atual: <strong id="mv-atual-val">—</strong> em <span id="mv-atual-data">—</span>
+                <div class="mv-atual-header">
+                  <div class="mv-atual-info">Registro atual: <strong id="mv-atual-val">—</strong> em <span id="mv-atual-data">—</span></div>
+                </div>
               </div>
               <button class="mv-btn" id="mv-btn" onclick="registrarMaiorVenda()">✓ Registrar</button>
+              <button class="mv-btn-del" id="mv-btn-del" style="display:none;" onclick="excluirMaiorVenda()">✕ Excluir registro</button>
             </div>
             <div class="mv-ranking">
               <div class="mv-ranking-titulo">Ranking do mês</div>
@@ -1171,7 +1178,13 @@ function jaRegistrouHoje(){
 }
 
 async function registrarDia(){
-  const reg={data:dataLancamento()};
+  const dt = dataLancamento();
+  const [dd,mm] = dt.split('/').map(Number);
+  if(mm !== mesAtivo){
+    toast(`Esta data é de ${MESES_NOMES[mm-1]} — você está visualizando ${MESES_NOMES[mesAtivo-1]}. Navegue para o mês correto.`);
+    return;
+  }
+  const reg={data:dt};
   if(diaEsp){reg.especial=diaEsp;}
   else{
     if(!CATS.some(c=>(diaInp[c.id]||0)>0)){toast('Insira pelo menos uma venda, ou marque um dia especial.');return;}
@@ -1408,6 +1421,21 @@ async function carregarMaiorVendas(){
   }));
 }
 
+async function excluirMaiorVenda(){
+  if(!confirm('Excluir seu registro de maior venda deste mês?')) return;
+  const btn = document.getElementById('mv-btn-del');
+  btn.disabled = true;
+  loading(true);
+  const k = keyMV(usuario, anoAtivo, mesAtivo);
+  await db.collection('ls_maior_venda').doc(k).delete();
+  cacheHist[k] = null;
+  loading(false);
+  btn.disabled = false;
+  document.getElementById('mv-valor').value = '';
+  toast('Registro excluído.');
+  renderMaiorVenda();
+}
+
 async function registrarMaiorVenda(){
   const valorStr = document.getElementById('mv-valor').value;
   const dataStr  = document.getElementById('mv-data').value;
@@ -1422,9 +1450,15 @@ async function registrarMaiorVenda(){
     return;
   }
 
+  // Validar que a data pertence ao mês ativo
+  const [y,m,d] = dataStr.split('-').map(Number);
+  if(m !== mesAtivo || y !== anoAtivo){
+    toast(`A data deve ser de ${MESES_NOMES[mesAtivo-1]} ${anoAtivo}.`);
+    return;
+  }
+
   const valor = parseFloat(valorStr);
-  const [y,m,d] = dataStr.split('-');
-  const dataFormatada = `${d}/${m}/${y}`;
+  const dataFormatada = `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
 
   btn.disabled = true;
   loading(true);
@@ -1456,23 +1490,35 @@ function renderMaiorVenda(){
     const atualEl = document.getElementById('mv-atual');
     const btnEl   = document.getElementById('mv-btn');
     const tituloEl = document.getElementById('mv-form-titulo');
+    const delBtn = document.getElementById('mv-btn-del');
     if(meu){
       document.getElementById('mv-atual-val').textContent = `R$ ${meu.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
       document.getElementById('mv-atual-data').textContent = meu.data;
       atualEl.classList.add('show');
-      if(tituloEl) tituloEl.textContent = 'Atualizar minha maior venda';
-      if(btnEl) btnEl.textContent = '↺ Atualizar';
-      // Preencher campos com valor atual
+      if(tituloEl) tituloEl.textContent = 'Editar minha maior venda';
+      if(btnEl) btnEl.textContent = '↺ Salvar alteração';
+      if(delBtn) delBtn.style.display='block';
       document.getElementById('mv-valor').value = meu.valor;
     } else {
       atualEl.classList.remove('show');
       if(tituloEl) tituloEl.textContent = 'Registrar minha maior venda';
       if(btnEl) btnEl.textContent = '✓ Registrar';
+      if(delBtn) delBtn.style.display='none';
     }
-    // Data default hoje
-    if(!document.getElementById('mv-data').value){
-      const d = new Date();
-      document.getElementById('mv-data').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    // Restringir e definir data padrão da maior venda
+    const mvInp = document.getElementById('mv-data');
+    if(mvInp){
+      const totalDiasMV = new Date(anoAtivo,mesAtivo,0).getDate();
+      mvInp.min = `${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-01`;
+      mvInp.max = `${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDiasMV).padStart(2,'0')}`;
+      if(!mvInp.value || mvInp.value.split('-')[1] != String(mesAtivo).padStart(2,'0')){
+        const d=new Date(), mesH=d.getMonth()+1, anoH=d.getFullYear();
+        if(mesH===mesAtivo&&anoH===anoAtivo){
+          mvInp.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        } else {
+          mvInp.value=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDiasMV).padStart(2,'0')}`;
+        }
+      }
     }
   }
 
@@ -1662,8 +1708,18 @@ function atualizarDataLancamento(){
 function inicializarDataLancamento(){
   const inp=document.getElementById('inp-lancamento');
   if(!inp)return;
+  // Restringir ao mês ativo
+  const totalDias=new Date(anoAtivo,mesAtivo,0).getDate();
+  inp.min=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-01`;
+  inp.max=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDias).padStart(2,'0')}`;
+  // Data padrão: hoje se estiver no mês ativo, senão último dia do mês
   const d=new Date();
-  inp.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const mesHoje=d.getMonth()+1, anoHoje=d.getFullYear();
+  if(mesHoje===mesAtivo && anoHoje===anoAtivo){
+    inp.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  } else {
+    inp.value=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDias).padStart(2,'0')}`;
+  }
   atualizarDataLancamento();
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
