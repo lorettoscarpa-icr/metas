@@ -126,6 +126,9 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .cat-bar-bg{background:rgba(255,255,255,.07);height:4px;margin-top:10px;overflow:hidden;}
 .cat-bar-fg{height:100%;background:linear-gradient(90deg,var(--ou3),var(--ou2));transition:width .5s;}
 .cat-bar-fg.ok{background:linear-gradient(90deg,#3a7a3a,#6dbf6d);}
+.cat-bar-fg.ultra-completo{background:linear-gradient(90deg,#b8860b,#ffd700);}
+.cat-card-ultra{border-color:rgba(220,192,106,.45);background:rgba(220,192,106,.03);}
+.cat-card-ultra .cat-tag{color:var(--ou);font-weight:600;}
 .cat-pct{font-size:9px;color:var(--cr3);text-align:right;margin-top:5px;letter-spacing:1px;}
 .cat-nums{text-align:right;flex-shrink:0;}
 .cat-acum{font-family:'Cormorant Garamond',serif;font-size:38px;color:var(--ou2);font-weight:300;line-height:1;}
@@ -169,15 +172,15 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 
 /* ── HISTÓRICO ── */
 .hist-wrap{margin-top:32px;}
-.hist-item{display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(201,168,76,.07);flex-wrap:wrap;cursor:pointer;transition:background .15s;}
-.hist-item:hover{background:rgba(255,255,255,.02);}
-.hist-dt{font-size:10px;color:var(--cr3);letter-spacing:1px;width:52px;flex-shrink:0;padding-top:2px;}
+.hist-item{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border:1px solid var(--oud2);margin-bottom:8px;flex-wrap:wrap;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.025);}
+.hist-item:hover{background:rgba(255,255,255,.05);border-color:var(--oud);}
+.hist-dt{font-size:12px;color:var(--ou2);letter-spacing:1px;width:52px;flex-shrink:0;padding-top:2px;font-weight:600;}
 .hist-body{flex:1;min-width:0;}
-.hist-cats{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-.hcat{font-size:11px;}
-.hcat-n{color:var(--cr3);}
-.hcat-v{color:var(--ou2);font-family:'Cormorant Garamond',serif;font-size:15px;margin-left:3px;}
-.hist-esp{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cr3);font-style:italic;}
+.hist-cats{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.hcat{font-size:12px;}
+.hcat-n{color:var(--cr2);}
+.hcat-v{color:var(--ou2);font-family:'Cormorant Garamond',serif;font-size:18px;margin-left:4px;font-weight:300;}
+.hist-esp{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cr2);font-style:italic;}
 .hist-edit{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--oud2);}
 .hist-item.aberto .hist-edit{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-direction:column;}
 .hist-edit-inp{display:flex;align-items:center;gap:6px;}
@@ -186,8 +189,8 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .hist-edit-inp input:focus{border-color:var(--ou);}
 .hist-btns{display:flex;gap:8px;width:100%;}
 .hist-salv{background:var(--ou);color:var(--v0);border:none;padding:7px 18px;font-family:'Barlow',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;font-weight:700;cursor:pointer;}
-.hist-del-btn{background:transparent;border:1px solid rgba(192,80,74,.3);color:rgba(192,80,74,.6);padding:7px 14px;font-family:'Barlow',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s;}
-.hist-del-btn:hover{border-color:rgba(192,80,74,.7);color:rgba(192,80,74,.9);}
+.hist-del-btn{background:rgba(192,80,74,.15);border:1px solid rgba(192,80,74,.6);color:rgba(192,80,74,.9);padding:7px 14px;font-family:'Barlow',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+.hist-del-btn:hover{background:rgba(192,80,74,.28);border-color:rgba(192,80,74,.9);color:#fff;}
 .hist-canc{background:transparent;border:1px solid rgba(240,234,216,.15);color:var(--cr3);padding:7px 14px;font-family:'Barlow',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;}
 .hist-empty{font-size:10px;color:var(--cr3);text-align:center;padding:24px 0;letter-spacing:1.5px;}
 
@@ -363,6 +366,28 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .btn-ajuda:hover{background:rgba(201,168,76,.1);}
 hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
 
+/* ── Ultrameta ── */
+.cat-ultrameta{
+  margin-top:10px;padding-top:10px;border-top:1px dashed rgba(220,192,106,.3);
+}
+.cat-ultra-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cat-ultra-label{
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--ou);font-weight:600;display:flex;align-items:center;gap:6px;
+}
+.cat-ultra-label::before{content:'⚡';font-size:11px;}
+.cat-ultra-nums{text-align:right;}
+.cat-ultra-acum{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ou2);font-weight:300;line-height:1;}
+.cat-ultra-de{font-size:9px;color:var(--cr3);letter-spacing:1px;}
+.cat-ultra-bar-bg{background:rgba(255,255,255,.07);height:4px;overflow:hidden;position:relative;}
+.cat-ultra-bar-fg{height:100%;background:linear-gradient(90deg,var(--ou3),var(--ou2));transition:width .5s;}
+.cat-ultra-bar-fg.completo{background:linear-gradient(90deg,#b8860b,#ffd700);}
+.cat-ultra-pct{font-size:9px;color:var(--ou3);text-align:right;margin-top:4px;letter-spacing:1px;}
+.cat-ultra-ritmo{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--oud2);gap:8px;}
+.cat-ultra-ritmo-info{font-size:11px;color:var(--cr2);letter-spacing:.5px;}
+.cat-ultra-ritmo-info strong{color:var(--cr);font-weight:600;font-size:12px;}
+.cat-ultra-badge{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;padding:3px 9px;border:1px solid;flex-shrink:0;color:var(--ou);border-color:var(--oud);background:rgba(212,180,90,.1);}
+
 /* ── Maior Venda do Mês ── */
 .mv-card{background:rgba(255,255,255,.03);border:1px solid var(--oud);padding:20px 22px;margin-bottom:0;}
 .mv-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
@@ -383,8 +408,8 @@ hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
 .mv-btn{width:100%;background:var(--ou);color:var(--v0);border:none;padding:11px;font-family:'Barlow',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;cursor:pointer;margin-top:4px;transition:background .2s;}
 .mv-btn:hover{background:var(--ou2);}
 .mv-btn:disabled{opacity:.4;cursor:not-allowed;}
-.mv-btn-del{width:100%;background:transparent;border:1px solid rgba(192,80,74,.35);color:rgba(192,80,74,.7);padding:9px;font-family:'Barlow',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:all .2s;}
-.mv-btn-del:hover{border-color:rgba(192,80,74,.8);color:rgba(192,80,74,1);background:rgba(192,80,74,.06);}
+.mv-btn-del{width:100%;background:rgba(192,80,74,.15);border:1px solid rgba(192,80,74,.6);color:rgba(192,80,74,.9);padding:9px;font-family:'Barlow',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:all .2s;}
+.mv-btn-del:hover{background:rgba(192,80,74,.28);border-color:rgba(192,80,74,.9);color:#fff;}
 .mv-atual-header{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .mv-atual-info{flex:1;}
 .mv-ranking{background:rgba(255,255,255,.025);border:1px solid var(--oud2);padding:16px 18px;}
@@ -469,8 +494,8 @@ svg{display:inline-block;vertical-align:middle;}
 .login-btn-canc:hover{color:var(--cr);}
 .login-erro{font-size:11px;color:#e07070;text-align:center;margin-top:12px;min-height:16px;letter-spacing:.5px;}
 /* logout btn */
-.btn-logout{background:transparent;border:1px solid rgba(192,80,74,.3);color:rgba(192,80,74,.6);padding:6px 14px;font-family:'Barlow',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
-.btn-logout:hover{border-color:rgba(192,80,74,.7);color:rgba(192,80,74,.9);}
+.btn-logout{background:rgba(192,80,74,.15);border:1px solid rgba(192,80,74,.6);color:rgba(192,80,74,.9);padding:6px 14px;font-family:'Barlow',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.btn-logout:hover{background:rgba(192,80,74,.28);border-color:rgba(192,80,74,.9);color:#fff;}
 /* ── Loading overlay ── */
 .loading-ov{display:none;position:fixed;inset:0;background:rgba(21,30,14,.85);z-index:600;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
 .loading-ov.show{display:flex;}
@@ -589,7 +614,7 @@ svg{display:inline-block;vertical-align:middle;}
         <div class="hist-wrap">
           <div class="slbl" style="margin-top:32px;">
             <span>Meu histórico do mês</span>
-            <button class="bsm" style="color:rgba(192,80,74,.45);border-color:rgba(192,80,74,.2);" onclick="zerarHist()">Zerar</button>
+            <button class="bsm" style="color:rgba(192,80,74,.9);border-color:rgba(192,80,74,.6);background:rgba(192,80,74,.15);" onclick="zerarHist()">Zerar</button>
           </div>
           <div id="hist-lista"></div>
         </div>
@@ -1131,17 +1156,47 @@ function renderCats(ag,cfg,isG){
         ?`<div class="cat-ritmo"><span class="cat-ritmo-info">Meta atingida!</span><span class="cat-ritmo-badge ok">✓ Meta</span></div>`
         :`<div class="cat-ritmo"><span class="cat-ritmo-info">Faltam <strong>${falt}</strong> · ${necessario}/dia</span><span class="cat-ritmo-badge ${noRitmo?'ok':'er'}">${noRitmo?'No ritmo':'⚠ Atrás'}</span></div>`;
     }
-    return `<div class="cat-card">
-      <div class="cat-ico">${cat.svg}</div>
-      <div class="cat-info" style="flex:1;">
-        <div class="cat-nome">${cat.nome}</div>
-        <div class="cat-tag">${cat.acess?'Acessório · Competição':'Categoria principal'}</div>
-        <div class="cat-bar-bg" style="margin-top:8px;"><div class="cat-bar-fg ${ating?'ok':''}" style="width:${p}%"></div></div>
-        <div class="cat-pct">${p.toFixed(0)}%${ating?' ✓':''}</div>
-        ${ritmoHtml}
-      </div>
-      <div class="cat-nums"><div class="cat-acum">${a}</div><div class="cat-de">de ${m||'—'}</div></div>
-    </div>`;
+    // Quando ultrameta ativa, substitui visualmente a meta normal
+    const ultraAtiva=cfg.ultraAtiva||false;
+    const um=(cfg.ultrametas&&cfg.ultrametas[cat.id])||0;
+    const usarUltra=ultraAtiva&&um>0;
+
+    let metaAlvo,progPct,metaAting,metaFalt,metaTag,metaRitmoHtml,metaNumLabel;
+    if(usarUltra){
+      metaAlvo=um;
+      progPct=Math.min(a/um*100,100);
+      metaAting=a>=um;
+      metaFalt=Math.max(um-a,0);
+      metaTag='⚡ Ultrameta';
+      metaNumLabel='de '+um+' ⚡';
+      const uNec=(!metaAting&&diasRestantes>0)?(metaFalt/diasRestantes).toFixed(1):null;
+      const uAtual=diasPassados>0?(a/diasPassados).toFixed(1):'0';
+      const uNoR=uNec!==null&&parseFloat(uAtual)>=parseFloat(uNec);
+      if(!isG&&um>0){
+        metaRitmoHtml=metaAting
+          ?'<div class="cat-ritmo"><span class="cat-ritmo-info">⚡ Ultrameta atingida!</span><span class="cat-ritmo-badge ok">✓ Ultra</span></div>'
+          :'<div class="cat-ritmo"><div class="cat-ritmo-info"><span class="ritmo-label">Faltam</span><span class="ritmo-num">'+metaFalt+'</span><span class="ritmo-sep">·</span><span class="ritmo-num">'+uNec+'</span><span class="ritmo-label">/dia necessário</span></div><span class="cat-ritmo-badge '+(uNoR?'ok':'er')+'">'+(uNoR?'No ritmo':'⚠ Atrás')+'</span></div>';
+      } else { metaRitmoHtml=''; }
+    } else {
+      metaAlvo=m; progPct=p; metaAting=ating; metaFalt=falt;
+      metaTag=cat.acess?'Acessório · Competição':'Categoria principal';
+      metaNumLabel='de '+(m||'—');
+      metaRitmoHtml=ritmoHtml;
+    }
+
+    const barClass=metaAting?(usarUltra?'cat-bar-fg ultra-completo':'cat-bar-fg ok'):'cat-bar-fg';
+
+    return '<div class="cat-card'+(usarUltra?' cat-card-ultra':'')+'">'+
+      '<div class="cat-ico">'+cat.svg+'</div>'+
+      '<div class="cat-info" style="flex:1;">'+
+        '<div class="cat-nome">'+cat.nome+'</div>'+
+        '<div class="cat-tag">'+metaTag+'</div>'+
+        '<div class="cat-bar-bg" style="margin-top:8px;"><div class="'+barClass+'" style="width:'+progPct.toFixed(0)+'%"></div></div>'+
+        '<div class="cat-pct">'+progPct.toFixed(0)+'%'+(metaAting?(usarUltra?' ⚡':' ✓'):'')+'</div>'+
+        metaRitmoHtml+
+      '</div>'+
+      '<div class="cat-nums"><div class="cat-acum">'+a+'</div><div class="cat-de">'+metaNumLabel+'</div></div>'+
+    '</div>';
   }).join('');
 }
 
@@ -1182,6 +1237,12 @@ async function registrarDia(){
   const [dd,mm] = dt.split('/').map(Number);
   if(mm !== mesAtivo){
     toast(`Esta data é de ${MESES_NOMES[mm-1]} — você está visualizando ${MESES_NOMES[mesAtivo-1]}. Navegue para o mês correto.`);
+    return;
+  }
+  // Bloquear datas futuras
+  const hj=new Date(), dHj=hj.getDate(), mHj=hj.getMonth()+1, aHj=hj.getFullYear();
+  if(anoAtivo===aHj && mm===mHj && dd>dHj){
+    toast('Não é possível registrar vendas em datas futuras.');
     return;
   }
   const reg={data:dt};
@@ -1508,13 +1569,18 @@ function renderMaiorVenda(){
     // Restringir e definir data padrão da maior venda
     const mvInp = document.getElementById('mv-data');
     if(mvInp){
-      const totalDiasMV = new Date(anoAtivo,mesAtivo,0).getDate();
-      mvInp.min = `${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-01`;
-      mvInp.max = `${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDiasMV).padStart(2,'0')}`;
-      if(!mvInp.value || mvInp.value.split('-')[1] != String(mesAtivo).padStart(2,'0')){
-        const d=new Date(), mesH=d.getMonth()+1, anoH=d.getFullYear();
+      const totalDiasMV=new Date(anoAtivo,mesAtivo,0).getDate();
+      const dNow=new Date(), mesH=dNow.getMonth()+1, anoH=dNow.getFullYear(), diaH=dNow.getDate();
+      mvInp.min=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-01`;
+      // Max: se mês ativo = hoje → hoje; senão → último dia do mês
+      if(mesH===mesAtivo&&anoH===anoAtivo){
+        mvInp.max=`${anoH}-${String(mesH).padStart(2,'0')}-${String(diaH).padStart(2,'0')}`;
+      } else {
+        mvInp.max=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDiasMV).padStart(2,'0')}`;
+      }
+      if(!mvInp.value||mvInp.value.split('-')[1]!=String(mesAtivo).padStart(2,'0')){
         if(mesH===mesAtivo&&anoH===anoAtivo){
-          mvInp.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          mvInp.value=`${anoH}-${String(mesH).padStart(2,'0')}-${String(diaH).padStart(2,'0')}`;
         } else {
           mvInp.value=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDiasMV).padStart(2,'0')}`;
         }
@@ -1670,14 +1736,38 @@ async function abrirCfg(){
   const cfg=cfgAtualCache();
   document.getElementById('modal-mes-label').textContent=`metas para ${MESES_NOMES[mesAtivo-1]} ${anoAtivo} · dias úteis para cálculo de ritmo`;
   document.getElementById('cfg-dias').value=cfg.diasUteis||26;
-  document.getElementById('mcats').innerHTML=CATS.map(c=>`<div class="mrow"><label>${c.svg} ${c.nome}</label><input class="minp-n" type="number" min="0" id="cfg-${c.id}" value="${cfg.metas[c.id]||0}"></div>`).join('');
+  const ultraAtiva = cfg.ultraAtiva || false;
+  document.getElementById('mcats').innerHTML=`
+    <div class="mrow" style="margin-bottom:4px;">
+      <label style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--cr2);">⚡ Ativar Ultrametas</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="cfg-ultra-ativa" ${ultraAtiva?'checked':''} style="width:16px;height:16px;accent-color:var(--ou);cursor:pointer;">
+        <span style="font-size:10px;color:var(--cr3);">${ultraAtiva?'Ativadas':'Desativadas'}</span>
+      </label>
+    </div>
+    <div style="font-size:9px;color:var(--cr3);letter-spacing:1.5px;text-transform:uppercase;padding:10px 0 6px;border-bottom:1px solid var(--oud2);margin-bottom:4px;">Meta normal · Ultrameta</div>
+  `+CATS.map(c=>`<div class="mrow">
+    <label>${c.svg} ${c.nome}</label>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input class="minp-n" type="number" min="0" id="cfg-${c.id}" value="${cfg.metas[c.id]||0}" style="width:72px;" title="Meta normal">
+      <span style="color:var(--ou);font-size:14px;">⚡</span>
+      <input class="minp-n" type="number" min="0" id="cfg-ultra-${c.id}" value="${(cfg.ultrametas&&cfg.ultrametas[c.id])||0}" style="width:72px;border-color:rgba(212,180,90,.4);" title="Ultrameta">
+    </div>
+  </div>`).join('');
   document.getElementById('modal').classList.add('open');
 }
 function fecharCfg(){document.getElementById('modal').classList.remove('open');}
 async function salvarCfg(){
   const cfg=cfgAtualCache();
   cfg.diasUteis=parseInt(document.getElementById('cfg-dias').value)||26;
-  CATS.forEach(c=>{cfg.metas[c.id]=parseInt(document.getElementById('cfg-'+c.id)?.value)||0;});
+  cfg.ultraAtiva=document.getElementById('cfg-ultra-ativa')?.checked||false;
+  if(!cfg.ultrametas)cfg.ultrametas={};
+  CATS.forEach(c=>{
+    cfg.metas[c.id]=parseInt(document.getElementById('cfg-'+c.id)?.value)||0;
+    cfg.ultrametas[c.id]=parseInt(document.getElementById('cfg-ultra-'+c.id)?.value)||0;
+  });
   loading(true);await saveCfgMes(anoAtivo,mesAtivo,cfg);loading(false);
   fecharCfg();render();toast(`✓ Metas de ${MESES_NOMES[mesAtivo-1]} atualizadas!`);
 }
@@ -1708,16 +1798,16 @@ function atualizarDataLancamento(){
 function inicializarDataLancamento(){
   const inp=document.getElementById('inp-lancamento');
   if(!inp)return;
-  // Restringir ao mês ativo
   const totalDias=new Date(anoAtivo,mesAtivo,0).getDate();
-  inp.min=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-01`;
-  inp.max=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDias).padStart(2,'0')}`;
-  // Data padrão: hoje se estiver no mês ativo, senão último dia do mês
   const d=new Date();
-  const mesHoje=d.getMonth()+1, anoHoje=d.getFullYear();
+  const mesHoje=d.getMonth()+1, anoHoje=d.getFullYear(), diaHoje=d.getDate();
+  inp.min=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-01`;
+  // Max: se mês ativo = mês atual → hoje; senão → último dia do mês
   if(mesHoje===mesAtivo && anoHoje===anoAtivo){
-    inp.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    inp.max=`${anoHoje}-${String(mesHoje).padStart(2,'0')}-${String(diaHoje).padStart(2,'0')}`;
+    inp.value=`${anoHoje}-${String(mesHoje).padStart(2,'0')}-${String(diaHoje).padStart(2,'0')}`;
   } else {
+    inp.max=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDias).padStart(2,'0')}`;
     inp.value=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDias).padStart(2,'0')}`;
   }
   atualizarDataLancamento();
