@@ -11,11 +11,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <style>
 :root{
-  --v0:#151e0e;--v1:#1c2714;--v2:#28341a;--v3:#3a4e27;
-  --ou:#c9a84c;--ou2:#e2c97a;--ou3:#9a7830;
-  --oud:rgba(201,168,76,.22);--oud2:rgba(201,168,76,.10);
-  --cr:#f0ead8;--cr2:rgba(240,234,216,.65);--cr3:rgba(240,234,216,.38);
-  --ok:#4e9e4e;--er:#b84040;
+  --v0:#1f2f14;--v1:#2a3d1c;--v2:#364f24;--v3:#4a6330;
+  --ou:#d4b45a;--ou2:#ebd48a;--ou3:#b08840;
+  --oud:rgba(212,180,90,.30);--oud2:rgba(212,180,90,.14);
+  --cr:#f8f3e6;--cr2:rgba(248,243,230,.78);--cr3:rgba(248,243,230,.52);
+  --ok:#5cb85c;--er:#c0504a;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{zoom:1.2;}
@@ -204,6 +204,8 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .rk-pos.p3{color:rgba(201,168,76,.32);}
 .rk-info{flex:1;min-width:0;}
 .rk-nome{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;color:var(--cr2);}
+.rk-avatar{width:28px;height:28px;border-radius:50%;overflow:hidden;border:1px solid var(--oud);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:12px;color:var(--ou);background:var(--v2);}
+.rk-avatar img{width:100%;height:100%;object-fit:cover;object-position:center top;}
 .rk-falta{font-size:9px;color:var(--cr3);margin-top:2px;letter-spacing:.5px;}
 .rk-falta.lider{color:rgba(109,191,109,.7);}
 .rk-bar{height:3px;background:rgba(255,255,255,.07);margin-top:5px;overflow:hidden;}
@@ -279,6 +281,8 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .conv-rk-pos.p3{color:rgba(201,168,76,.3);}
 .conv-rk-info{flex:1;min-width:0;}
 .conv-rk-nome{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;color:var(--cr2);}
+.conv-rk-avatar{width:26px;height:26px;border-radius:50%;overflow:hidden;border:1px solid var(--oud);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:11px;color:var(--ou);background:var(--v2);}
+.conv-rk-avatar img{width:100%;height:100%;object-fit:cover;object-position:center top;}
 .conv-rk-bar{height:3px;background:rgba(255,255,255,.07);margin-top:5px;overflow:hidden;}
 .conv-rk-bar-f{height:100%;background:linear-gradient(90deg,var(--ou3),var(--ou2));transition:width .5s;}
 .conv-rk-val{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ou2);font-weight:300;flex-shrink:0;}
@@ -358,6 +362,44 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .btn-ajuda{background:transparent;border:1px solid var(--oud);color:var(--ou);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-family:'Cormorant Garamond',serif;transition:all .2s;flex-shrink:0;}
 .btn-ajuda:hover{background:rgba(201,168,76,.1);}
 hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
+
+/* ── Maior Venda do Mês ── */
+.mv-card{background:rgba(255,255,255,.03);border:1px solid var(--oud);padding:20px 22px;margin-bottom:0;}
+.mv-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.mv-titulo{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cr3);}
+.mv-min{font-size:9px;color:var(--cr3);letter-spacing:1px;}
+.mv-min span{color:var(--ou2);font-weight:600;}
+.mv-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.mv-form{background:rgba(255,255,255,.025);border:1px solid var(--oud2);padding:16px 18px;}
+.mv-form-titulo{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);margin-bottom:14px;}
+.mv-field{margin-bottom:12px;}
+.mv-field label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);display:block;margin-bottom:6px;}
+.mv-inp{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--oud);color:var(--cr);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;outline:none;transition:border-color .2s;}
+.mv-inp:focus{border-color:var(--ou);}
+.mv-inp-valor{font-family:'Cormorant Garamond',serif;font-size:22px;text-align:center;letter-spacing:1px;}
+.mv-atual{margin-top:12px;padding:10px 12px;background:rgba(201,168,76,.06);border:1px solid var(--oud2);font-size:11px;color:var(--cr2);display:none;}
+.mv-atual.show{display:block;}
+.mv-atual strong{color:var(--ou2);font-family:'Cormorant Garamond',serif;font-size:18px;}
+.mv-btn{width:100%;background:var(--ou);color:var(--v0);border:none;padding:11px;font-family:'Barlow',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;cursor:pointer;margin-top:4px;transition:background .2s;}
+.mv-btn:hover{background:var(--ou2);}
+.mv-btn:disabled{opacity:.4;cursor:not-allowed;}
+.mv-ranking{background:rgba(255,255,255,.025);border:1px solid var(--oud2);padding:16px 18px;}
+.mv-ranking-titulo{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);margin-bottom:14px;}
+.mv-rank-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
+.mv-rank-pos{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;width:24px;text-align:center;flex-shrink:0;color:rgba(212,180,90,.2);}
+.mv-rank-pos.p1{color:var(--ou);}
+.mv-rank-pos.p2{color:rgba(212,180,90,.55);}
+.mv-rank-pos.p3{color:rgba(212,180,90,.32);}
+.mv-rank-avatar{width:32px;height:32px;border-radius:50%;overflow:hidden;border:1px solid var(--oud);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--ou);background:var(--v2);}
+.mv-rank-avatar img{width:100%;height:100%;object-fit:cover;object-position:center top;}
+.mv-rank-info{flex:1;min-width:0;}
+.mv-rank-nome{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;color:var(--cr2);}
+.mv-rank-data{font-size:9px;color:var(--cr3);margin-top:2px;}
+.mv-rank-bar{height:3px;background:rgba(255,255,255,.07);margin-top:4px;overflow:hidden;}
+.mv-rank-bar-f{height:100%;background:linear-gradient(90deg,var(--ou3),var(--ou2));transition:width .5s;}
+.mv-rank-val{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ou2);font-weight:300;flex-shrink:0;}
+.mv-vazio{font-size:10px;color:var(--cr3);text-align:center;padding:20px 0;letter-spacing:1.5px;}
+@media(max-width:640px){.mv-layout{grid-template-columns:1fr;}}
 
 /* ── Card status de atualização ── */
 .status-card{
@@ -501,8 +543,7 @@ svg{display:inline-block;vertical-align:middle;}
     </div>
 
     <div id="conteudo-principal">
-      <div class="slbl" style="margin-bottom:14px;"><span>Resumo global · equipe</span></div>
-      <div class="cards3" id="cards-top"></div>
+      <div class="cards3" id="cards-top" style="display:none;"></div>
       <!-- Card status de atualização -->
       <div class="status-card" id="status-atualizacao">
         <div class="status-card-titulo">
@@ -550,6 +591,38 @@ svg{display:inline-block;vertical-align:middle;}
         </div>
       </div>
       <hr class="dv">
+      <!-- Maior Venda do Mês -->
+      <div id="mv-sec">
+        <div class="slbl"><span>Competição · Maior Venda do Mês</span></div>
+        <div class="mv-card">
+          <div class="mv-header">
+            <div class="mv-titulo">Registre sua maior venda acima de</div>
+            <div class="mv-min">Mínimo: <span>R$ 2.000</span></div>
+          </div>
+          <div class="mv-layout">
+            <div class="mv-form" id="mv-form-area">
+              <div class="mv-form-titulo" id="mv-form-titulo">Registrar minha maior venda</div>
+              <div class="mv-field">
+                <label>Valor da venda (R$)</label>
+                <input class="mv-inp mv-inp-valor" type="number" id="mv-valor" min="2000" placeholder="0,00">
+              </div>
+              <div class="mv-field">
+                <label>Data da venda</label>
+                <input class="mv-inp" type="date" id="mv-data" color-scheme="dark">
+              </div>
+              <div class="mv-atual" id="mv-atual">
+                Seu registro atual: <strong id="mv-atual-val">—</strong> em <span id="mv-atual-data">—</span>
+              </div>
+              <button class="mv-btn" id="mv-btn" onclick="registrarMaiorVenda()">✓ Registrar</button>
+            </div>
+            <div class="mv-ranking">
+              <div class="mv-ranking-titulo">Ranking do mês</div>
+              <div id="mv-rank-lista"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="rank-sec">
         <div class="slbl"><span>Competição · Mix de Acessórios</span></div>
         <div class="rank-grid" id="rank-grid"></div>
@@ -759,6 +832,15 @@ function iniciarListeners(){
     if(doc.exists){cacheCfg[cfgKey]=doc.data();render();}
   });
   unsubscribers.push(unsubCfg);
+  // Listeners maior venda
+  VENDEDORAS.forEach(v=>{
+    const k=keyMV(v.id,anoAtivo,mesAtivo);
+    const unsub=db.collection('ls_maior_venda').doc(k).onSnapshot(doc=>{
+      cacheHist[k]=doc.exists?doc.data():null;
+      renderMaiorVenda();
+    });
+    unsubscribers.push(unsub);
+  });
 }
 
 // ══ ACUMULADOS ══
@@ -918,10 +1000,10 @@ auth.onAuthStateChanged(async (user) => {
 });
 
 async function carregarMes(){
-  // Pré-carregar config e históricos no cache
   await getCfgMes(anoAtivo,mesAtivo);
   const todos=[...VENDEDORAS.map(v=>v.id),...ARQUIVADAS];
   await Promise.all(todos.map(vid=>getHistMes(vid,anoAtivo,mesAtivo)));
+  await carregarMaiorVendas();
   iniciarListeners();
 }
 
@@ -999,7 +1081,7 @@ function render(){
   renderCards(ag,cfg);renderCats(ag,cfg,isG);
   document.getElementById('bloco-reg').style.display=isG?'none':'block';
   if(!isG){renderReg(ag,cfg);renderHist();}
-  renderStatusAtualizacao();renderRanking();renderConversao();
+  renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();
 }
 
 function renderCards(ag,cfg){
@@ -1014,8 +1096,21 @@ function renderCards(ag,cfg){
 
 function renderCats(ag,cfg,isG){
   const diasUteis=cfg.diasUteis||26;
-  const hist=isG?[]:histAtualCache(usuario);
-  const diasPassados=hist.filter(d=>!d.especial||d.especial==='').length;
+  // Calcular dias corridos passados no mês atual com base na data real
+  const hoje_calc=new Date();
+  const diaHoje=hoje_calc.getDate();
+  const mesHoje=hoje_calc.getMonth()+1;
+  const anoHoje=hoje_calc.getFullYear();
+  // Se estamos no mês ativo, usar o dia atual como referência proporcional
+  let diasPassados;
+  if(anoAtivo===anoHoje&&mesAtivo===mesHoje){
+    // Proporção: dia atual / total de dias no mês * dias úteis configurados
+    const totalDiasMes=new Date(anoHoje,mesHoje,0).getDate();
+    diasPassados=Math.round((diaHoje/totalDiasMes)*diasUteis);
+  } else {
+    // Mês passado — considerar todos os dias úteis como passados
+    diasPassados=diasUteis;
+  }
   const diasRestantes=Math.max(diasUteis-diasPassados,1);
   document.getElementById('cats-grid').innerHTML=CATS.map(cat=>{
     const a=ag[cat.id]||0,m=cfg.metas[cat.id]||0;
@@ -1298,22 +1393,158 @@ function renderStatusAtualizacao(){
   }).join('');
 }
 
+// ══ MAIOR VENDA DO MÊS ══
+const keyMV = (v,ano,mes) => `ls_mv_${v}_${ano}_${String(mes).padStart(2,'0')}`;
+
+async function carregarMaiorVendas(){
+  // Carregar de todos os jogadores do mês ativo
+  await Promise.all(VENDEDORAS.map(async v => {
+    const k = keyMV(v.id, anoAtivo, mesAtivo);
+    if(cacheHist[k] !== undefined) return;
+    try{
+      const doc = await db.collection('ls_maior_venda').doc(k).get();
+      cacheHist[k] = doc.exists ? doc.data() : null;
+    }catch(e){ cacheHist[k] = null; }
+  }));
+}
+
+async function registrarMaiorVenda(){
+  const valorStr = document.getElementById('mv-valor').value;
+  const dataStr  = document.getElementById('mv-data').value;
+  const btn      = document.getElementById('mv-btn');
+
+  if(!valorStr || parseFloat(valorStr) < 2000){
+    toast('O valor mínimo é R$ 2.000.');
+    return;
+  }
+  if(!dataStr){
+    toast('Selecione a data da venda.');
+    return;
+  }
+
+  const valor = parseFloat(valorStr);
+  const [y,m,d] = dataStr.split('-');
+  const dataFormatada = `${d}/${m}/${y}`;
+
+  btn.disabled = true;
+  loading(true);
+
+  const k = keyMV(usuario, anoAtivo, mesAtivo);
+  const reg = { vendedora: usuario, valor, data: dataFormatada };
+  await db.collection('ls_maior_venda').doc(k).set(reg);
+  cacheHist[k] = reg;
+
+  loading(false);
+  btn.disabled = false;
+  toast('✓ Maior venda registrada!');
+  renderMaiorVenda();
+}
+
+function renderMaiorVenda(){
+  const isG = usuario === '__gestor__';
+  const sec = document.getElementById('mv-sec');
+  if(!sec) return;
+
+  // Formulário — ocultar para gestor
+  const formArea = document.getElementById('mv-form-area');
+  if(formArea) formArea.style.display = isG ? 'none' : 'block';
+
+  // Mostrar registro atual da vendedora
+  if(!isG){
+    const k = keyMV(usuario, anoAtivo, mesAtivo);
+    const meu = cacheHist[k];
+    const atualEl = document.getElementById('mv-atual');
+    const btnEl   = document.getElementById('mv-btn');
+    const tituloEl = document.getElementById('mv-form-titulo');
+    if(meu){
+      document.getElementById('mv-atual-val').textContent = `R$ ${meu.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+      document.getElementById('mv-atual-data').textContent = meu.data;
+      atualEl.classList.add('show');
+      if(tituloEl) tituloEl.textContent = 'Atualizar minha maior venda';
+      if(btnEl) btnEl.textContent = '↺ Atualizar';
+      // Preencher campos com valor atual
+      document.getElementById('mv-valor').value = meu.valor;
+    } else {
+      atualEl.classList.remove('show');
+      if(tituloEl) tituloEl.textContent = 'Registrar minha maior venda';
+      if(btnEl) btnEl.textContent = '✓ Registrar';
+    }
+    // Data default hoje
+    if(!document.getElementById('mv-data').value){
+      const d = new Date();
+      document.getElementById('mv-data').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+  }
+
+  // Ranking
+  const lista = document.getElementById('mv-rank-lista');
+  if(!lista) return;
+
+  const dados = VENDEDORAS.map(v => {
+    const k = keyMV(v.id, anoAtivo, mesAtivo);
+    const reg = cacheHist[k];
+    return { v, reg, valor: reg?.valor || 0 };
+  }).sort((a,b) => b.valor - a.valor);
+
+  const max = dados[0]?.valor || 1;
+  const temAlgum = dados.some(d => d.valor > 0);
+  const pc = ['p1','p2','p3',''];
+
+  if(!temAlgum){
+    lista.innerHTML = '<div class="mv-vazio">NENHUM REGISTRO AINDA</div>';
+    return;
+  }
+
+  lista.innerHTML = dados.map((d,i) => {
+    if(!d.reg) return `<div class="mv-rank-row">
+      <div class="mv-rank-pos ${pc[i]||''}">${i+1}</div>
+      <div class="mv-rank-avatar">${d.v.nome[0]}</div>
+      <div class="mv-rank-info">
+        <div class="mv-rank-nome">${d.v.nome}</div>
+        <div class="mv-rank-data">sem registro</div>
+      </div>
+      <div class="mv-rank-val" style="color:var(--cr3);font-size:14px;">—</div>
+    </div>`;
+
+    const avatarHtml = d.v.foto
+      ? `<img src="${d.v.foto}" alt="${d.v.nome}">`
+      : d.v.nome[0];
+
+    return `<div class="mv-rank-row">
+      <div class="mv-rank-pos ${pc[i]||''}">${i+1}</div>
+      <div class="mv-rank-avatar">${avatarHtml}</div>
+      <div class="mv-rank-info">
+        <div class="mv-rank-nome">${d.v.nome}</div>
+        <div class="mv-rank-data">${d.reg.data}</div>
+        <div class="mv-rank-bar"><div class="mv-rank-bar-f" style="width:${max>0?(d.valor/max*100):0}%"></div></div>
+      </div>
+      <div class="mv-rank-val">R$ ${d.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+    </div>`;
+  }).join('');
+}
+
 function renderRanking(){
   const pv=accPorV(),pc=['p1','p2','p3',''];
   document.getElementById('rank-grid').innerHTML=ACESS.map(cat=>{
-    const dados=VENDEDORAS.map(v=>{return{nome:v.nome,val:pv[v.id][cat.id]||0};}).sort((a,b)=>b.val-a.val);
+    const dados=VENDEDORAS.map(v=>{
+      return{nome:v.nome,val:pv[v.id][cat.id]||0,foto:v.foto||null};
+    }).sort((a,b)=>b.val-a.val);
     const max=dados[0]?.val||1;
-    return `<div class="rk"><div class="rk-tit">${cat.svg} ${cat.nome}</div>
-      ${dados.map((d,i)=>`<div class="rk-row">
-        <div class="rk-pos ${pc[i]||''}">${i+1}</div>
-        <div class="rk-info">
-          <div class="rk-nome">${d.nome}</div>
-          <div class="rk-falta ${i===0?'lider':''}">${i===0?'🏆 Líder':`faltam ${max-d.val} p/ líder`}</div>
-          <div class="rk-bar"><div class="rk-bar-f" style="width:${max>0?(d.val/max*100):0}%"></div></div>
-        </div>
-        <div class="rk-val">${d.val}</div>
-      </div>`).join('')}
-    </div>`;
+    return '<div class="rk"><div class="rk-tit">'+cat.svg+' '+cat.nome+'</div>'+
+      dados.map((d,i)=>{
+        const av=d.foto?'<img src="'+d.foto+'" alt="'+d.nome+'">':d.nome[0];
+        return '<div class="rk-row">'+
+          '<div class="rk-pos '+(pc[i]||'')+'">'+( i+1)+'</div>'+
+          '<div class="rk-avatar">'+av+'</div>'+
+          '<div class="rk-info">'+
+            '<div class="rk-nome">'+d.nome+'</div>'+
+            '<div class="rk-falta '+(i===0?'lider':'')+'">'+( i===0?'🏆 Líder':'faltam '+(max-d.val)+' p/ líder')+'</div>'+
+            '<div class="rk-bar"><div class="rk-bar-f" style="width:'+(max>0?(d.val/max*100):0)+'%"></div></div>'+
+          '</div>'+
+          '<div class="rk-val">'+d.val+'</div>'+
+        '</div>';
+      }).join('')+
+    '</div>';
   }).join('');
 }
 
@@ -1368,17 +1599,21 @@ function renderConversao(){
     <div class="slbl" style="margin-top:24px;margin-bottom:14px;"><span>Ranking de Conversão · Equipe</span></div>
     <div class="conv-rank-grid">
       ${rankCols.map(col=>{
-        const dados=VENDEDORAS.map(v=>{return{nome:v.nome,val:col.fn(pv[v.id])};} ).sort((a,b)=>b.val-a.val);
+        const dados=VENDEDORAS.map(v=>{return{nome:v.nome,val:col.fn(pv[v.id]),foto:v.foto||null};} ).sort((a,b)=>b.val-a.val);
         const max=dados[0]?.val||0.01;
         return `<div class="conv-rk"><div class="conv-rk-tit">${col.svg} ${col.nome}</div>
-          ${dados.map((d,i)=>`<div class="conv-rk-row">
-            <div class="conv-rk-pos ${pc[i]||''}">${i+1}</div>
-            <div class="conv-rk-info">
-              <div class="conv-rk-nome">${d.nome}${i===0&&d.val>0?'<span class="conv-rk-dest">Líder</span>':''}</div>
-              <div class="conv-rk-bar"><div class="conv-rk-bar-f" style="width:${max>0?(d.val/max*100):0}%"></div></div>
-            </div>
-            <div class="conv-rk-val">${d.val>0?d.val.toFixed(2):'—'}</div>
-          </div>`).join('')}
+          ${dados.map((d,i)=>{
+            const av=d.foto?'<img src="'+d.foto+'" alt="'+d.nome+'">':d.nome[0];
+            return `<div class="conv-rk-row">
+              <div class="conv-rk-pos ${pc[i]||''}">${i+1}</div>
+              <div class="conv-rk-avatar">${av}</div>
+              <div class="conv-rk-info">
+                <div class="conv-rk-nome">${d.nome}${i===0&&d.val>0?'<span class="conv-rk-dest">Líder</span>':''}</div>
+                <div class="conv-rk-bar"><div class="conv-rk-bar-f" style="width:${max>0?(d.val/max*100):0}%"></div></div>
+              </div>
+              <div class="conv-rk-val">${d.val>0?d.val.toFixed(2):'—'}</div>
+            </div>`;
+          }).join('')}
         </div>`;
       }).join('')}
     </div>`;
