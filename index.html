@@ -11,12 +11,180 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <style>
 :root{
-  --v0:#1f2f14;--v1:#2a3d1c;--v2:#364f24;--v3:#4a6330;
+  /* Modo escuro (padrão) — verdes 30% mais claros */
+  --v0:#283d1a;--v1:#374f24;--v2:#46672f;--v3:#60813e;
   --ou:#d4b45a;--ou2:#ebd48a;--ou3:#b08840;
   --oud:rgba(212,180,90,.30);--oud2:rgba(212,180,90,.14);
   --cr:#f8f3e6;--cr2:rgba(248,243,230,.78);--cr3:rgba(248,243,230,.52);
   --ok:#5cb85c;--er:#c0504a;
 }
+
+/* ── Modo Claro ── */
+body.light-mode{
+  /* Fundos — marfim quente */
+  --v0:#f5f0e6;
+  --v1:#eee8d8;
+  --v2:#e5dcca;
+  --v3:#162410;
+  /* Dourado rico */
+  --ou:#8a6820;
+  --ou2:#6b5018;
+  --ou3:#b08830;
+  /* Bordas em verde muito escuro */
+  --oud:rgba(18,36,10,.35);
+  --oud2:rgba(18,36,10,.15);
+  /* Texto — verde quase preto */
+  --cr:#0e1a08;
+  --cr2:rgba(14,26,8,.82);
+  --cr3:rgba(14,26,8,.52);
+  /* Status */
+  --ok:#1a4a1a;
+  --er:#b83030;
+}
+/* Ajustes específicos modo claro — alto contraste */
+body.light-mode header{background:#ddd5be;border-bottom:2px solid rgba(14,26,8,.35);}
+body.light-mode .h-marca{color:#6b5018;letter-spacing:4px;}
+body.light-mode .h-sub{color:rgba(14,26,8,.6);}
+body.light-mode .h-cen{color:#6b5018;}
+body.light-mode .sel-logo h1{color:#6b5018;}
+body.light-mode .sel-logo p{color:rgba(14,26,8,.55);}
+body.light-mode .sel-logo .linha{background:linear-gradient(90deg,transparent,#6b5018,transparent);}
+body.light-mode .sel-prompt{color:rgba(14,26,8,.55);}
+
+/* Cards — fundo branco sólido, bordas escuras visíveis */
+body.light-mode .ct{background:#fff;border:1px solid rgba(14,26,8,.25);box-shadow:0 2px 8px rgba(14,26,8,.08);}
+body.light-mode .ct::before{background:#6b5018;}
+body.light-mode .ct .lbl{color:rgba(14,26,8,.55);}
+body.light-mode .ct .val{color:#1a3a0e;}
+body.light-mode .ct .sub{color:rgba(14,26,8,.55);}
+body.light-mode .ct.destaque .val{color:#1a6e1a;}
+
+body.light-mode .cat-card{background:#fff;border:1px solid rgba(14,26,8,.22);box-shadow:0 2px 6px rgba(14,26,8,.06);}
+body.light-mode .cat-card:hover{border-color:rgba(14,26,8,.45);box-shadow:0 4px 12px rgba(14,26,8,.12);}
+body.light-mode .cat-nome{color:#0e1a08;}
+body.light-mode .cat-tag{color:rgba(14,26,8,.55);}
+body.light-mode .cat-acum{color:#1a3a0e;}
+body.light-mode .cat-de{color:rgba(14,26,8,.55);}
+body.light-mode .cat-pct{color:rgba(14,26,8,.5);}
+body.light-mode .cat-ritmo-info{color:rgba(14,26,8,.65);}
+body.light-mode .cat-ritmo-info strong{color:#0e1a08;}
+
+body.light-mode .rk{background:#fff;border:1px solid rgba(14,26,8,.22);box-shadow:0 2px 6px rgba(14,26,8,.06);}
+body.light-mode .rk-tit{color:rgba(14,26,8,.55);}
+body.light-mode .rk-nome{color:#0e1a08;}
+body.light-mode .rk-falta{color:rgba(14,26,8,.55);}
+body.light-mode .rk-val{color:#1a3a0e;}
+
+body.light-mode .conv-item{background:#fff;border:1px solid rgba(14,26,8,.22);box-shadow:0 2px 6px rgba(14,26,8,.06);}
+body.light-mode .conv-rk{background:#fff;border:1px solid rgba(14,26,8,.22);}
+body.light-mode .conv-rk-nome{color:#0e1a08;}
+body.light-mode .conv-rk-val{color:#1a3a0e;}
+
+body.light-mode .reg-item{background:#fff;border:1px solid rgba(14,26,8,.22);}
+body.light-mode .reg-item:hover{border-color:rgba(14,26,8,.45);}
+body.light-mode .reg-nome{color:#0e1a08;}
+body.light-mode .reg-eq{color:rgba(14,26,8,.55);}
+
+body.light-mode .hist-item{background:#fff;border:1px solid rgba(14,26,8,.2);box-shadow:0 1px 4px rgba(14,26,8,.06);}
+body.light-mode .hist-item:hover{background:#f8f5ee;border-color:rgba(14,26,8,.4);}
+body.light-mode .hist-dt{color:#6b5018;}
+body.light-mode .hcat-n{color:rgba(14,26,8,.65);}
+body.light-mode .hcat-v{color:#1a3a0e;}
+body.light-mode .hist-esp{color:rgba(14,26,8,.6);}
+body.light-mode .hist-totais{background:rgba(107,80,24,.1);border:1px solid rgba(107,80,24,.45);}
+body.light-mode .hist-totais-label{color:#6b5018;}
+body.light-mode .htcat-n{color:rgba(14,26,8,.65);}
+body.light-mode .htcat-v{color:#1a3a0e;}
+
+body.light-mode .status-card{background:#fff;border:1px solid rgba(14,26,8,.2);}
+body.light-mode .status-v{border:1px solid rgba(14,26,8,.18);background:rgba(255,255,255,.8);}
+body.light-mode .status-v-nome{color:#0e1a08;}
+body.light-mode .status-v-data{color:rgba(14,26,8,.6);}
+
+body.light-mode .mv-card{background:rgba(255,255,255,.6);border:1px solid rgba(14,26,8,.2);}
+body.light-mode .mv-form{background:#fff;border:1px solid rgba(14,26,8,.2);}
+body.light-mode .mv-ranking{background:#fff;border:1px solid rgba(14,26,8,.2);}
+body.light-mode .mv-form-titulo{color:rgba(14,26,8,.6);}
+body.light-mode .mv-rank-nome{color:#0e1a08;}
+
+body.light-mode .modal{background:#ddd5be;border:1px solid rgba(107,80,24,.5);box-shadow:0 20px 60px rgba(14,26,8,.2);}
+body.light-mode .modal h3{color:#6b5018;}
+body.light-mode .modal-sub{color:rgba(14,26,8,.55);}
+body.light-mode .mf label{color:rgba(14,26,8,.6);}
+body.light-mode .mrow label{color:#0e1a08;}
+body.light-mode .login-modal{background:#ddd5be;border:1px solid rgba(107,80,24,.5);}
+body.light-mode .login-modal-nome{color:#1a3a0e;}
+body.light-mode .login-modal-sub{color:rgba(14,26,8,.55);}
+body.light-mode .tut-box{background:#ddd5be;border:1px solid rgba(107,80,24,.5);}
+body.light-mode .tut-titulo{color:#1a3a0e;}
+body.light-mode .tut-desc{color:rgba(14,26,8,.75);}
+body.light-mode .tut-num{color:rgba(14,26,8,.5);}
+body.light-mode .tut-dica{background:rgba(107,80,24,.08);border-left-color:#6b5018;color:rgba(14,26,8,.75);}
+
+body.light-mode .sel-card{background:#fff;border:1px solid rgba(14,26,8,.2);box-shadow:0 2px 8px rgba(14,26,8,.08);}
+body.light-mode .sel-card:hover{background:#f8f5ee;border-color:rgba(14,26,8,.45);box-shadow:0 6px 20px rgba(14,26,8,.14);}
+body.light-mode .sel-nome{color:#0e1a08;}
+body.light-mode .sel-avatar{background:#e8e0cc;border-color:rgba(14,26,8,.25);}
+body.light-mode .sel-gestor{border-color:rgba(14,26,8,.25);color:rgba(14,26,8,.6);}
+body.light-mode .sel-gestor:hover{border-color:#6b5018;color:#6b5018;}
+
+/* Inputs */
+body.light-mode .inp-n,
+body.light-mode .login-inp,
+body.light-mode .minp,
+body.light-mode .minp-n,
+body.light-mode .mv-inp{background:#fff;border:1px solid rgba(14,26,8,.3);color:#0e1a08;}
+body.light-mode .inp-data{color:#6b5018;border-bottom-color:rgba(14,26,8,.3);}
+
+/* Barras de progresso */
+body.light-mode .cat-bar-bg,
+body.light-mode .rk-bar,
+body.light-mode .mv-rank-bar,
+body.light-mode .conv-rk-bar,
+body.light-mode .rk-bar-bg{background:rgba(14,26,8,.12);}
+
+/* Labels e divisores */
+body.light-mode .slbl{color:rgba(14,26,8,.5);border-bottom:1px solid rgba(14,26,8,.2);}
+body.light-mode hr.dv{border-top:1px solid rgba(14,26,8,.15);}
+
+/* Botões */
+body.light-mode .bsm{border-color:rgba(14,26,8,.25);color:rgba(14,26,8,.65);}
+body.light-mode .bsm:hover{border-color:#6b5018;color:#6b5018;}
+body.light-mode .btn-ajuda{border-color:rgba(14,26,8,.3);color:#6b5018;}
+body.light-mode .btn-tema{border-color:rgba(14,26,8,.3);color:#6b5018;}
+body.light-mode .btn-logout{background:rgba(184,48,48,.12);border-color:rgba(184,48,48,.5);color:rgba(184,48,48,.9);}
+
+/* Dias especiais */
+body.light-mode .tag-opcao{border-color:rgba(14,26,8,.2);color:rgba(14,26,8,.6);}
+body.light-mode .tag-opcao:hover,body.light-mode .tag-opcao.ativo{background:rgba(107,80,24,.12);border-color:rgba(107,80,24,.5);color:#6b5018;}
+
+/* Toast e loading */
+body.light-mode .toast{background:#ddd5be;border:1px solid rgba(107,80,24,.5);color:#0e1a08;}
+body.light-mode .loading-ov{background:rgba(245,240,230,.92);}
+body.light-mode .loading-txt{color:rgba(14,26,8,.6);}
+
+/* Campos de data */
+body.light-mode .sel-data-wrap{background:rgba(255,255,255,.6);border-color:rgba(14,26,8,.2);}
+body.light-mode .sel-data-wrap label{color:rgba(14,26,8,.55);}
+body.light-mode #lbl-dia-semana{color:rgba(14,26,8,.5);}
+
+/* Botões circulares */
+body.light-mode .bcirc{border-color:rgba(14,26,8,.3);color:#6b5018;}
+body.light-mode .bcirc:hover{background:#6b5018;color:#f5f0e6;border-color:#6b5018;}
+
+/* Badge data */
+body.light-mode .badge{background:rgba(107,80,24,.1);border-color:rgba(107,80,24,.4);color:#6b5018;}
+
+/* Dias especiais selector */
+body.light-mode .dia-especial-sel{background:rgba(255,255,255,.4);border-color:rgba(14,26,8,.15);}
+body.light-mode .dia-especial-sel .det{color:rgba(14,26,8,.55);}
+
+/* Histórico edit inputs */
+body.light-mode .hist-edit-inp label{color:rgba(14,26,8,.6);}
+body.light-mode .hist-edit-inp input{background:#fff;border-color:rgba(14,26,8,.3);color:#0e1a08;}
+body.light-mode .hist-salv{background:#6b5018;color:#f5f0e6;}
+body.light-mode .hist-canc{border-color:rgba(14,26,8,.2);color:rgba(14,26,8,.6);}
+
 *{margin:0;padding:0;box-sizing:border-box;}
 html{zoom:1.2;}
 body{font-family:'Barlow',sans-serif;background:var(--v0);color:var(--cr);min-height:100vh;overflow-x:hidden;}
@@ -364,7 +532,20 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 /* botão ? no header */
 .btn-ajuda{background:transparent;border:1px solid var(--oud);color:var(--ou);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-family:'Cormorant Garamond',serif;transition:all .2s;flex-shrink:0;}
 .btn-ajuda:hover{background:rgba(201,168,76,.1);}
+.btn-tema{background:transparent;border:1px solid var(--oud);color:var(--ou);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .2s;flex-shrink:0;}
+.btn-tema:hover{background:rgba(122,95,31,.1);}
 hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
+/* ── Totais do histórico ── */
+.hist-totais{
+  background:rgba(212,180,90,.06);border:1px solid rgba(212,180,90,.35);
+  padding:14px 16px;margin-top:4px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.hist-totais-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--ou);font-weight:600;flex-shrink:0;}
+.hist-totais-cats{display:flex;gap:12px;flex-wrap:wrap;flex:1;}
+.htcat{font-size:12px;}
+.htcat-n{color:var(--cr2);}
+.htcat-v{color:var(--ou2);font-family:'Cormorant Garamond',serif;font-size:18px;margin-left:4px;font-weight:300;}
 
 /* ── Ultrameta ── */
 .cat-ultrameta{
@@ -557,6 +738,7 @@ svg{display:inline-block;vertical-align:middle;}
     </div>
 
     <div class="h-dir">
+      <button class="btn-tema" id="btn-tema" onclick="toggleTema()" title="Alternar modo claro/escuro">☀</button>
       <button class="btn-ajuda" onclick="abrirTutorial()" title="Como usar">?</button>
       <button class="bsm" onclick="abrirCfg()">⚙ Metas</button>
       <button class="btn-logout" onclick="fazerLogout()">Sair ↗</button>
@@ -641,7 +823,9 @@ svg{display:inline-block;vertical-align:middle;}
               </div>
               <div class="mv-atual" id="mv-atual">
                 <div class="mv-atual-header">
-                  <div class="mv-atual-info">Registro atual: <strong id="mv-atual-val">—</strong> em <span id="mv-atual-data">—</span></div>
+                  <div class="mv-atual-info">Registro atual: <strong id="mv-atual-val">—</strong> em <span id="mv-atual-data">—</span>
+                    <button onclick="editarMaiorVenda()" style="background:transparent;border:none;color:var(--ou);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;margin-left:10px;text-decoration:underline;">Editar</button>
+                  </div>
                 </div>
               </div>
               <button class="mv-btn" id="mv-btn" onclick="registrarMaiorVenda()">✓ Registrar</button>
@@ -1288,7 +1472,8 @@ async function conflito_somar(){
   const idx=h.findIndex(d=>d.data===dataLancamento());
   if(idx>=0)CATS.forEach(c=>{h[idx][c.id]=(h[idx][c.id]||0)+(window._regNovo[c.id]||0);});
   fecharConflito();
-  CATS.forEach(c=>diaInp[c.id]=0);diaEsp='';
+  CATS.forEach(c=>{ diaInp[c.id]=0; const inp=document.getElementById('inp-'+c.id); if(inp)inp.value=0; });
+  diaEsp='';
   document.querySelectorAll('.tag-opcao').forEach(b=>b.classList.remove('ativo'));
   const tn=document.getElementById('tag-nenhum');if(tn)tn.classList.add('ativo');
   loading(true);
@@ -1314,7 +1499,8 @@ async function finalizarRegistro(reg){
   loading(true);
   await saveHistMes(usuario, ano, mes, h);
   loading(false);
-  CATS.forEach(c=>diaInp[c.id]=0); diaEsp='';
+  CATS.forEach(c=>{ diaInp[c.id]=0; const inp=document.getElementById('inp-'+c.id); if(inp)inp.value=0; });
+  diaEsp='';
   document.querySelectorAll('.tag-opcao').forEach(b=>b.classList.remove('ativo'));
   const tn=document.getElementById('tag-nenhum'); if(tn)tn.classList.add('ativo');
   inicializarDataLancamento();
@@ -1332,7 +1518,8 @@ async function finalizarRegistroComHistorico(h, novoReg){
   loading(true);
   await saveHistMes(usuario, ano, mes, h);
   loading(false);
-  CATS.forEach(c=>diaInp[c.id]=0); diaEsp='';
+  CATS.forEach(c=>{ diaInp[c.id]=0; const inp=document.getElementById('inp-'+c.id); if(inp)inp.value=0; });
+  diaEsp='';
   document.querySelectorAll('.tag-opcao').forEach(b=>b.classList.remove('ativo'));
   const tn=document.getElementById('tag-nenhum'); if(tn)tn.classList.add('ativo');
   inicializarDataLancamento();
@@ -1360,8 +1547,19 @@ function renderHist(){
   const h=histAtualCache(usuario);
   const el=document.getElementById('hist-lista');
   if(!h.length){el.innerHTML='<div class="hist-empty">NENHUM REGISTRO AINDA</div>';return;}
-  el.innerHTML=[...h].reverse().map((d,ri)=>{
-    const idx=h.length-1-ri;
+
+  // Ordem cronológica: mais antigo primeiro
+  const ordenado=[...h].sort((a,b)=>{
+    const [da,ma]=(a.data||'01/01').split('/').map(Number);
+    const [db,mb]=(b.data||'01/01').split('/').map(Number);
+    return (ma*100+da)-(mb*100+db);
+  });
+
+  // Mapear índices originais para edição/exclusão
+  const idxMap=ordenado.map(d=>h.indexOf(d));
+
+  const linhas=ordenado.map((d,ri)=>{
+    const idx=idxMap[ri];
     if(d.especial){
       return `<div class="hist-item" onclick="toggleEdit(this)">
         <div class="hist-dt">${d.data}</div>
@@ -1386,6 +1584,21 @@ function renderHist(){
         </div>
       </div></div>`;
   }).join('');
+
+  // Somatória individual do mês
+  const totais={};
+  CATS.forEach(c=>totais[c.id]=0);
+  h.forEach(d=>{ if(!d.especial) CATS.forEach(c=>totais[c.id]+=(d[c.id]||0)); });
+  const catsTot=CATS.filter(c=>totais[c.id]>0);
+  const totalHtml=catsTot.length?`
+    <div class="hist-totais">
+      <div class="hist-totais-label">Total do mês</div>
+      <div class="hist-totais-cats">
+        ${catsTot.map(c=>`<div class="htcat"><span class="htcat-n">${c.nome}:</span><span class="htcat-v">${totais[c.id]}</span></div>`).join('')}
+      </div>
+    </div>`:'';
+
+  el.innerHTML=linhas+totalHtml;
 }
 
 function toggleEdit(el){const ab=el.classList.contains('aberto');document.querySelectorAll('.hist-item.aberto').forEach(e=>e.classList.remove('aberto'));if(!ab)el.classList.add('aberto');}
@@ -1482,6 +1695,22 @@ async function carregarMaiorVendas(){
   }));
 }
 
+function editarMaiorVenda(){
+  const k = keyMV(usuario, anoAtivo, mesAtivo);
+  const meu = cacheHist[k];
+  if(!meu) return;
+  const campo = document.getElementById('mv-valor');
+  if(campo){
+    campo.value = meu.valor;
+    campo.dataset.editando = '1';
+    campo.focus();
+  }
+  const tituloEl = document.getElementById('mv-form-titulo');
+  const btnEl = document.getElementById('mv-btn');
+  if(tituloEl) tituloEl.textContent = 'Editar minha maior venda';
+  if(btnEl) btnEl.textContent = '↺ Salvar alteração';
+}
+
 async function excluirMaiorVenda(){
   if(!confirm('Excluir seu registro de maior venda deste mês?')) return;
   const btn = document.getElementById('mv-btn-del');
@@ -1531,6 +1760,12 @@ async function registrarMaiorVenda(){
 
   loading(false);
   btn.disabled = false;
+  const campoV = document.getElementById('mv-valor');
+  if(campoV){ campoV.value=''; delete campoV.dataset.editando; }
+  const tituloEl2 = document.getElementById('mv-form-titulo');
+  const btnEl2 = document.getElementById('mv-btn');
+  if(tituloEl2) tituloEl2.textContent = 'Registrar minha maior venda';
+  if(btnEl2) btnEl2.textContent = '✓ Registrar';
   toast('✓ Maior venda registrada!');
   renderMaiorVenda();
 }
@@ -1556,10 +1791,13 @@ function renderMaiorVenda(){
       document.getElementById('mv-atual-val').textContent = `R$ ${meu.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
       document.getElementById('mv-atual-data').textContent = meu.data;
       atualEl.classList.add('show');
-      if(tituloEl) tituloEl.textContent = 'Editar minha maior venda';
-      if(btnEl) btnEl.textContent = '↺ Salvar alteração';
+      if(tituloEl) tituloEl.textContent = 'Registrar minha maior venda';
+      if(btnEl) btnEl.textContent = '✓ Registrar';
       if(delBtn) delBtn.style.display='block';
-      document.getElementById('mv-valor').value = meu.valor;
+      // Não pré-preencher o campo — deixar limpo para novo registro
+      // O campo só é preenchido se a vendedora clicar em "Editar"
+      const campoValor = document.getElementById('mv-valor');
+      if(campoValor && !campoValor.dataset.editando) campoValor.value = '';
     } else {
       atualEl.classList.remove('show');
       if(tituloEl) tituloEl.textContent = 'Registrar minha maior venda';
@@ -1814,6 +2052,23 @@ function inicializarDataLancamento(){
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
+// ══ TEMA CLARO / ESCURO ══
+function toggleTema(){
+  const isLight=document.body.classList.toggle('light-mode');
+  localStorage.setItem('ls_tema', isLight?'light':'dark');
+  const btn=document.getElementById('btn-tema');
+  if(btn) btn.textContent=isLight?'🌙':'☀';
+}
+function aplicarTema(){
+  const tema=localStorage.getItem('ls_tema')||'dark';
+  if(tema==='light'){
+    document.body.classList.add('light-mode');
+    const btn=document.getElementById('btn-tema');
+    if(btn) btn.textContent='🌙';
+  }
+}
+aplicarTema();
+
 // ══ TUTORIAL ══
 const TUT_STEPS=[
   {titulo:'Bem-vinda ao Dashboard de Metas!',desc:'Este é o seu painel de controle de vendas da Loretto Scarpa. Aqui você registra suas vendas diariamente, acompanha o progresso da equipe e monitora sua performance no mix de acessórios.',dica:'<strong>Dica:</strong> O tutorial está sempre disponível clicando no botão <strong>?</strong> no canto superior direito.'},
@@ -1950,6 +2205,9 @@ async function runSeedSeNecessario() {
 
 // Seed roda em background; a tela é controlada pelo auth listener
 runSeedSeNecessario();
+
+// Aplicar tema salvo imediatamente
+aplicarTema();
 
 // Renderizar grade de seleção
 function renderSel(){
