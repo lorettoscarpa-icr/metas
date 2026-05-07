@@ -878,6 +878,8 @@ body.light-mode .mes-tem-dados{background:#b8921a;}
 
 *{margin:0;padding:0;box-sizing:border-box;}
 html{zoom:1.2;}
+/* No mobile remove o zoom — a tela já é pequena */
+@media(max-width:768px){html{zoom:1;}}
 body{font-family:'Barlow',sans-serif;background:var(--v0);color:var(--cr);min-height:100vh;overflow-x:hidden;}
 
 /* ── SELEÇÃO ── */
@@ -1183,7 +1185,7 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .bcan:hover{border-color:var(--cr2);color:var(--cr);}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--v2);border:1px solid var(--oud);color:var(--cr);padding:11px 20px;font-size:11px;letter-spacing:1.5px;z-index:400;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--v2);border:1px solid var(--oud);color:var(--cr);padding:11px 20px;font-size:11px;letter-spacing:1.5px;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;max-width:calc(100vw - 32px);}
 .toast.show{opacity:1;transform:translateY(0);}
 
 /* ── Tutorial ── */
@@ -1288,6 +1290,7 @@ hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
   letter-spacing:1px;font-style:italic;
 }
 @media(max-width:700px){.dest-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:400px){.dest-grid{grid-template-columns:1fr;}}
 /* ── Totais do histórico ── */
 .hist-totais{
   background:rgba(212,180,90,.06);border:1px solid rgba(212,180,90,.35);
@@ -1396,7 +1399,102 @@ hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
 .status-v-badge.ok{color:#6dbf6d;border-color:rgba(109,191,109,.35);background:rgba(109,191,109,.07);}
 .status-v-badge.atencao{color:var(--ou);border-color:var(--oud);background:rgba(201,168,76,.07);}
 .status-v-badge.atrasada{color:#e07070;border-color:rgba(224,112,112,.35);background:rgba(224,112,112,.06);}
-@media(max-width:640px){.status-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:640px){.status-grid{grid-template-columns:repeat(2,1fr);gap:8px;}}
+
+/* ══ MOBILE FIXES COMPLETOS ══ */
+@media(max-width:640px){
+  /* Main padding */
+  main{padding:20px 14px 60px;}
+
+  /* Cards topo — 1 coluna */
+  .cards3{grid-template-columns:1fr;}
+
+  /* Cats — 1 coluna em telas muito pequenas */
+  .cats-grid{grid-template-columns:1fr;}
+
+  /* Cat-card layout compacto */
+  .cat-card{padding:14px 12px;}
+  .cat-ico svg{width:18px;height:18px;}
+  .cat-acum{font-size:28px;}
+
+  /* Ranking — 1 coluna */
+  .rank-grid{grid-template-columns:1fr;}
+  .conv-rank-grid{grid-template-columns:1fr;}
+
+  /* Registro — botões maiores (touch) */
+  .bcirc{width:38px;height:38px;font-size:18px;}
+  .inp-n{width:56px;font-size:18px;padding:8px 4px;}
+  .reg-item{padding:12px 10px;}
+  .ctrl{gap:6px;}
+
+  /* Histórico mais compacto */
+  .hist-item{padding:12px 12px;}
+  .hcat{font-size:11px;}
+  .hcat-v{font-size:14px;}
+
+  /* Destaques — 1 coluna em telas muito pequenas */
+  .dest-item{padding:12px 14px;}
+  .dest-avatar{width:38px;height:38px;}
+  .dest-valor{font-size:22px;}
+
+  /* Status vendedoras — avatares menores */
+  .status-v{padding:10px 8px;}
+  .status-v-avatar{width:36px;height:36px;}
+  .status-v-nome{font-size:9px;}
+  .status-v-badge{font-size:7px;padding:3px 7px;}
+
+  /* Maior venda */
+  .mv-layout{grid-template-columns:1fr;}
+  .mv-inp-valor{font-size:18px;}
+
+  /* Seletor data — mais espaço */
+  .sel-data-wrap{flex-wrap:wrap;gap:8px;}
+
+  /* Conversão cards */
+  .conv-itens{grid-template-columns:1fr;}
+  .ci-pct{font-size:34px;}
+
+  /* Dias especiais — wrap */
+  .tags-esp{flex-wrap:wrap;gap:6px;}
+  .tag-opcao{font-size:8px;padding:4px 10px;}
+
+  /* Botão confirmar — full width */
+  .btn-reg{width:100%;padding:14px;}
+
+  /* Modais — full screen no mobile */
+  .modal{max-width:100%;margin:0;max-height:85vh;overflow-y:auto;}
+  .tut-box{max-width:100%;max-height:88vh;}
+  .login-modal{max-width:100%;}
+  .mv-form,.mv-ranking{padding:14px 12px;}
+
+  /* Ritmo — layout vertical */
+  .cat-ritmo{flex-direction:column;align-items:flex-start;gap:6px;}
+
+  /* Hist-edit inputs menores */
+  .hist-edit-inp input{width:52px;font-size:13px;}
+
+  /* Ranking rows mais compactos */
+  .rk-row{gap:8px;}
+  .rk-pos{font-size:18px;width:18px;}
+  .rk-avatar{width:26px;height:26px;}
+}
+
+@media(max-width:380px){
+  .cats-grid{grid-template-columns:1fr;}
+  .cards3{grid-template-columns:1fr;}
+  header .btn-tema{display:none;}
+  .mes-atual{min-width:80px;font-size:9px;}
+}
+@media(max-width:640px){
+  /* Modal conflito scroll */
+  #modal-conflito .modal{max-height:85vh;overflow-y:auto;padding:24px 18px;}
+  /* Inputs date maior e mais fáceis de tocar */
+  input[type="date"]{font-size:16px!important;padding:10px 12px!important;min-height:44px;}
+  /* Evitar zoom automático no iOS ao focar input */
+  input[type="number"],input[type="text"],input[type="email"],input[type="password"]{font-size:16px!important;}
+  /* Toast mobile centralizado */
+  .toast{right:16px;left:16px;text-align:center;bottom:80px;}
+}
 svg{display:inline-block;vertical-align:middle;}
 
 @media(max-width:640px){
@@ -1578,7 +1676,7 @@ svg{display:inline-block;vertical-align:middle;}
               </div>
               <div class="mv-field">
                 <label>Data da venda</label>
-                <input class="mv-inp" type="date" id="mv-data" color-scheme="dark">
+                <input class="mv-inp" type="date" id="mv-data">
               </div>
               <div class="mv-atual" id="mv-atual">
                 <div class="mv-atual-header">
@@ -1623,7 +1721,7 @@ svg{display:inline-block;vertical-align:middle;}
 
 <!-- MODAL CONFLITO -->
 <div class="modal-ov" id="modal-conflito">
-  <div class="modal" style="max-width:420px;">
+  <div class="modal" style="max-width:420px;max-height:90vh;overflow-y:auto;">
     <h3>Registro duplicado</h3>
     <div class="modal-sub">você já registrou vendas neste dia</div>
     <div style="margin-bottom:20px;">
@@ -2031,7 +2129,11 @@ async function aoTrocarMes(){
   const ag=accGlobal(),cfg=cfgAtualCache();
   CATS.forEach(c=>metasCelebradas[c.id]=(ag[c.id]>=(cfg.metas[c.id]||1)));
   renderMesSelector();
-  if(!mesFuturo())setTimeout(inicializarDataLancamento,50);
+  if(!mesFuturo()){
+    setTimeout(inicializarDataLancamento,50);
+    // Forçar atualização do input de maior venda também
+    setTimeout(()=>renderMaiorVenda(),100);
+  }
   render();
 }
 
@@ -2179,13 +2281,16 @@ async function registrarDia(){
   const dt = dataLancamento();
   const [dd,mm] = dt.split('/').map(Number);
   if(mm !== mesAtivo){
-    toast(`Esta data é de ${MESES_NOMES[mm-1]} — você está visualizando ${MESES_NOMES[mesAtivo-1]}. Navegue para o mês correto.`);
+    toast(`⚠ Data inválida — ${MESES_NOMES[mm-1]} não é ${MESES_NOMES[mesAtivo-1]}. Corrija a data.`);
+    // Resetar input para hoje do mês ativo
+    inicializarDataLancamento();
     return;
   }
   // Bloquear datas futuras
   const hj=new Date(), dHj=hj.getDate(), mHj=hj.getMonth()+1, aHj=hj.getFullYear();
   if(anoAtivo===aHj && mm===mHj && dd>dHj){
-    toast('Não é possível registrar vendas em datas futuras.');
+    toast('⚠ Não é possível registrar datas futuras.');
+    inicializarDataLancamento();
     return;
   }
   const reg={data:dt};
@@ -2589,7 +2694,19 @@ async function registrarMaiorVenda(){
   // Validar que a data pertence ao mês ativo
   const [y,m,d] = dataStr.split('-').map(Number);
   if(m !== mesAtivo || y !== anoAtivo){
-    toast(`A data deve ser de ${MESES_NOMES[mesAtivo-1]} ${anoAtivo}.`);
+    toast(`⚠ Data inválida — use uma data de ${MESES_NOMES[mesAtivo-1]} ${anoAtivo}.`);
+    // Resetar para hoje
+    const mvInp=document.getElementById('mv-data');
+    if(mvInp){
+      const dn=new Date();
+      mvInp.value=`${dn.getFullYear()}-${String(dn.getMonth()+1).padStart(2,'0')}-${String(dn.getDate()).padStart(2,'0')}`;
+    }
+    return;
+  }
+  // Bloquear datas futuras
+  const djMV=new Date(), djD=djMV.getDate(), djM=djMV.getMonth()+1, djA=djMV.getFullYear();
+  if(y===djA && m===djM && d>djD){
+    toast('⚠ Não é possível registrar datas futuras.');
     return;
   }
 
@@ -2889,14 +3006,35 @@ function inicializarDataLancamento(){
   // Max: se mês ativo = mês atual → hoje; senão → último dia do mês
   if(mesHoje===mesAtivo && anoHoje===anoAtivo){
     inp.max=`${anoHoje}-${String(mesHoje).padStart(2,'0')}-${String(diaHoje).padStart(2,'0')}`;
-    inp.value=`${anoHoje}-${String(mesHoje).padStart(2,'0')}-${String(diaHoje).padStart(2,'0')}`;
+    // Padrão: dia anterior (vendedoras sempre registram o dia passado)
+    const ontem=new Date(d); ontem.setDate(ontem.getDate()-1);
+    const dOntem=ontem.getDate(), mOntem=ontem.getMonth()+1, aOntem=ontem.getFullYear();
+    // Se ontem ainda está no mês ativo, usar ontem; senão usar hoje
+    if(mOntem===mesAtivo && aOntem===anoAtivo){
+      inp.value=`${aOntem}-${String(mOntem).padStart(2,'0')}-${String(dOntem).padStart(2,'0')}`;
+    } else {
+      inp.value=`${anoHoje}-${String(mesHoje).padStart(2,'0')}-${String(diaHoje).padStart(2,'0')}`;
+    }
   } else {
     inp.max=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDias).padStart(2,'0')}`;
     inp.value=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(totalDias).padStart(2,'0')}`;
   }
   atualizarDataLancamento();
 }
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  // No mobile com teclado aberto, mostrar no topo
+  const isSmall=window.innerWidth<=640;
+  const keyboardOpen=isSmall&&window.visualViewport&&window.visualViewport.height<window.innerHeight*0.75;
+  if(keyboardOpen){
+    t.style.bottom='auto';t.style.top='70px';
+  } else {
+    t.style.bottom='24px';t.style.top='auto';
+  }
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
 
 // ══ TEMA CLARO / ESCURO ══
 function toggleTema(){
