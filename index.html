@@ -6,6 +6,7 @@
 <title>Loretto Scarpa — Metas</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Firebase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -1589,6 +1590,7 @@ svg{display:inline-block;vertical-align:middle;}
     </div>
 
     <div class="h-dir">
+      <button class="bsm" id="btn-gerar-pptx" style="display:none;background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.5);color:var(--ou);" onclick="gerarApresentacaoMes()">📊 Gerar Apresentação</button>
       <button class="btn-tema" id="btn-tema" onclick="toggleTema()" title="Alternar modo claro/escuro">☀</button>
       <button class="btn-ajuda" onclick="abrirTutorial()" title="Como usar">?</button>
       <button class="bsm" onclick="abrirCfg()">⚙ Metas</button>
@@ -2143,6 +2145,8 @@ function render(){
   const cfg=cfgAtualCache();
   const futuro=mesFuturo();
   document.getElementById('h-sub').textContent=isG?'Visão do Gestor':`Vendedora · ${usuario}`;
+  const btnPptx=document.getElementById('btn-gerar-pptx');
+  if(btnPptx) btnPptx.style.display=isG?'block':'none';
   document.getElementById('aviso-futuro').style.display=futuro?'block':'none';
   document.getElementById('conteudo-principal').style.display=futuro?'none':'block';
   if(futuro){document.getElementById('aviso-mes-nome').textContent=MESES_NOMES[mesAtivo-1]+' '+anoAtivo;return;}
@@ -3186,6 +3190,369 @@ async function runSeedSeNecessario() {
     console.warn('[Loretto] Setup falhou (sem conexão?):', e.message);
   }
 }
+
+// ══ GERADOR DE APRESENTAÇÃO LORETTO SCARPA ══
+// Cores da paleta original
+const C = {
+  verde:  '1A3A2A',
+  verde2: '2D6A4F',
+  ouro:   'C9A84C',
+  ouro2:  'E8C96A',
+  branco: 'FFFFFF',
+  creme:  'F7F4EC',
+  bege:   'E0D8C0',
+  preto:  '000000',
+  verde3: '3D7A5E',
+};
+
+// Emojis por categoria (texto)
+const CAT_ICONS = {
+  sapatos:   '👞',
+  meias:     '🧦',
+  cintos:    '👔',
+  carteiras: '👝',
+  limpeza:   '🧴',
+  prendedor: '📎',
+};
+const CAT_NOMES = {
+  sapatos:   'SAPATOS',
+  meias:     'MEIAS',
+  cintos:    'CINTOS',
+  carteiras: 'CARTEIRAS',
+  limpeza:   'PRODUTOS',
+  prendedor: 'PRENDEDOR',
+};
+
+async function gerarInsightsIA(dadosVendedoras, mesNome, ano) {
+  try {
+    const prompt = `Você é um analista de vendas da Loretto Scarpa, loja de sapatos masculinos.
+Analise os dados de ${mesNome} ${ano} e gere para CADA vendedora:
+1. PONTO FORTE: 1-2 frases curtas destacando o principal resultado positivo
+2. ONDE CRESCER: 1-2 frases curtas com a principal oportunidade de melhoria
+
+Dados de conversão (acessórios por sapato):
+${dadosVendedoras.map(v => `${v.nome}: Sapatos=${v.sapatos}, Meias=${(v.meias/Math.max(v.sapatos,1)*100).toFixed(1)}%, Cintos=${(v.cintos/Math.max(v.sapatos,1)*100).toFixed(1)}%, Carteiras=${(v.carteiras/Math.max(v.sapatos,1)*100).toFixed(1)}%, Limpeza=${(v.limpeza/Math.max(v.sapatos,1)*100).toFixed(1)}%, Prendedor=${(v.prendedor/Math.max(v.sapatos,1)*100).toFixed(1)}%`).join('\n')}
+
+Benchmarks: Meias 31%, Cintos 22%, Limpeza 12%
+
+Responda APENAS em JSON válido, sem markdown:
+{"vendedoras":[{"nome":"...","pontoForte":"...","ondeCrescer":"..."}]}`;
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await r.json();
+    const text = data.content[0].text.replace(/```json|```/g,'').trim();
+    return JSON.parse(text).vendedoras;
+  } catch(e) {
+    console.warn('IA falhou, usando dados automáticos:', e);
+    return null;
+  }
+}
+
+async function gerarApresentacaoMes() {
+  const btn = document.getElementById('btn-gerar-pptx');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
+
+  try {
+    // ── Dados do mês ativo ──
+    const cfg   = cfgAtualCache();
+    const ag    = accGlobal();
+    const pv    = accPorV();
+    const MES   = MESES_NOMES[mesAtivo-1].toUpperCase();
+    const MES_PROX = MESES_NOMES[mesAtivo%12].toUpperCase();
+    const ANO   = anoAtivo;
+    const CATS  = ['sapatos','meias','cintos','carteiras','limpeza','prendedor'];
+    const ACESS = ['meias','cintos','carteiras','limpeza','prendedor'];
+    const ICONS = {sapatos:'👞',meias:'🧦',cintos:'👔',carteiras:'👝',limpeza:'🧴',prendedor:'📎'};
+    const NOMES_CAT = {sapatos:'SAPATOS',meias:'MEIAS',cintos:'CINTOS',carteiras:'CARTEIRAS',limpeza:'PRODUTOS',prendedor:'PRENDEDOR'};
+
+    // Totais globais
+    const TOTAIS = {};
+    CATS.forEach(c => TOTAIS[c] = ag[c]||0);
+    const METAS  = {}; CATS.forEach(c => METAS[c]  = cfg.metas?.[c]||0);
+    const ULTRAS = {}; CATS.forEach(c => ULTRAS[c] = cfg.ultrametas?.[c]||0);
+
+    // Dados por vendedora — filtrar quem tem dados no mês
+    const VENDS = VENDEDORAS.map(v => {
+      const d = {nome:v.id};
+      CATS.forEach(c => d[c] = pv[v.id][c]||0);
+      return d;
+    }).filter(v => v.sapatos > 0 || ACESS.some(c => v[c] > 0));
+
+    // Ranking conversão
+    const rankConv = [...VENDS].map(v => ({
+      ...v,
+      conv: parseFloat((ACESS.reduce((s,c)=>s+v[c],0)/Math.max(v.sapatos,1)*100).toFixed(1))
+    })).sort((a,b)=>b.conv-a.conv);
+    const medConv = (rankConv.reduce((s,v)=>s+v.conv,0)/rankConv.length).toFixed(1);
+    const campea  = [...VENDS].map(v=>({...v,tot:ACESS.reduce((s,c)=>s+v[c],0)})).sort((a,b)=>b.tot-a.tot)[0].nome;
+
+    // Top vendas (Maior Venda do Mês por vendedora → ranking)
+    const mvRaw = VENDEDORAS.map(v => {
+      const k = keyMV(v.id, anoAtivo, mesAtivo);
+      return {nome:v.id, valor:cacheHist[k]?.valor||0, destaque:''};
+    }).filter(x=>x.valor>0).sort((a,b)=>b.valor-a.valor);
+    if(mvRaw.length>0) mvRaw[0].destaque = '⭐ RECORDE DO MÊS';
+    const TOP_VENDAS = mvRaw.length>0 ? mvRaw : [{nome:'—',valor:0,destaque:''}];
+
+    // Insights IA via Claude API
+    let INSIGHTS = null;
+    try {
+      const prompt = `Analise os resultados de ${MES} ${ANO} da Loretto Scarpa e gere para CADA vendedora:
+1. PONTO FORTE: 1-2 frases curtas destacando o principal resultado positivo
+2. ONDE CRESCER: 1-2 frases curtas com a principal oportunidade de melhoria
+
+Dados:
+${VENDS.map(v=>`${v.nome}: Sapatos=${v.sapatos}, Meias=${v.meias}(${(v.meias/Math.max(v.sapatos,1)*100).toFixed(1)}%), Cintos=${v.cintos}(${(v.cintos/Math.max(v.sapatos,1)*100).toFixed(1)}%), Carteiras=${v.carteiras}(${(v.carteiras/Math.max(v.sapatos,1)*100).toFixed(1)}%), Limpeza=${v.limpeza}(${(v.limpeza/Math.max(v.sapatos,1)*100).toFixed(1)}%), Prendedor=${v.prendedor}(${(v.prendedor/Math.max(v.sapatos,1)*100).toFixed(1)}%)`).join('\n')}
+Benchmarks: Meias 31%, Cintos 22%, Limpeza 12%
+Responda APENAS JSON sem markdown: {"vendedoras":[{"nome":"...","pontoForte":"...","ondeCrescer":"..."}]}`;
+      const r = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      });
+      const data = await r.json();
+      INSIGHTS = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim()).vendedoras;
+    } catch(e) { INSIGHTS = null; }
+    // Fallback automático
+    if(!INSIGHTS) {
+      INSIGHTS = VENDS.map(v=>{
+        const best = ACESS.map(c=>({c,p:v[c]/Math.max(v.sapatos,1)*100})).sort((a,b)=>b.p-a.p)[0];
+        const worst= ACESS.map(c=>({c,p:v[c]/Math.max(v.sapatos,1)*100})).sort((a,b)=>a.p-b.p)[0];
+        return {nome:v.nome,pontoForte:`${NOMES_CAT[best.c]} em destaque com ${best.p.toFixed(1)}%.`,ondeCrescer:`${NOMES_CAT[worst.c]} ${worst.p.toFixed(1)}% — oportunidade de crescimento.`};
+      });
+    }
+
+    // ── PALETA ──
+    const C={verde:'1A3A2A',verde2:'2D6A4F',verde3:'3D7A5E',ouro:'C9A84C',ouro2:'E8C96A',ouro3:'B89020',branco:'FFFFFF',creme:'F7F4EC',bege:'E0D8C0',preto:'000000',escuro:'162810'};
+
+    function strips(s){
+      s.addShape('rect',{x:0,y:0,w:'100%',h:0.13,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+      s.addShape('rect',{x:0,y:7.37,w:'100%',h:0.13,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    }
+
+    const pptx = new PptxGenJS();
+    pptx.layout='LAYOUT_WIDE';
+
+    // ════ S1 CAPA ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    strips(s);
+    s.addShape('rect',{x:10.78,y:0,w:2.55,h:7.5,fill:{color:C.escuro},line:{color:C.verde,width:2}});
+    s.addText('LORETTO  SCARPA',{x:0.5,y:0.35,w:9.8,h:0.38,fontSize:14,bold:true,color:C.ouro,charSpacing:5,fontFace:'Calibri'});
+    s.addText('RESULTADOS',{x:0.4,y:0.95,w:10.0,h:1.65,fontSize:92,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`${MES} ${ANO}`,{x:0.4,y:2.6,w:10.0,h:1.65,fontSize:92,bold:true,color:C.ouro,fontFace:'Calibri'});
+    s.addText('Metas  •  Performance  •  Ranking  •  Cross Sell',{x:0.5,y:4.55,w:9.8,h:0.5,fontSize:18,italic:true,color:C.ouro2,fontFace:'Calibri'});
+    s.addText('EQUIPE  DE  VENDAS',{x:0.5,y:6.92,w:6,h:0.34,fontSize:12,bold:true,color:C.ouro,charSpacing:4,fontFace:'Calibri'});}
+
+    // ════ S2 VISÃO GERAL ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    strips(s);
+    const todasBatidas=CATS.every(c=>{const m=METAS[c];return m===0||(TOTAIS[c]||0)>=m;});
+    s.addText('VISÃO\nGERAL',{x:0.25,y:0.9,w:2.8,h:1.8,fontSize:48,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`${MES} ${ANO}`,{x:0.25,y:2.85,w:2.8,h:0.38,fontSize:13,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
+    s.addText(todasBatidas?'Todas as metas\nforam superadas!':'Resultados\ndo mês',{x:0.25,y:3.35,w:2.8,h:0.9,fontSize:15,italic:true,color:C.ouro2,fontFace:'Calibri'});
+    const cW=1.67,cX=3.08;
+    CATS.forEach((cat,i)=>{
+      const x=cX+i*cW,V=TOTAIS[cat],M=METAS[cat],U=ULTRAS[cat];
+      const alvo=U>0?U:M,diff=alvo>0?V-alvo:0,nova=M===0&&U===0;
+      s.addShape('rect',{x,y:0.13,w:cW-0.04,h:7.24,fill:{color:C.creme},line:{color:C.bege,width:0.8}});
+      s.addText(ICONS[cat],{x,y:0.22,w:cW-0.04,h:0.48,fontSize:22,align:'center'});
+      s.addText(NOMES_CAT[cat],{x,y:0.73,w:cW-0.04,h:0.3,fontSize:10,bold:true,color:C.preto,align:'center',charSpacing:1,fontFace:'Calibri'});
+      s.addShape('line',{x:x+0.1,y:1.07,w:cW-0.24,h:0,line:{color:C.ouro,width:1.5}});
+      s.addText('VENDIDO',{x,y:1.12,w:cW-0.04,h:0.22,fontSize:7,color:'888888',align:'center',charSpacing:2,fontFace:'Calibri'});
+      s.addText(String(V),{x,y:1.34,w:cW-0.04,h:0.7,fontSize:38,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});
+      s.addShape('line',{x:x+0.1,y:2.08,w:cW-0.24,h:0,line:{color:C.bege,width:0.8}});
+      s.addText('META',{x,y:2.13,w:cW-0.04,h:0.22,fontSize:7,color:'888888',align:'center',charSpacing:2,fontFace:'Calibri'});
+      s.addText(M>0?String(M):'—',{x,y:2.35,w:cW-0.04,h:0.58,fontSize:30,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});
+      s.addShape('line',{x:x+0.1,y:2.97,w:cW-0.24,h:0,line:{color:C.bege,width:0.8}});
+      s.addText('ULTRAMETA',{x,y:3.02,w:cW-0.04,h:0.22,fontSize:7,color:'888888',align:'center',charSpacing:2,fontFace:'Calibri'});
+      s.addText(U>0?String(U):'—',{x,y:3.24,w:cW-0.04,h:0.58,fontSize:30,bold:true,color:C.ouro,align:'center',fontFace:'Calibri'});
+      s.addShape('rect',{x:x+0.05,y:4.05,w:cW-0.14,h:0.42,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+      s.addText(nova?'NOVA CAT.':diff>=0?`+${diff} ACIMA`:`${diff} ABAIXO`,{x:x+0.05,y:4.05,w:cW-0.14,h:0.42,fontSize:10,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});
+      s.addText('✔ ULTRA BATIDA',{x,y:4.55,w:cW-0.04,h:0.3,fontSize:8,bold:true,color:C.verde2,align:'center',fontFace:'Calibri'});});}
+
+    // ════ S3 GRÁFICO ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    strips(s);
+    s.addText('VENDIDO vs META vs ULTRAMETA',{x:0.4,y:0.18,w:12.5,h:0.8,fontSize:40,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`${MES} ${ANO} — DIFERENÇA POR CATEGORIA`,{x:0.4,y:0.98,w:12,h:0.32,fontSize:12,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
+    [[C.ouro,'Vendido'],[C.verde2,'Ultrameta'],['B8A070','Meta']].forEach(([c,lbl],i)=>{
+      s.addShape('rect',{x:4.5+i*2.2,y:1.35,w:0.18,h:0.18,fill:{color:c},line:{color:c,width:0}});
+      s.addText(lbl,{x:4.72+i*2.2,y:1.35,w:1.8,h:0.18,fontSize:10,color:C.branco,fontFace:'Calibri'});});
+    const chartX=0.9,chartY=1.65,chartW=12.0,chartH=3.55,chartBotY=chartY+chartH;
+    const catsG=CATS.filter(c=>c!=='prendedor'&&(METAS[c]||0)>0);
+    const maxVal=Math.max(...catsG.map(c=>TOTAIS[c]))*1.2||1200;
+    const catW=chartW/catsG.length;
+    const barW=0.72,barGap=0.06,totalBB=(barW*3+barGap*2),catPad=(catW-totalBB)/2;
+    [0,0.2,0.4,0.6,0.8,1.0].forEach(frac=>{
+      const y=chartBotY-frac*chartH;
+      s.addShape('line',{x:chartX,y,w:chartW,h:0,line:{color:'2A5A3A',width:0.5}});
+      s.addText(String(Math.round(frac*maxVal)),{x:chartX-0.75,y:y-0.12,w:0.7,h:0.24,fontSize:8,color:'AAAAAA',align:'right',fontFace:'Calibri'});});
+    catsG.forEach((cat,ci)=>{
+      const V=TOTAIS[cat],M=METAS[cat],U=ULTRAS[cat]||M,x0=chartX+ci*catW+catPad;
+      [[V,C.ouro],[U,C.verde2],[M,'B8A070']].forEach(([val,col],bi)=>{
+        if(!val)return;
+        const bh=(val/maxVal)*chartH,bx=x0+bi*(barW+barGap),by=chartBotY-bh;
+        s.addShape('rect',{x:bx,y:by,w:barW,h:bh,fill:{color:col},line:{color:col,width:0}});
+        s.addText(String(val),{x:bx,y:by-0.22,w:barW,h:0.22,fontSize:bi===0?9:8,bold:bi===0,color:C.branco,align:'center',fontFace:'Calibri'});});
+      s.addText(NOMES_CAT[cat],{x:chartX+ci*catW,y:chartBotY+0.04,w:catW,h:0.28,fontSize:10,color:C.branco,align:'center',fontFace:'Calibri'});});
+    const tW=chartW/catsG.length;
+    catsG.forEach((cat,i)=>{
+      const x=chartX+i*tW,diff=TOTAIS[cat]-(ULTRAS[cat]||METAS[cat]);
+      s.addShape('rect',{x,y:5.72,w:tW-0.05,h:1.55,fill:{color:C.ouro},line:{color:C.verde,width:0.5}});
+      s.addText(diff>=0?`+${diff} acima`:`${diff} abaixo`,{x,y:5.82,w:tW-0.05,h:0.44,fontSize:14,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});
+      s.addText(`${TOTAIS[cat]} vs ${ULTRAS[cat]||METAS[cat]}`,{x,y:6.3,w:tW-0.05,h:0.35,fontSize:11,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});});}
+
+    // ════ S4 RANKING MIX ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    strips(s);
+    s.addText('RANKING DE MIX',{x:0.3,y:0.18,w:8.5,h:0.65,fontSize:44,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`VOLUME DE ACESSÓRIOS POR CATEGORIA — ${MES} ${ANO}`,{x:0.3,y:0.83,w:10,h:0.3,fontSize:11,bold:true,color:C.ouro,charSpacing:2,fontFace:'Calibri'});
+    s.addShape('rect',{x:10.15,y:0.18,w:2.9,h:0.82,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    s.addText(`🏆 CAMPEÃ DO MÊS\n${campea.toUpperCase()}`,{x:10.15,y:0.18,w:2.9,h:0.82,fontSize:11,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});
+    const cW4=13.33/5-0.02,md=['🥇','🥈','🥉','4º'],rb=[C.ouro,C.verde2,C.verde2,C.verde],rt=[C.preto,C.branco,C.branco,C.branco];
+    // Altura das linhas proporcional ao número de vendedoras (preenche o slide)
+    const nV4=VENDS.length, rowH4=Math.min(1.55, (7.1-1.68)/nV4);
+    ACESS.forEach((cat,ci)=>{const x=ci*(cW4+0.02);
+      s.addShape('rect',{x,y:1.2,w:cW4,h:0.44,fill:{color:C.verde2},line:{color:C.ouro,width:0.5}});
+      s.addText(ICONS[cat]+' '+NOMES_CAT[cat],{x,y:1.2,w:cW4,h:0.44,fontSize:11,bold:true,color:C.branco,align:'center',fontFace:'Calibri'});
+      s.addShape('line',{x:x+0.08,y:1.64,w:cW4-0.16,h:0,line:{color:C.ouro,width:1}});
+      [...VENDS].map(v=>({nome:v.nome,val:v[cat]})).sort((a,b)=>b.val-a.val).forEach((r,ri)=>{
+        const y=1.68+ri*rowH4;
+        const nomeSz=Math.max(9,Math.min(11,11*(1.35/rowH4)));
+        const valSz=ri===0?Math.max(28,Math.min(36,36*(rowH4/1.35))):Math.max(22,Math.min(28,28*(rowH4/1.35)));
+        s.addShape('rect',{x,y,w:cW4,h:rowH4-0.04,fill:{color:rb[Math.min(ri,3)]},line:{color:ri===0?C.verde2:C.ouro,width:0.4}});
+        s.addText(md[ri]+' '+r.nome,{x,y:y+0.06,w:cW4,h:rowH4*0.3,fontSize:nomeSz,bold:ri===0,color:rt[Math.min(ri,3)],align:'center',fontFace:'Calibri'});
+        s.addText(String(r.val),{x,y:y+rowH4*0.33,w:cW4,h:rowH4*0.6,fontSize:valSz,bold:true,color:ri===0?C.preto:C.ouro,align:'center',fontFace:'Calibri'});});});
+    s.addShape('rect',{x:0,y:7.1,w:13.33,h:0.28,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    s.addText(`🏆 ${campea.toUpperCase()} — CAMPEÃ GERAL DE MIX DE ACESSÓRIOS EM ${MES}`,{x:0,y:7.1,w:13.33,h:0.28,fontSize:10,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});}
+
+    // ════ S5 CONVERSÃO ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    strips(s);
+    s.addText('TAXA DE CONVERSÃO CROSS SELL',{x:0.3,y:0.18,w:12,h:0.65,fontSize:36,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`ITENS VENDIDOS POR CADA 100 SAPATOS — ${MES} ${ANO}`,{x:0.3,y:0.83,w:11,h:0.3,fontSize:11,bold:true,color:C.ouro,charSpacing:2,fontFace:'Calibri'});
+    const cW5=13.33/5-0.02,md5=['🥇','🥈','🥉','4º'],rb5=[C.ouro,C.verde2,C.verde2,C.verde],rt5=[C.preto,C.branco,C.branco,C.branco];
+    const rowH5=(7.1-1.68)/VENDS.length;
+    ACESS.forEach((cat,ci)=>{const x=ci*(cW5+0.02);
+      s.addShape('rect',{x,y:1.2,w:cW5,h:0.44,fill:{color:C.verde2},line:{color:C.ouro,width:0.5}});
+      s.addText(ICONS[cat]+' '+NOMES_CAT[cat],{x,y:1.2,w:cW5,h:0.44,fontSize:11,bold:true,color:C.branco,align:'center',fontFace:'Calibri'});
+      s.addShape('line',{x:x+0.08,y:1.64,w:cW5-0.16,h:0,line:{color:C.ouro,width:1}});
+      [...VENDS].map(v=>({nome:v.nome,pct:parseFloat((v[cat]/Math.max(v.sapatos,1)*100).toFixed(1))})).sort((a,b)=>b.pct-a.pct).forEach((r,ri)=>{
+        const y=1.68+ri*rowH5;
+        const nomeSz=Math.max(9,Math.min(11,11*(1.35/rowH5)));
+        const valSz=ri===0?Math.max(26,Math.min(32,32*(rowH5/1.35))):Math.max(20,Math.min(26,26*(rowH5/1.35)));
+        s.addShape('rect',{x,y,w:cW5,h:rowH5-0.04,fill:{color:rb5[Math.min(ri,3)]},line:{color:ri===0?C.verde2:C.ouro,width:0.4}});
+        s.addText(md5[ri]+' '+r.nome,{x,y:y+0.06,w:cW5,h:rowH5*0.3,fontSize:nomeSz,bold:ri===0,color:rt5[Math.min(ri,3)],align:'center',fontFace:'Calibri'});
+        s.addText(r.pct+'%',{x,y:y+rowH5*0.33,w:cW5,h:rowH5*0.6,fontSize:valSz,bold:true,color:ri===0?C.preto:C.ouro,align:'center',fontFace:'Calibri'});});});}
+
+    // ════ S6 RANKING GERAL ════
+    {const s=pptx.addSlide();
+    s.background={color:C.branco};
+    s.addText('RANKING GERAL',{x:0.4,y:0.12,w:12,h:0.85,fontSize:52,bold:true,color:C.verde,fontFace:'Calibri'});
+    s.addText('TAXA DE CONVERSÃO TOTAL DE ACESSÓRIOS POR SAPATO',{x:0.4,y:0.98,w:12,h:0.3,fontSize:11,bold:true,color:C.ouro3,charSpacing:2,fontFace:'Calibri'});
+    const cW6=13.33/4,bg6=[C.ouro,C.verde2,C.verde2,C.verde],pos6=['🥇','🥈','🥉','4️⃣'];
+    rankConv.forEach((v,i)=>{const x=i*cW6;
+      s.addShape('rect',{x,y:1.38,w:cW6,h:6.12,fill:{color:bg6[i]},line:{color:bg6[i],width:0}});
+      s.addText(pos6[i],{x,y:1.45,w:cW6,h:0.75,fontSize:36,align:'center'});
+      s.addText(v.nome.toUpperCase(),{x:x+0.1,y:2.24,w:cW6-0.2,h:0.42,fontSize:14,bold:true,color:i===0?C.escuro:C.branco,align:'center',charSpacing:2,fontFace:'Calibri'});
+      s.addShape('line',{x:x+0.25,y:2.7,w:cW6-0.5,h:0,line:{color:i===0?C.escuro:C.ouro,width:2}});
+      s.addText(v.conv+'%',{x,y:2.76,w:cW6,h:1.3,fontSize:i===0?80:66,bold:true,color:i===0?C.escuro:C.ouro,align:'center',fontFace:'Calibri'});
+      s.addText('TAXA GERAL',{x:x+0.1,y:4.1,w:cW6-0.2,h:0.3,fontSize:9,bold:true,color:i===0?C.escuro:C.branco,align:'center',charSpacing:2,fontFace:'Calibri'});
+      const det=ACESS.map(c=>`${ICONS[c]}${(v[c]/Math.max(v.sapatos,1)*100).toFixed(1)}%`).join('  ');
+      s.addText(det,{x:x+0.08,y:4.5,w:cW6-0.16,h:0.55,fontSize:9,color:i===0?C.escuro:C.branco,align:'center',fontFace:'Calibri'});});
+    s.addShape('rect',{x:0,y:7.12,w:13.33,h:0.38,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    s.addText(`MÉDIA DO TIME: ${medConv}%   •   ${rankConv[0].nome} lidera o mix geral com ${rankConv[0].conv}% de conversão`,{x:0,y:7.12,w:13.33,h:0.38,fontSize:11,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});}
+
+    // ════ S7 MAIOR VENDA ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    strips(s);
+    const mv1=TOP_VENDAS[0]||{nome:'—',valor:0};
+    s.addText(`⭐  DESTAQUE DO MÊS  •  ${MES} ${ANO}  ⭐`,{x:0.5,y:0.2,w:12.3,h:0.38,fontSize:13,bold:true,color:C.ouro,align:'center',charSpacing:2,fontFace:'Calibri'});
+    s.addShape('rect',{x:0.4,y:0.7,w:5.5,h:1.05,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    s.addText('MAIOR VENDA DO MÊS',{x:0.4,y:0.7,w:5.5,h:0.38,fontSize:11,bold:true,color:C.preto,align:'center',charSpacing:2,fontFace:'Calibri'});
+    s.addText(mv1.nome.toUpperCase(),{x:0.4,y:1.08,w:5.5,h:0.48,fontSize:26,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});
+    s.addText(mv1.valor>0?`R$ ${mv1.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}`:'—',{x:0.4,y:1.85,w:5.5,h:1.1,fontSize:52,bold:true,color:C.ouro,align:'center',fontFace:'Calibri'});
+    s.addShape('rect',{x:0.4,y:2.95,w:5.5,h:0.36,fill:{color:C.ouro3},line:{color:C.ouro,width:0}});
+    s.addText('⭐ RECORDE DO MÊS',{x:0.4,y:2.95,w:5.5,h:0.36,fontSize:11,bold:true,color:C.branco,align:'center',charSpacing:2,fontFace:'Calibri'});
+    s.addShape('rect',{x:6.15,y:0.7,w:0.04,h:6.3,fill:{color:C.ouro3},line:{color:C.ouro3,width:0}});
+    s.addText('RANKING DE MAIORES VENDAS',{x:6.5,y:0.7,w:6.4,h:0.35,fontSize:11,bold:true,color:C.ouro,charSpacing:2,fontFace:'Calibri'});
+    s.addShape('rect',{x:6.5,y:1.08,w:6.4,h:0.02,fill:{color:C.ouro3},line:{color:C.ouro3,width:0}});
+    const medPos=['🥇','🥈','🥉','4º'],medBg=[C.ouro,C.verde2,C.verde2,C.verde],medTc=[C.preto,C.branco,C.branco,C.branco];
+    TOP_VENDAS.slice(0,4).forEach((tv,i)=>{
+      const y=1.18+i*1.42,cardH=1.3;
+      s.addShape('rect',{x:6.5,y,w:6.4,h:cardH,fill:{color:medBg[i]},line:{color:medBg[i],width:0}});
+      s.addText(medPos[i],{x:6.55,y,w:0.55,h:cardH,fontSize:20,align:'center',fontFace:'Calibri',valign:'middle'});
+      s.addText(tv.nome,{x:7.15,y:y+0.12,w:2.8,h:0.5,fontSize:16,bold:i===0,color:medTc[i],fontFace:'Calibri'});
+      if(tv.destaque){s.addText(tv.destaque,{x:7.15,y:y+0.62,w:4.5,h:0.3,fontSize:10,bold:true,color:i===0?C.escuro:'DDAA44',fontFace:'Calibri'});}
+      s.addText(tv.valor>0?`R$ ${tv.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}`:'—',{x:9.5,y,w:3.2,h:cardH,fontSize:i===0?24:20,bold:true,color:i===0?C.preto:C.ouro,align:'right',fontFace:'Calibri',valign:'middle'});});
+    s.addShape('rect',{x:0,y:7.1,w:13.33,h:0.28,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    s.addText(mv1.valor>0?`🏆 ${mv1.nome.toUpperCase()} — MAIOR VENDA: R$ ${mv1.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}  •  RECORDE DO MÊS`:'Sem registros de maior venda',{x:0,y:7.1,w:13.33,h:0.28,fontSize:10,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});}
+
+    // ════ S8 ANÁLISE INDIVIDUAL ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    strips(s);
+    s.addText('ANÁLISE INDIVIDUAL',{x:0.4,y:0.18,w:12.5,h:0.7,fontSize:44,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`FORÇA E PONTO DE MELHORIA — ${MES} ${ANO}`,{x:0.4,y:0.88,w:12,h:0.3,fontSize:11,bold:true,color:C.ouro,charSpacing:2,fontFace:'Calibri'});
+    const cW8=13.33/4-0.06;
+    VENDS.forEach((v,i)=>{
+      const x=i*(cW8+0.08);
+      const ins=INSIGHTS?.find(ins=>ins.nome===v.nome)||{pontoForte:'—',ondeCrescer:'—'};
+      const conv=rankConv.find(r=>r.nome===v.nome);
+      s.addShape('rect',{x,y:1.28,w:cW8,h:6.1,fill:{color:C.verde2},line:{color:C.ouro,width:0.8}});
+      s.addShape('rect',{x,y:1.28,w:cW8,h:0.44,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+      s.addText(v.nome.toUpperCase(),{x,y:1.28,w:cW8,h:0.44,fontSize:12,bold:true,color:C.preto,align:'center',charSpacing:2,fontFace:'Calibri'});
+      s.addText((conv?.conv||0)+'%',{x,y:1.78,w:cW8,h:1.0,fontSize:44,bold:true,color:C.ouro,align:'center',fontFace:'Calibri'});
+      s.addText('TAXA GERAL',{x,y:2.82,w:cW8,h:0.28,fontSize:8,bold:true,color:'AAAAAA',align:'center',charSpacing:2,fontFace:'Calibri'});
+      s.addShape('line',{x:x+0.15,y:3.14,w:cW8-0.3,h:0,line:{color:C.ouro,width:1}});
+      s.addText('✅ PONTO FORTE',{x:x+0.12,y:3.2,w:cW8-0.22,h:0.3,fontSize:9,bold:true,color:C.ouro,fontFace:'Calibri'});
+      s.addText(ins.pontoForte,{x:x+0.12,y:3.52,w:cW8-0.22,h:1.1,fontSize:10,color:C.branco,fontFace:'Calibri',valign:'top'});
+      s.addShape('line',{x:x+0.15,y:4.68,w:cW8-0.3,h:0,line:{color:'446644',width:0.8}});
+      s.addText('⚡ ONDE CRESCER',{x:x+0.12,y:4.74,w:cW8-0.22,h:0.3,fontSize:9,bold:true,color:C.ouro2,fontFace:'Calibri'});
+      s.addText(ins.ondeCrescer,{x:x+0.12,y:5.08,w:cW8-0.22,h:1.1,fontSize:10,color:C.branco,fontFace:'Calibri',valign:'top'});});}
+
+    // ════ S9 ENCERRAMENTO ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    s.addShape('rect',{x:0,y:0,w:13.33,h:0.1,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    s.addShape('rect',{x:0,y:7.4,w:13.33,h:0.1,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    s.addText('🏆',{x:5.5,y:0.5,w:2.33,h:1.8,fontSize:64,align:'center'});
+    s.addText(`${MES} FOI HISTÓRICO!`,{x:0.3,y:2.55,w:12.73,h:1.1,fontSize:62,bold:true,color:C.ouro,align:'center',fontFace:'Calibri'});
+    const todasBatS9=CATS.every(c=>{const m=METAS[c];return m===0||(TOTAIS[c]||0)>=m;});
+    const subtituloS9=todasBatS9
+      ?`${TOTAIS.sapatos.toLocaleString('pt-BR')} sapatos. Todas as metas e ultrametas batidas.`
+      :`${TOTAIS.sapatos.toLocaleString('pt-BR')} sapatos. Um mês de crescimento e aprendizado.`;
+    s.addText(subtituloS9,{x:1,y:3.78,w:11.33,h:0.55,fontSize:17,italic:true,color:C.branco,align:'center',fontFace:'Calibri'});
+    s.addText(`AGORA É HORA DE SUPERAR ${MES_PROX}. JUNTAS SOMOS MAIS FORTES.`,{x:0.5,y:4.65,w:12.33,h:0.45,fontSize:15,bold:true,color:C.ouro,align:'center',charSpacing:3,fontFace:'Calibri'});
+    s.addText(`LORETTO SCARPA  —  EQUIPE DE VENDAS ${ANO}`,{x:0.5,y:6.85,w:12.33,h:0.3,fontSize:11,color:C.ouro3,align:'center',charSpacing:4,fontFace:'Calibri'});}
+
+    // Download
+    const nomeArq=`Loretto_Scarpa_${MES}_${ANO}.pptx`;
+    await pptx.writeFile({fileName:nomeArq});
+    toast(`✓ Apresentação gerada: ${nomeArq}`);
+
+  } catch(e) {
+    console.error('Erro PPTX:', e);
+    toast('Erro ao gerar apresentação. Tente novamente.');
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='📊 Gerar Apresentação';}
+  }
+}
+
+
 
 // Seed roda em background; a tela é controlada pelo auth listener
 runSeedSeNecessario();
