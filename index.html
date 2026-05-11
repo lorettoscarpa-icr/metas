@@ -3292,7 +3292,8 @@ async function gerarApresentacaoMes() {
       conv: parseFloat((ACESS.reduce((s,c)=>s+v[c],0)/Math.max(v.sapatos,1)*100).toFixed(1))
     })).sort((a,b)=>b.conv-a.conv);
     const medConv = (rankConv.reduce((s,v)=>s+v.conv,0)/rankConv.length).toFixed(1);
-    const campea  = [...VENDS].map(v=>({...v,tot:ACESS.reduce((s,c)=>s+v[c],0)})).sort((a,b)=>b.tot-a.tot)[0].nome;
+    if(VENDS.length===0){toast('Sem dados registrados neste mês.');if(btn){btn.disabled=false;btn.textContent='📊 Gerar Apresentação';}return;}
+    const campea  = [...VENDS].map(v=>({...v,tot:ACESS.reduce((s,c)=>s+v[c],0)})).sort((a,b)=>b.tot-a.tot)[0]?.nome||'—';
 
     // Top vendas (Maior Venda do Mês por vendedora → ranking)
     const mvRaw = VENDEDORAS.map(v => {
@@ -3302,32 +3303,27 @@ async function gerarApresentacaoMes() {
     if(mvRaw.length>0) mvRaw[0].destaque = '⭐ RECORDE DO MÊS';
     const TOP_VENDAS = mvRaw.length>0 ? mvRaw : [{nome:'—',valor:0,destaque:''}];
 
-    // Insights IA via Claude API
-    let INSIGHTS = null;
-    try {
-      const prompt = `Analise os resultados de ${MES} ${ANO} da Loretto Scarpa e gere para CADA vendedora:
-1. PONTO FORTE: 1-2 frases curtas destacando o principal resultado positivo
-2. ONDE CRESCER: 1-2 frases curtas com a principal oportunidade de melhoria
-
-Dados:
-${VENDS.map(v=>`${v.nome}: Sapatos=${v.sapatos}, Meias=${v.meias}(${(v.meias/Math.max(v.sapatos,1)*100).toFixed(1)}%), Cintos=${v.cintos}(${(v.cintos/Math.max(v.sapatos,1)*100).toFixed(1)}%), Carteiras=${v.carteiras}(${(v.carteiras/Math.max(v.sapatos,1)*100).toFixed(1)}%), Limpeza=${v.limpeza}(${(v.limpeza/Math.max(v.sapatos,1)*100).toFixed(1)}%), Prendedor=${v.prendedor}(${(v.prendedor/Math.max(v.sapatos,1)*100).toFixed(1)}%)`).join('\n')}
-Benchmarks: Meias 31%, Cintos 22%, Limpeza 12%
-Responda APENAS JSON sem markdown: {"vendedoras":[{"nome":"...","pontoForte":"...","ondeCrescer":"..."}]}`;
-      const r = await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-      });
-      const data = await r.json();
-      INSIGHTS = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim()).vendedoras;
-    } catch(e) { INSIGHTS = null; }
-    // Fallback automático
-    if(!INSIGHTS) {
-      INSIGHTS = VENDS.map(v=>{
-        const best = ACESS.map(c=>({c,p:v[c]/Math.max(v.sapatos,1)*100})).sort((a,b)=>b.p-a.p)[0];
-        const worst= ACESS.map(c=>({c,p:v[c]/Math.max(v.sapatos,1)*100})).sort((a,b)=>a.p-b.p)[0];
-        return {nome:v.nome,pontoForte:`${NOMES_CAT[best.c]} em destaque com ${best.p.toFixed(1)}%.`,ondeCrescer:`${NOMES_CAT[worst.c]} ${worst.p.toFixed(1)}% — oportunidade de crescimento.`};
-      });
-    }
+    // Insights automáticos baseados nos dados (sem chamada externa)
+    const INSIGHTS = VENDS.map(v=>{
+      const sap=Math.max(v.sapatos,1);
+      const convs=ACESS.map(c=>({c,p:v[c]/sap*100,v:v[c]}));
+      const best=convs.sort((a,b)=>b.p-a.p)[0];
+      const worst=convs.sort((a,b)=>a.p-b.p)[0];
+      // Ponto forte: melhor categoria ou volume de sapatos
+      const rankSap=[...VENDS].sort((a,b)=>b.sapatos-a.sapatos);
+      const posSap=rankSap.findIndex(r=>r.nome===v.nome);
+      let pontoForte=posSap===0
+        ?`Líder em volume com ${v.sapatos} sapatos. ${NOMES_CAT[best.c]} em destaque (${best.p.toFixed(1)}%).`
+        :`${NOMES_CAT[best.c]} com ${best.p.toFixed(1)}% — melhor conversão da categoria.`;
+      // Onde crescer: categoria mais abaixo dos benchmarks
+      const bench={meias:31,cintos:22,carteiras:3,limpeza:12,prendedor:3};
+      const gaps=ACESS.map(c=>({c,gap:(bench[c]||10)-(v[c]/sap*100)})).sort((a,b)=>b.gap-a.gap);
+      const piorGap=gaps[0];
+      let ondeCrescer=piorGap.gap>0
+        ?`${NOMES_CAT[piorGap.c]} ${(v[piorGap.c]/sap*100).toFixed(1)}% → meta ${bench[piorGap.c]}%.`
+        :`Manter o ritmo e crescer volume base de sapatos.`;
+      return {nome:v.nome,pontoForte,ondeCrescer};
+    });
 
     // ── PALETA ──
     const C={verde:'1A3A2A',verde2:'2D6A4F',verde3:'3D7A5E',ouro:'C9A84C',ouro2:'E8C96A',ouro3:'B89020',branco:'FFFFFF',creme:'F7F4EC',bege:'E0D8C0',preto:'000000',escuro:'162810'};
@@ -3337,6 +3333,22 @@ Responda APENAS JSON sem markdown: {"vendedoras":[{"nome":"...","pontoForte":"..
       s.addShape('rect',{x:0,y:7.37,w:'100%',h:0.13,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
     }
 
+    // Carregar PptxGenJS se ainda não estiver disponível
+    if(typeof PptxGenJS === 'undefined'){
+      toast('Carregando biblioteca... tente novamente em 3 segundos.');
+      const sc=document.createElement('script');
+      sc.src='https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js';
+      sc.onload=()=>toast('Biblioteca carregada! Clique novamente.');
+      sc.onerror=()=>{
+        const sc2=document.createElement('script');
+        sc2.src='https://unpkg.com/pptxgenjs@3.12.0/libs/pptxgen.bundle.js';
+        sc2.onload=()=>toast('Biblioteca carregada! Clique novamente.');
+        document.head.appendChild(sc2);
+      };
+      document.head.appendChild(sc);
+      if(btn){btn.disabled=false;btn.textContent='📊 Gerar Apresentação';}
+      return;
+    }
     const pptx = new PptxGenJS();
     pptx.layout='LAYOUT_WIDE';
 
@@ -3546,7 +3558,7 @@ Responda APENAS JSON sem markdown: {"vendedoras":[{"nome":"...","pontoForte":"..
 
   } catch(e) {
     console.error('Erro PPTX:', e);
-    toast('Erro ao gerar apresentação. Tente novamente.');
+    toast('Erro: ' + (e?.message || String(e)));
   } finally {
     if(btn){btn.disabled=false;btn.textContent='📊 Gerar Apresentação';}
   }
