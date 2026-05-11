@@ -6,7 +6,7 @@
 <title>Loretto Scarpa — Metas</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Firebase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js"></script>
+<!-- PptxGenJS carregado sob demanda -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -3336,21 +3336,25 @@ async function gerarApresentacaoMes() {
       s.addShape('rect',{x:0,y:7.37,w:'100%',h:0.13,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
     }
 
-    // Carregar PptxGenJS se ainda não estiver disponível
+    // Carregar PptxGenJS sob demanda e aguardar
     if(typeof PptxGenJS === 'undefined'){
-      toast('Carregando biblioteca... tente novamente em 3 segundos.');
-      const sc=document.createElement('script');
-      sc.src='https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js';
-      sc.onload=()=>toast('Biblioteca carregada! Clique novamente.');
-      sc.onerror=()=>{
-        const sc2=document.createElement('script');
-        sc2.src='https://unpkg.com/pptxgenjs@3.12.0/libs/pptxgen.bundle.js';
-        sc2.onload=()=>toast('Biblioteca carregada! Clique novamente.');
-        document.head.appendChild(sc2);
-      };
-      document.head.appendChild(sc);
-      if(btn){btn.disabled=false;btn.textContent='📊 Gerar Apresentação';}
-      return;
+      if(btn) btn.textContent = '⏳ Carregando biblioteca...';
+      await new Promise((resolve, reject) => {
+        const urls = [
+          'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js',
+          'https://unpkg.com/pptxgenjs@3.12.0/libs/pptxgen.bundle.js'
+        ];
+        function tryLoad(i) {
+          if(i >= urls.length){ reject(new Error('Não foi possível carregar PptxGenJS')); return; }
+          const sc = document.createElement('script');
+          sc.src = urls[i];
+          sc.onload = resolve;
+          sc.onerror = () => tryLoad(i + 1);
+          document.head.appendChild(sc);
+        }
+        tryLoad(0);
+      });
+      if(btn) btn.textContent = '⏳ Gerando...';
     }
     const pptx = new PptxGenJS();
     pptx.layout='LAYOUT_WIDE';
