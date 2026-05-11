@@ -2147,6 +2147,8 @@ function render(){
   document.getElementById('h-sub').textContent=isG?'Visão do Gestor':`Vendedora · ${usuario}`;
   const btnPptx=document.getElementById('btn-gerar-pptx');
   if(btnPptx) btnPptx.style.display=isG?'block':'none';
+  // Seed só roda quando gestor autentica (já tem permissão)
+  if(isG) runSeedSeNecessario();
   document.getElementById('aviso-futuro').style.display=futuro?'block':'none';
   document.getElementById('conteudo-principal').style.display=futuro?'none':'block';
   if(futuro){document.getElementById('aviso-mes-nome').textContent=MESES_NOMES[mesAtivo-1]+' '+anoAtivo;return;}
@@ -3187,7 +3189,8 @@ async function runSeedSeNecessario() {
     await db.collection('_setup').doc('v1').set({ completo: true, data: new Date().toISOString() });
     console.log('[Loretto] Setup concluído com sucesso.');
   } catch(e) {
-    console.warn('[Loretto] Setup falhou (sem conexão?):', e.message);
+    // Silencioso — setup pode falhar se já foi feito ou sem permissão
+    // Não afeta o funcionamento normal do dashboard
   }
 }
 
@@ -3566,8 +3569,8 @@ async function gerarApresentacaoMes() {
 
 
 
-// Seed roda em background; a tela é controlada pelo auth listener
-runSeedSeNecessario();
+// Seed roda após login como gestor (precisa de autenticação)
+// runSeedSeNecessario() é chamado em entrarComUsuario()
 
 // Aplicar tema salvo imediatamente
 aplicarTema();
