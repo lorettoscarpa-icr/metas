@@ -1596,7 +1596,19 @@ svg{display:inline-block;vertical-align:middle;}
     </div>
 
     <div class="h-dir">
-      <button class="bsm" id="btn-gerar-pptx" style="display:none;background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.5);color:var(--ou);" onclick="gerarApresentacaoMes()">📊 Gerar Apresentação</button>
+      <div id="wrap-gerar-pptx" style="display:none;position:relative;">
+        <button class="bsm" id="btn-gerar-pptx" style="background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.5);color:var(--ou);" onclick="event.stopPropagation();toggleMenuPptx()">📊 Gerar Apresentação ▾</button>
+        <div id="menu-pptx" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--bgd,#1a1f1a);border:1px solid rgba(201,168,76,.5);border-radius:8px;min-width:260px;z-index:1000;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden;">
+          <button onclick="fecharMenuPptx();gerarApresentacaoMes()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight:600;">📊 Fechamento do mês</div>
+            <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Resultados, ranking e insights</div>
+          </button>
+          <button onclick="fecharMenuPptx();gerarApresentacaoMetas()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight:600;">🎯 Metas do mês</div>
+            <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Bônus, desafios e regras</div>
+          </button>
+        </div>
+      </div>
       <button class="btn-tema" id="btn-tema" onclick="toggleTema()" title="Alternar modo claro/escuro">☀</button>
       <button class="btn-ajuda" onclick="abrirTutorial()" title="Como usar">?</button>
       <button class="bsm" onclick="abrirCfg()">⚙ Metas</button>
@@ -2152,7 +2164,8 @@ function render(){
   const futuro=mesFuturo();
   document.getElementById('h-sub').textContent=isG?'Visão do Gestor':`Vendedora · ${usuario}`;
   const btnPptx=document.getElementById('btn-gerar-pptx');
-  if(btnPptx) btnPptx.style.display=isG?'block':'none';
+  const wrapPptx=document.getElementById('wrap-gerar-pptx');
+  if(wrapPptx) wrapPptx.style.display=isG?'inline-block':'none';
   // Seed só roda quando gestor autentica (já tem permissão)
   if(isG) runSeedSeNecessario();
   document.getElementById('aviso-futuro').style.display=futuro?'block':'none';
@@ -2947,6 +2960,8 @@ function renderConversao(){
 
 async function abrirCfg(){
   const cfg=cfgAtualCache();
+  const B=cfg.bonus||{sapMeta:100,sapSuper:150,sapHiper:200,acessorio:50,maiorMix:100,melhorConv:100,maiorVenda:100,maiorVendaMin:2000};
+  const hipSap = (cfg.hipermetas && cfg.hipermetas.sapatos) || 0;
   document.getElementById('modal-mes-label').textContent=`metas para ${MESES_NOMES[mesAtivo-1]} ${anoAtivo} · dias úteis para cálculo de ritmo`;
   document.getElementById('cfg-dias').value=cfg.diasUteis||26;
   const ultraAtiva = cfg.ultraAtiva || false;
@@ -2968,7 +2983,42 @@ async function abrirCfg(){
       <span style="color:var(--ou);font-size:14px;">⚡</span>
       <input class="minp-n" type="number" min="0" id="cfg-ultra-${c.id}" value="${(cfg.ultrametas&&cfg.ultrametas[c.id])||0}" style="width:72px;border-color:rgba(212,180,90,.4);" title="Ultrameta">
     </div>
-  </div>`).join('');
+  </div>`).join('')+`
+    <div style="font-size:9px;color:var(--ou);letter-spacing:1.5px;text-transform:uppercase;padding:14px 0 6px;border-bottom:1px solid rgba(201,168,76,.3);margin:14px 0 4px;">💰 Bônus da Apresentação de Metas</div>
+
+    <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Sapatos · 3 níveis</div>
+    <div class="mrow"><label>Bônus Meta</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-sapMeta" value="${B.sapMeta}" style="width:72px;"></div>
+    </div>
+    <div class="mrow"><label>Bônus Super Meta</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-sapSuper" value="${B.sapSuper}" style="width:72px;"></div>
+    </div>
+    <div class="mrow"><label>Hiper Meta (qtd · bônus)</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">
+        <input class="minp-n" type="number" min="0" id="cfg-hiper-sapatos" value="${hipSap}" style="width:72px;" title="Quantidade (pares). Deixe 0 para calcular automaticamente.">
+        R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-sapHiper" value="${B.sapHiper}" style="width:72px;">
+      </div>
+    </div>
+
+    <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Acessórios</div>
+    <div class="mrow"><label>Bônus por categoria batida</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-acessorio" value="${B.acessorio}" style="width:72px;"></div>
+    </div>
+
+    <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Bônus Individuais</div>
+    <div class="mrow"><label>Maior Vendedora Mix</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-maiorMix" value="${B.maiorMix}" style="width:72px;"></div>
+    </div>
+    <div class="mrow"><label>Melhor Conversão Mix</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-melhorConv" value="${B.melhorConv}" style="width:72px;"></div>
+    </div>
+    <div class="mrow"><label>Maior Venda (mín. · bônus)</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">
+        R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-maiorVendaMin" value="${B.maiorVendaMin}" style="width:84px;" title="Valor mínimo da venda única">
+        R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-maiorVenda" value="${B.maiorVenda}" style="width:72px;" title="Bônus por venda válida">
+      </div>
+    </div>
+  `;
   document.getElementById('modal').classList.add('open');
 }
 function fecharCfg(){document.getElementById('modal').classList.remove('open');}
@@ -2977,10 +3027,23 @@ async function salvarCfg(){
   cfg.diasUteis=parseInt(document.getElementById('cfg-dias').value)||26;
   cfg.ultraAtiva=document.getElementById('cfg-ultra-ativa')?.checked||false;
   if(!cfg.ultrametas)cfg.ultrametas={};
+  if(!cfg.hipermetas)cfg.hipermetas={};
+  if(!cfg.bonus)cfg.bonus={};
   CATS.forEach(c=>{
     cfg.metas[c.id]=parseInt(document.getElementById('cfg-'+c.id)?.value)||0;
     cfg.ultrametas[c.id]=parseInt(document.getElementById('cfg-ultra-'+c.id)?.value)||0;
   });
+  // Hipermeta de sapatos (qtd) — opcional
+  cfg.hipermetas.sapatos=parseInt(document.getElementById('cfg-hiper-sapatos')?.value)||0;
+  // Bônus
+  cfg.bonus.sapMeta       = parseInt(document.getElementById('cfg-bonus-sapMeta')?.value)||0;
+  cfg.bonus.sapSuper      = parseInt(document.getElementById('cfg-bonus-sapSuper')?.value)||0;
+  cfg.bonus.sapHiper      = parseInt(document.getElementById('cfg-bonus-sapHiper')?.value)||0;
+  cfg.bonus.acessorio     = parseInt(document.getElementById('cfg-bonus-acessorio')?.value)||0;
+  cfg.bonus.maiorMix      = parseInt(document.getElementById('cfg-bonus-maiorMix')?.value)||0;
+  cfg.bonus.melhorConv    = parseInt(document.getElementById('cfg-bonus-melhorConv')?.value)||0;
+  cfg.bonus.maiorVenda    = parseInt(document.getElementById('cfg-bonus-maiorVenda')?.value)||0;
+  cfg.bonus.maiorVendaMin = parseInt(document.getElementById('cfg-bonus-maiorVendaMin')?.value)||0;
   loading(true);await saveCfgMes(anoAtivo,mesAtivo,cfg);loading(false);
   fecharCfg();render();toast(`✓ Metas de ${MESES_NOMES[mesAtivo-1]} atualizadas!`);
 }
@@ -3594,7 +3657,336 @@ async function gerarApresentacaoMes() {
     console.error('Erro PPTX:', e);
     toast('Erro: ' + (e?.message || String(e)));
   } finally {
-    if(btn){btn.disabled=false;btn.textContent='📊 Gerar Apresentação';}
+    if(btn){btn.disabled=false;btn.innerHTML='📊 Gerar Apresentação ▾';}
+  }
+}
+
+// ══ MENU DROPDOWN: Fechamento vs Metas ══
+function toggleMenuPptx(){
+  const m=document.getElementById('menu-pptx');
+  if(!m) return;
+  m.style.display = m.style.display==='block' ? 'none' : 'block';
+}
+function fecharMenuPptx(){
+  const m=document.getElementById('menu-pptx');
+  if(m) m.style.display='none';
+}
+document.addEventListener('click',function(e){
+  const w=document.getElementById('wrap-gerar-pptx');
+  if(w && !w.contains(e.target)) fecharMenuPptx();
+});
+
+// ══ APRESENTAÇÃO DE METAS DO MÊS ══
+async function gerarApresentacaoMetas() {
+  const btn = document.getElementById('btn-gerar-pptx');
+  if(btn){btn.disabled=true;btn.innerHTML='⏳ Gerando...';}
+
+  try {
+    const cfg = cfgAtualCache();
+    const MES = MESES_NOMES[mesAtivo-1].toUpperCase();
+    const ANO = anoAtivo;
+    const DIAS = cfg.diasUteis || 26;
+
+    const METAS = {}, ULTRAS = {};
+    ['sapatos','meias','cintos','carteiras','limpeza','prendedor'].forEach(c => {
+      METAS[c] = cfg.metas?.[c] || 0;
+      ULTRAS[c] = cfg.ultrametas?.[c] || 0;
+    });
+
+    if(METAS.sapatos === 0){
+      toast('Configure a meta de sapatos antes de gerar a apresentação.');
+      if(btn){btn.disabled=false;btn.innerHTML='📊 Gerar Apresentação ▾';}
+      return;
+    }
+
+    // 3 níveis para sapatos (META / SUPER META / HIPER META)
+    const sapMeta  = METAS.sapatos;
+    const sapSuper = ULTRAS.sapatos > 0 ? ULTRAS.sapatos : Math.round(sapMeta * 1.05);
+    const hipSapCfg = (cfg.hipermetas && cfg.hipermetas.sapatos) || 0;
+    const sapHiper = hipSapCfg > 0 ? hipSapCfg : sapSuper + Math.max(sapSuper - sapMeta, 25);
+
+    // Bônus — lidos do cfg (cadastrados no modal de Metas)
+    const cfgB = cfg.bonus || {};
+    const BONUS = {
+      sapMeta:       cfgB.sapMeta       || 100,
+      sapSuper:      cfgB.sapSuper      || 150,
+      sapHiper:      cfgB.sapHiper      || 200,
+      acessorio:     cfgB.acessorio     || 50,
+      maiorMix:      cfgB.maiorMix      || 100,
+      melhorConv:    cfgB.melhorConv    || 100,
+      maiorVenda:    cfgB.maiorVenda    || 100,
+      maiorVendaMin: cfgB.maiorVendaMin || 2000
+    };
+
+    const totalColetivo = BONUS.sapHiper  // Sapatos: vale o nível mais alto atingido (não soma os 3)
+                        + (METAS.meias>0    ? BONUS.acessorio : 0)
+                        + (METAS.cintos>0   ? BONUS.acessorio : 0)
+                        + (METAS.limpeza>0  ? BONUS.acessorio : 0)
+                        + (METAS.carteiras>0? BONUS.acessorio : 0);
+    const totalIndividual = BONUS.maiorMix + BONUS.melhorConv + BONUS.maiorVenda;
+    const TOTAL_MAX = totalColetivo + totalIndividual;
+
+    const C={verde:'1A3A2A',verde2:'2D6A4F',verde3:'3D7A5E',ouro:'C9A84C',ouro2:'E8C96A',ouro3:'B89020',branco:'FFFFFF',creme:'F7F4EC',bege:'E0D8C0',preto:'000000',escuro:'162810'};
+
+    function strips(s){
+      s.addShape('rect',{x:0,y:0,w:'100%',h:0.13,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+      s.addShape('rect',{x:0,y:7.37,w:'100%',h:0.13,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    }
+
+    const pptx = new PptxGenJS();
+    pptx.layout = 'LAYOUT_WIDE';
+
+    // ════ S1 CAPA ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    // Motif decorativo: círculos verde-escuro (marca d'água sutil)
+    s.addShape('ellipse',{x:9.8,y:-2.5,w:6.0,h:6.0,fill:{color:C.escuro},line:{color:C.escuro,width:0}});
+    s.addShape('ellipse',{x:8.7,y:4.2,w:5.0,h:5.0,fill:{color:C.escuro},line:{color:C.escuro,width:0}});
+    s.addShape('ellipse',{x:-1.5,y:5.0,w:3.5,h:3.5,fill:{color:'15321F'},line:{color:'15321F',width:0}});
+    strips(s);
+    // Tag dourada em volta de "MAIO 2026"
+    s.addShape('rect',{x:0.5,y:0.32,w:1.8,h:0.46,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+    s.addText(`${MES} ${ANO}`,{x:0.5,y:0.32,w:1.8,h:0.46,fontSize:11,bold:true,color:C.verde,charSpacing:3,align:'center',valign:'middle',fontFace:'Calibri'});
+    s.addText('LORETTO  SCARPA',{x:0.5,y:1.0,w:9.8,h:0.42,fontSize:16,bold:true,color:C.branco,charSpacing:4,fontFace:'Calibri'});
+    s.addText('METAS',{x:0.4,y:1.7,w:10.0,h:1.5,fontSize:92,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText('DO MÊS',{x:0.4,y:3.15,w:10.0,h:1.5,fontSize:92,bold:true,color:C.ouro,fontFace:'Calibri'});
+    s.addText(`${DIAS} dias úteis  •  Bônus coletivo + individual  •  Até R$ ${TOTAL_MAX.toLocaleString('pt-BR')},00 em prêmios`,{x:0.5,y:5.0,w:9.8,h:0.5,fontSize:18,italic:true,color:C.ouro2,fontFace:'Calibri'});
+    s.addText('EQUIPE  DE  VENDAS  •  LORETTO  SCARPA',{x:0.5,y:6.92,w:9.8,h:0.34,fontSize:12,bold:true,color:C.ouro,charSpacing:4,fontFace:'Calibri'});}
+
+    // ════ S2 ESCADA DE SAPATOS ════
+    {const s=pptx.addSlide();
+    s.background={color:C.creme};
+    strips(s);
+    s.addShape('rect',{x:0,y:0.13,w:3.5,h:7.24,fill:{color:C.verde},line:{color:C.verde,width:0}});
+    s.addText('👞',{x:0.4,y:0.5,w:2.7,h:0.7,fontSize:48,align:'left'});
+    s.addText('META DE\nSAPATOS',{x:0.4,y:1.3,w:2.8,h:1.5,fontSize:40,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`${MES} ${ANO}`,{x:0.4,y:3.0,w:2.8,h:0.35,fontSize:13,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
+    s.addText(`${DIAS} dias úteis\nAlcance sua escada\nde bônus!`,{x:0.4,y:3.5,w:2.8,h:1.5,fontSize:15,italic:true,color:C.ouro2,fontFace:'Calibri'});
+
+    const tiers = [
+      {label:'META',      val:sapMeta, bonus:BONUS.sapMeta,  icon:'🎯', h:3.4, color:'4A8A70'},
+      {label:'SUPER META',val:sapSuper,bonus:BONUS.sapSuper, icon:'🚀', h:4.2, color:'2D6A4F'},
+      {label:'HIPER META',val:sapHiper,bonus:BONUS.sapHiper, icon:'🏆', h:5.0, color:'1A4A30'}
+    ];
+    const tX = 4.0, tW = 2.9, tGap = 0.15, cardsBottom = 6.95;
+    tiers.forEach((t,i) => {
+      const x = tX + i*(tW+tGap);
+      const yTop = cardsBottom - t.h;
+      // Card base (cor escalonada do mais claro pro mais escuro)
+      s.addShape('rect',{x,y:yTop,w:tW,h:t.h,fill:{color:t.color},line:{color:C.ouro,width:1.2}});
+      // Topo: faixa dourada com EMOJI + label DENTRO
+      s.addShape('rect',{x,y:yTop,w:tW,h:0.95,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
+      s.addText(t.icon,{x,y:yTop+0.04,w:tW,h:0.55,fontSize:30,align:'center'});
+      s.addText(t.label,{x,y:yTop+0.62,w:tW,h:0.28,fontSize:12,bold:true,color:C.verde,align:'center',charSpacing:2,fontFace:'Calibri'});
+      // Caixa BÔNUS dourada destacada no rodapé
+      const bonusY = yTop + t.h - 1.0;
+      s.addShape('rect',{x:x+0.15,y:bonusY,w:tW-0.3,h:0.88,fill:{color:C.ouro},line:{color:C.ouro2,width:0.5}});
+      s.addText('BÔNUS',{x:x+0.15,y:bonusY+0.06,w:tW-0.3,h:0.22,fontSize:10,bold:true,color:C.verde,align:'center',charSpacing:2,fontFace:'Calibri'});
+      s.addText(`R$ ${t.bonus}`,{x:x+0.15,y:bonusY+0.28,w:tW-0.3,h:0.55,fontSize:28,bold:true,color:C.verde,align:'center',fontFace:'Calibri'});
+      // Centro: número gigante + "pares"
+      const numY = yTop + 1.05;
+      const numH = bonusY - 0.15 - numY;
+      s.addText(String(t.val),{x,y:numY,w:tW,h:numH*0.78,fontSize:62,bold:true,color:C.branco,align:'center',valign:'bottom',fontFace:'Calibri'});
+      s.addText('pares',{x,y:numY+numH*0.78,w:tW,h:numH*0.22,fontSize:13,italic:true,color:C.ouro2,align:'center',valign:'top',fontFace:'Calibri'});
+    });
+    s.addText(`Vale o nível mais alto atingido — alcance a Hiper Meta e leve R$ ${BONUS.sapHiper}!`,{x:3.7,y:7.05,w:9.5,h:0.28,fontSize:11,italic:true,bold:true,color:C.verde,align:'center',fontFace:'Calibri'});}
+
+    // ════ S3 METAS DE ACESSÓRIOS ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    strips(s);
+    s.addText('METAS DE ACESSÓRIOS',{x:0.4,y:0.4,w:12.5,h:0.8,fontSize:40,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`${MES} ${ANO}  •  BÔNUS R$ ${BONUS.acessorio},00 POR CATEGORIA BATIDA`,{x:0.4,y:1.25,w:12,h:0.32,fontSize:12,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
+
+    const acessCfg = [
+      {id:'meias',    nome:'MEIAS',    icon:'🧦', val:METAS.meias,    unidade:'pares',      extra:null},
+      {id:'cintos',   nome:'CINTOS',   icon:'👔', val:METAS.cintos,   unidade:'acessórios', extra: METAS.prendedor>0 ? `+ ${METAS.prendedor} prendedores` : null},
+      {id:'limpeza',  nome:'PRODUTOS', icon:'🧴', val:METAS.limpeza,  unidade:'produtos',   extra:'de limpeza'},
+      {id:'carteiras',nome:'CARTEIRAS',icon:'👝', val:METAS.carteiras,unidade:'unidades',   extra:null}
+    ].filter(a => a.val > 0);
+
+    if(acessCfg.length > 0){
+      const aN = acessCfg.length;
+      const aW = (12.4 - (aN-1)*0.15) / aN;
+      acessCfg.forEach((a,i) => {
+        const x = 0.4 + i*(aW+0.15);
+        s.addShape('rect',{x,y:2.0,w:aW,h:5.0,fill:{color:C.verde2},line:{color:C.ouro,width:1}});
+        s.addText(a.icon,{x,y:2.15,w:aW,h:0.75,fontSize:42,align:'center'});
+        s.addText(a.nome,{x,y:2.95,w:aW,h:0.35,fontSize:13,bold:true,color:C.branco,align:'center',charSpacing:2,fontFace:'Calibri'});
+        s.addShape('line',{x:x+0.4,y:3.40,w:aW-0.8,h:0,line:{color:C.ouro,width:0.8}});
+        s.addText(String(a.val),{x,y:3.55,w:aW,h:0.9,fontSize:48,bold:true,color:C.branco,align:'center',fontFace:'Calibri'});
+        s.addText(a.unidade,{x,y:4.45,w:aW,h:0.4,fontSize:18,bold:true,color:C.branco,align:'center',fontFace:'Calibri'});
+        if(a.extra){
+          s.addText(a.extra,{x,y:4.85,w:aW,h:0.3,fontSize:11,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+        }
+        s.addShape('line',{x:x+0.4,y:5.3,w:aW-0.8,h:0,line:{color:C.ouro,width:0.8}});
+        s.addShape('rect',{x:x+0.15,y:5.5,w:aW-0.3,h:1.15,fill:{color:C.ouro},line:{color:C.ouro2,width:0.5}});
+        s.addText('BÔNUS',{x,y:5.55,w:aW,h:0.25,fontSize:10,bold:true,color:C.verde,align:'center',charSpacing:2,fontFace:'Calibri'});
+        s.addText(`R$ ${BONUS.acessorio}`,{x,y:5.85,w:aW,h:0.55,fontSize:30,bold:true,color:C.verde,align:'center',fontFace:'Calibri'});
+        s.addText('por categoria batida',{x,y:6.75,w:aW,h:0.25,fontSize:9,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+      });
+    } else {
+      s.addText('Nenhuma meta de acessórios configurada para este mês.',{x:0.4,y:3.5,w:12.5,h:0.5,fontSize:16,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+    }}
+
+    // ════ S4 BÔNUS INDIVIDUAIS ════
+    {const s=pptx.addSlide();
+    s.background={color:C.creme};
+    strips(s);
+    s.addText('BÔNUS INDIVIDUAIS',{x:0.4,y:0.4,w:12.5,h:0.8,fontSize:40,bold:true,color:C.verde,fontFace:'Calibri'});
+    s.addText(`CONQUISTE OS SEUS — ${MES} ${ANO}`,{x:0.4,y:1.25,w:12,h:0.32,fontSize:12,bold:true,color:C.verde2,charSpacing:3,fontFace:'Calibri'});
+
+    const ind = [
+      {icon:'🏅', titulo:'MAIOR VENDEDORA DE MIX', desc:'Maior volume total de acessórios vendidos no mês', bonus:BONUS.maiorMix},
+      {icon:'📊', titulo:'MELHOR CONVERSÃO DE MIX', desc:'Maior taxa de acessórios por sapato vendido', bonus:BONUS.melhorConv},
+      {icon:'⭐', titulo:'MAIOR VENDA DO MÊS', desc:`Venda única acima de R$ ${BONUS.maiorVendaMin.toLocaleString('pt-BR')},00\nRegra: mandar no grupo + CPF único`, bonus:BONUS.maiorVenda}
+    ];
+    const rowH = 1.6, rowGap = 0.2, rowY0 = 2.0;
+    // Tons sobre tom — leve variação entre os 3 cards
+    const cardTints = ['EDE4CC', 'E5DCBE', 'EDE4CC'];
+    ind.forEach((it,i) => {
+      const y = rowY0 + i*(rowH+rowGap);
+      s.addShape('rect',{x:0.4,y,w:12.5,h:rowH,fill:{color:cardTints[i]},line:{color:C.ouro,width:1}});
+      // Círculo ícone verde
+      s.addShape('ellipse',{x:0.7,y:y+0.3,w:1.0,h:1.0,fill:{color:C.verde},line:{color:C.ouro,width:1.5}});
+      s.addText(it.icon,{x:0.7,y:y+0.3,w:1.0,h:1.0,fontSize:32,align:'center',valign:'middle'});
+      s.addText(it.titulo,{x:2.0,y:y+0.25,w:7.5,h:0.4,fontSize:18,bold:true,color:C.verde,charSpacing:2,fontFace:'Calibri'});
+      s.addText(it.desc,{x:2.0,y:y+0.65,w:7.5,h:0.9,fontSize:14,italic:true,color:'3D3520',fontFace:'Calibri'});
+      // Caixa de bônus DOURADA destacada (invertido)
+      s.addShape('rect',{x:10.4,y:y+0.25,w:2.2,h:1.1,fill:{color:C.ouro},line:{color:C.ouro2,width:1}});
+      s.addText('BÔNUS',{x:10.4,y:y+0.35,w:2.2,h:0.25,fontSize:10,bold:true,color:C.verde,align:'center',charSpacing:2,fontFace:'Calibri'});
+      s.addText(`R$ ${it.bonus}`,{x:10.4,y:y+0.65,w:2.2,h:0.65,fontSize:34,bold:true,color:C.verde,align:'center',fontFace:'Calibri'});
+    });}
+
+    // ════ S5 RESUMO DE BÔNUS ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    strips(s);
+    s.addText('RESUMO DE BÔNUS',{x:0.4,y:0.4,w:12.5,h:0.8,fontSize:40,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`QUANTO VOCÊ PODE GANHAR EM ${MES} ${ANO}`,{x:0.4,y:1.25,w:12,h:0.32,fontSize:12,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
+
+    // Coluna esquerda (BÔNUS COLETIVO) — ocupa altura cheia
+    const colLeft_x = 0.4, colLeft_w = 6.05, colY = 1.8, colLeft_h = 5.45;
+    s.addShape('rect',{x:colLeft_x,y:colY,w:colLeft_w,h:colLeft_h,fill:{color:C.verde2},line:{color:C.ouro,width:1}});
+    s.addText('BÔNUS COLETIVO',{x:colLeft_x,y:colY+0.15,w:colLeft_w,h:0.35,fontSize:16,bold:true,color:C.branco,align:'center',charSpacing:2,fontFace:'Calibri'});
+    s.addText('(sapatos: vale o nível mais alto)',{x:colLeft_x,y:colY+0.5,w:colLeft_w,h:0.25,fontSize:10,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+
+    const coletivo = [
+      [`Meta Sapatos (${sapMeta}+)`, BONUS.sapMeta],
+      [`Super Meta (${sapSuper}+)`, BONUS.sapSuper],
+      [`Hiper Meta (${sapHiper}+)`, BONUS.sapHiper]
+    ];
+    if(METAS.meias>0)    coletivo.push(['Meta de Meias', BONUS.acessorio]);
+    if(METAS.cintos>0)   coletivo.push(['Meta de Cintos', BONUS.acessorio]);
+    if(METAS.limpeza>0)  coletivo.push(['Meta de Produtos', BONUS.acessorio]);
+    if(METAS.carteiras>0)coletivo.push(['Meta de Carteiras', BONUS.acessorio]);
+
+    const rowHC = (colLeft_h-1.0) / coletivo.length;
+    coletivo.forEach((row,i) => {
+      const y = colY + 0.95 + i*rowHC;
+      if(i%2===0) s.addShape('rect',{x:colLeft_x+0.15,y,w:colLeft_w-0.3,h:rowHC,fill:{color:C.verde},line:{color:C.verde,width:0}});
+      s.addText(row[0],{x:colLeft_x+0.3,y,w:colLeft_w-2.0,h:rowHC,fontSize:12,color:C.branco,valign:'middle',fontFace:'Calibri'});
+      s.addText(`R$ ${row[1]}`,{x:colLeft_x+colLeft_w-1.65,y,w:1.5,h:rowHC,fontSize:14,bold:true,color:C.ouro,align:'right',valign:'middle',fontFace:'Calibri'});
+    });
+
+    // Coluna direita SUPERIOR (BÔNUS INDIVIDUAL) — altura reduzida
+    const colRight_x = 6.95, colRight_w = 6.05;
+    const colRight_h = 2.85;
+    s.addShape('rect',{x:colRight_x,y:colY,w:colRight_w,h:colRight_h,fill:{color:C.verde2},line:{color:C.ouro,width:1}});
+    s.addText('BÔNUS INDIVIDUAL',{x:colRight_x,y:colY+0.12,w:colRight_w,h:0.32,fontSize:15,bold:true,color:C.branco,align:'center',charSpacing:2,fontFace:'Calibri'});
+    s.addText('(você conquista, você recebe)',{x:colRight_x,y:colY+0.42,w:colRight_w,h:0.22,fontSize:9,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+
+    const individual = [
+      ['Maior vendedora de mix', BONUS.maiorMix],
+      ['Melhor conversão de mix', BONUS.melhorConv],
+      [`Maior venda (+R$ ${BONUS.maiorVendaMin.toLocaleString('pt-BR')})`, BONUS.maiorVenda]
+    ];
+    const rowHI = (colRight_h-0.75) / individual.length;
+    individual.forEach((row,i) => {
+      const y = colY + 0.7 + i*rowHI;
+      if(i%2===0) s.addShape('rect',{x:colRight_x+0.15,y,w:colRight_w-0.3,h:rowHI,fill:{color:C.verde},line:{color:C.verde,width:0}});
+      s.addText(row[0],{x:colRight_x+0.3,y,w:colRight_w-2.0,h:rowHI,fontSize:11,color:C.branco,valign:'middle',fontFace:'Calibri'});
+      s.addText(`R$ ${row[1]}`,{x:colRight_x+colRight_w-1.65,y,w:1.5,h:rowHI,fontSize:13,bold:true,color:C.ouro,align:'right',valign:'middle',fontFace:'Calibri'});
+    });
+
+    // ── CAIXA TOTAL MÁXIMO (dourada, gigante, destacada) ── canto inferior direito
+    const tot_x = colRight_x, tot_y = colY + colRight_h + 0.20, tot_w = colRight_w, tot_h = 2.40;
+    s.addShape('rect',{x:tot_x,y:tot_y,w:tot_w,h:tot_h,fill:{color:C.ouro},line:{color:C.ouro2,width:2}});
+    s.addText('TOTAL MÁXIMO',{x:tot_x,y:tot_y+0.25,w:tot_w,h:0.4,fontSize:18,bold:true,color:C.verde,align:'center',charSpacing:4,fontFace:'Calibri'});
+    s.addShape('line',{x:tot_x+1.5,y:tot_y+0.78,w:tot_w-3.0,h:0,line:{color:C.verde,width:1.2}});
+    s.addText(`R$ ${TOTAL_MAX.toLocaleString('pt-BR')},00`,{x:tot_x,y:tot_y+0.85,w:tot_w,h:1.0,fontSize:54,bold:true,color:C.verde,align:'center',fontFace:'Calibri'});
+    s.addText('bônus coletivo + individual',{x:tot_x,y:tot_y+1.95,w:tot_w,h:0.32,fontSize:11,italic:true,color:C.verde,align:'center',fontFace:'Calibri'});}
+
+    // ════ S6 REGRAS & DESAFIO ════
+    {const s=pptx.addSlide();
+    s.background={color:C.creme};
+    strips(s);
+    s.addText('REGRAS & DESAFIO',{x:0.4,y:0.4,w:12.5,h:0.8,fontSize:40,bold:true,color:C.verde,fontFace:'Calibri'});
+    s.addText(`${MES} ${ANO}  •  LEIA COM ATENÇÃO`,{x:0.4,y:1.25,w:12,h:0.32,fontSize:12,bold:true,color:C.verde2,charSpacing:3,fontFace:'Calibri'});
+
+    // PAINEL REGRAS (verde escuro)
+    s.addShape('rect',{x:0.4,y:1.8,w:6.05,h:5.4,fill:{color:C.verde},line:{color:C.ouro,width:1.5}});
+    s.addText('REGRAS MAIOR VENDA',{x:0.4,y:1.95,w:6.05,h:0.4,fontSize:16,bold:true,color:C.ouro,align:'center',charSpacing:2,fontFace:'Calibri'});
+    s.addShape('line',{x:1.5,y:2.40,w:3.85,h:0,line:{color:C.ouro,width:0.8}});
+
+    const regras = [
+      ['01', `Venda única acima de\nR$ ${BONUS.maiorVendaMin.toLocaleString('pt-BR')},00`],
+      ['02', 'Mandar comprovante\nno grupo da equipe'],
+      ['03', 'CPF único por\ncada venda'],
+      ['04', `Bônus: R$ ${BONUS.maiorVenda},00\npor venda válida`]
+    ];
+    regras.forEach((r,i) => {
+      const y = 2.65 + i*1.1;
+      s.addShape('ellipse',{x:0.7,y,w:0.7,h:0.7,fill:{color:C.ouro},line:{color:C.ouro2,width:1}});
+      s.addText(r[0],{x:0.7,y,w:0.7,h:0.7,fontSize:18,bold:true,color:C.verde,align:'center',valign:'middle',fontFace:'Calibri'});
+      s.addText(r[1],{x:1.6,y:y+0.05,w:4.7,h:0.7,fontSize:14,color:C.branco,valign:'middle',fontFace:'Calibri'});
+    });
+
+    // PAINEL DESAFIO (tom sobre tom bege)
+    s.addShape('rect',{x:6.85,y:1.8,w:6.05,h:5.4,fill:{color:'EDE4CC'},line:{color:C.ouro,width:1.5}});
+    s.addText('SEU DESAFIO DE ' + MES,{x:6.85,y:1.95,w:6.05,h:0.4,fontSize:16,bold:true,color:C.verde,align:'center',charSpacing:2,fontFace:'Calibri'});
+    s.addShape('line',{x:7.95,y:2.40,w:3.85,h:0,line:{color:C.ouro,width:0.8}});
+
+    const desafios = [
+      ['👞', 'Todo sapato sai com meia, cinto e produto'],
+      ['👝', 'Oferecer carteira em cada atendimento']
+    ];
+    if(METAS.prendedor>0) desafios.push(['📎', `${METAS.prendedor} prendedores — novo item, nova oportunidade`]);
+    desafios.push(['⭐', `Busque a maior venda — R$ ${BONUS.maiorVendaMin.toLocaleString('pt-BR')}+ manda no grupo!`]);
+    desafios.push(['🏆', `Seja a campeã de mix — R$ ${BONUS.maiorMix} é seu!`]);
+
+    const dRowH = 4.5 / desafios.length;
+    desafios.forEach((d,i) => {
+      const y = 2.65 + i*dRowH;
+      s.addText(d[0],{x:7.0,y,w:0.6,h:dRowH,fontSize:22,align:'center',valign:'middle'});
+      s.addText(d[1],{x:7.75,y,w:5.0,h:dRowH,fontSize:14,color:C.verde,valign:'middle',fontFace:'Calibri'});
+      if(i < desafios.length-1) s.addShape('line',{x:7.05,y:y+dRowH,w:5.7,h:0,line:{color:'C9A84C66',width:0.6}});
+    });}
+
+    // ════ S7 FECHAMENTO ════
+    {const s=pptx.addSlide();
+    s.background={color:C.verde};
+    // Motif decorativo: círculos verde-escuro
+    s.addShape('ellipse',{x:-2.0,y:-1.5,w:5.0,h:5.0,fill:{color:C.escuro},line:{color:C.escuro,width:0}});
+    s.addShape('ellipse',{x:10.5,y:-2.0,w:5.0,h:5.0,fill:{color:C.escuro},line:{color:C.escuro,width:0}});
+    s.addShape('ellipse',{x:9.5,y:4.8,w:5.5,h:5.5,fill:{color:C.escuro},line:{color:C.escuro,width:0}});
+    s.addShape('ellipse',{x:-2.0,y:4.0,w:4.0,h:4.0,fill:{color:'15321F'},line:{color:'15321F',width:0}});
+    strips(s);
+    s.addText('🏆',{x:5.65,y:1.3,w:1.9,h:1.5,fontSize:96,align:'center'});
+    s.addText(`${MES} É O MÊS DE`,{x:0.5,y:3.0,w:12.3,h:0.8,fontSize:42,bold:true,color:C.branco,align:'center',fontFace:'Calibri'});
+    s.addText('SUPERAR LIMITES!',{x:0.5,y:3.85,w:12.3,h:1.0,fontSize:60,bold:true,color:C.ouro,align:'center',fontFace:'Calibri'});
+    s.addText(`${sapHiper} sapatos. R$ ${TOTAL_MAX.toLocaleString('pt-BR')},00 em bônus. Vamos juntas!`,{x:0.5,y:5.1,w:12.3,h:0.6,fontSize:20,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+    s.addText(`LORETTO  SCARPA  •  EQUIPE  DE  VENDAS  •  ${MES}  ${ANO}`,{x:0.5,y:6.92,w:12.3,h:0.34,fontSize:12,bold:true,color:C.ouro,charSpacing:4,align:'center',fontFace:'Calibri'});}
+
+    const nomeArq = `Loretto_Scarpa_Metas_${MESES_NOMES[mesAtivo-1]}${ANO}.pptx`;
+    await pptx.writeFile({fileName: nomeArq});
+    toast(`✓ Apresentação de metas gerada: ${nomeArq}`);
+
+  } catch(e) {
+    console.error('Erro PPTX Metas:', e);
+    toast('Erro: ' + (e?.message || String(e)));
+  } finally {
+    if(btn){btn.disabled=false;btn.innerHTML='📊 Gerar Apresentação ▾';}
   }
 }
 
