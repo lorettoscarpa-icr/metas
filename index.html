@@ -1611,7 +1611,7 @@ svg{display:inline-block;vertical-align:middle;}
       </div>
       <button class="btn-tema" id="btn-tema" onclick="toggleTema()" title="Alternar modo claro/escuro">☀</button>
       <button class="btn-ajuda" onclick="abrirTutorial()" title="Como usar">?</button>
-      <button class="bsm" onclick="abrirCfg()">⚙ Metas</button>
+      <button class="bsm" id="btn-cfg-metas" onclick="abrirCfg()" style="display:none;">⚙ Metas</button>
       <button class="btn-logout" onclick="fazerLogout()">Sair ↗</button>
     </div>
   </header>
@@ -2166,6 +2166,8 @@ function render(){
   const btnPptx=document.getElementById('btn-gerar-pptx');
   const wrapPptx=document.getElementById('wrap-gerar-pptx');
   if(wrapPptx) wrapPptx.style.display=isG?'inline-block':'none';
+  const btnCfgMetas=document.getElementById('btn-cfg-metas');
+  if(btnCfgMetas) btnCfgMetas.style.display=isG?'inline-block':'none';
   // Seed só roda quando gestor autentica (já tem permissão)
   if(isG) runSeedSeNecessario();
   document.getElementById('aviso-futuro').style.display=futuro?'block':'none';
@@ -2959,6 +2961,7 @@ function renderConversao(){
 }
 
 async function abrirCfg(){
+  if(usuario !== '__gestor__'){ toast('Apenas o gestor pode editar metas.'); return; }
   const cfg=cfgAtualCache();
   const B=cfg.bonus||{sapMeta:100,sapSuper:150,sapHiper:200,acessorio:50,maiorMix:100,melhorConv:100,maiorVenda:100,maiorVendaMin:2000};
   const hipSap = (cfg.hipermetas && cfg.hipermetas.sapatos) || 0;
@@ -3023,6 +3026,7 @@ async function abrirCfg(){
 }
 function fecharCfg(){document.getElementById('modal').classList.remove('open');}
 async function salvarCfg(){
+  if(usuario !== '__gestor__'){ toast('Apenas o gestor pode editar metas.'); return; }
   const cfg=cfgAtualCache();
   cfg.diasUteis=parseInt(document.getElementById('cfg-dias').value)||26;
   cfg.ultraAtiva=document.getElementById('cfg-ultra-ativa')?.checked||false;
