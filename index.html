@@ -2626,21 +2626,24 @@ function renderStatusAtualizacao(){
 
       ultimaData = datas[0].str;
 
-      if(ultimaData === hoje_dt) {
+      // Referência: ONTEM (vendedoras registram o dia anterior; hoje ainda não fechou)
+      const dtUlt = datas[0].ts;
+      const dtHoje = new Date(); dtHoje.setHours(0,0,0,0);
+      const dtOntem = new Date(dtHoje); dtOntem.setDate(dtOntem.getDate() - 1);
+      const diff = Math.round((dtOntem - dtUlt) / (1000*60*60*24));
+
+      if(diff <= 0) {
+        // Em dia (atualizou ontem ou hoje)
         badge = 'ok';
         badgeLabel = 'Em dia ✓';
-        diasStr = 'hoje';
-      } else if(ultimaData === ontem) {
+        diasStr = (ultimaData === hoje_dt) ? 'hoje' : 'ontem';
+      } else if(diff === 1) {
         badge = 'atencao';
-        badgeLabel = 'Ontem';
-        diasStr = 'ontem';
+        badgeLabel = '1 dia atrasada';
+        diasStr = ultimaData;
       } else {
-        // Calcular quantos dias atrás
-        const [dd,mm] = ultimaData.split('/').map(Number);
-        const dtUlt = new Date(anoAtivo, mm-1, dd);
-        const diff = Math.round((new Date() - dtUlt) / (1000*60*60*24));
         badge = 'atrasada';
-        badgeLabel = `${diff}d sem atualizar`;
+        badgeLabel = `${diff} dias atrasada`;
         diasStr = ultimaData;
       }
     }
