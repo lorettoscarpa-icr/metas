@@ -2868,12 +2868,17 @@ function renderMaiorVenda(){
 
 function renderRanking(){
   const pv=accPorV(),pc=['p1','p2','p3',''];
-  document.getElementById('rank-grid').innerHTML=ACESS.map(cat=>{
+  // Card "Geral" soma todos os acessórios + cards individuais por categoria
+  const cols=[
+    {id:'_geral',nome:'Geral',svg:CATS[0].svg,fn:(vd)=>ACESS.reduce((sum,c)=>sum+(vd[c.id]||0),0)},
+    ...ACESS.map(cat=>({id:cat.id,nome:cat.nome,svg:cat.svg,fn:(vd)=>vd[cat.id]||0}))
+  ];
+  document.getElementById('rank-grid').innerHTML=cols.map(col=>{
     const dados=VENDEDORAS.map(v=>{
-      return{nome:v.nome,val:pv[v.id][cat.id]||0,foto:v.foto||null};
+      return{nome:v.nome,val:col.fn(pv[v.id]),foto:v.foto||null};
     }).sort((a,b)=>b.val-a.val);
     const max=dados[0]?.val||1;
-    return '<div class="rk"><div class="rk-tit">'+cat.svg+' '+cat.nome+'</div>'+
+    return '<div class="rk"><div class="rk-tit">'+col.svg+' '+col.nome+'</div>'+
       dados.map((d,i)=>{
         const av=d.foto?'<img src="'+d.foto+'" alt="'+d.nome+'">':d.nome[0];
         return '<div class="rk-row">'+
