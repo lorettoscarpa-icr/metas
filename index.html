@@ -587,6 +587,17 @@ body.light-mode .mv-rank-bar{background:rgba(26,46,14,.1);}
 body.light-mode .mv-rank-bar-f{background:linear-gradient(90deg,#8a6c10,#b8921a);}
 body.light-mode .mv-vazio{color:rgba(26,46,14,.4);}
 body.light-mode .mv-rank-avatar{background:#f0e8cc;border-color:rgba(184,146,26,.4);}
+body.light-mode .mv-minhas-item{background:rgba(184,146,26,.06);border-color:rgba(184,146,26,.25);}
+body.light-mode .mv-minhas-item.editando{background:rgba(184,146,26,.15);border-color:#b8921a;}
+body.light-mode .mv-minhas-val{color:#8a6c10;}
+body.light-mode .mv-minhas-btn{border-color:rgba(184,146,26,.4);color:#8a6c10;}
+body.light-mode .mv-minhas-btn:hover{background:rgba(184,146,26,.1);border-color:#b8921a;}
+body.light-mode .mv-minhas-lider{background:linear-gradient(90deg,rgba(184,146,26,.18),rgba(184,146,26,.06));border-color:rgba(184,146,26,.45);color:#8a6c10;}
+body.light-mode .mv-rank-winner{background:rgba(184,146,26,.18);border-color:rgba(184,146,26,.45);color:#8a6c10;}
+body.light-mode .mv-rank-sem{border-top-color:rgba(26,46,14,.1);color:rgba(26,46,14,.5);}
+body.light-mode .mv-rank-sem-nome{color:rgba(26,46,14,.7);}
+body.light-mode .mv-btn-cancel{border-color:rgba(26,46,14,.2);color:rgba(26,46,14,.55);}
+body.light-mode .mv-btn-cancel:hover{border-color:rgba(26,46,14,.45);color:#1a2e0e;}
 
 /* ── Inputs globais ── */
 body.light-mode .minp{
@@ -1373,6 +1384,29 @@ hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
 .mv-rank-bar-f{height:100%;background:linear-gradient(90deg,var(--ou3),var(--ou2));transition:width .5s;}
 .mv-rank-val{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ou2);font-weight:300;flex-shrink:0;}
 .mv-vazio{font-size:10px;color:var(--cr3);text-align:center;padding:20px 0;letter-spacing:1.5px;}
+/* Lista de vendas próprias */
+.mv-minhas-header{display:flex;align-items:center;justify-content:space-between;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);margin-bottom:8px;}
+.mv-minhas-count{color:var(--ou2);font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:0;}
+.mv-minhas-lista{display:flex;flex-direction:column;gap:6px;}
+.mv-minhas-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.18);}
+.mv-minhas-item.editando{background:rgba(201,168,76,.12);border-color:var(--ou);}
+.mv-minhas-val{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ou2);flex:1;}
+.mv-minhas-data{font-size:10px;color:var(--cr3);letter-spacing:1px;}
+.mv-minhas-acoes{display:flex;gap:4px;}
+.mv-minhas-btn{background:transparent;border:1px solid rgba(201,168,76,.3);color:var(--ou2);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:5px 9px;cursor:pointer;font-family:'Barlow',sans-serif;transition:all .2s;}
+.mv-minhas-btn:hover{background:rgba(201,168,76,.1);border-color:var(--ou);}
+.mv-minhas-btn.del{border-color:rgba(192,80,74,.4);color:rgba(192,80,74,.85);}
+.mv-minhas-btn.del:hover{background:rgba(192,80,74,.12);border-color:rgba(192,80,74,.8);}
+.mv-minhas-lider{margin-top:10px;padding:8px 10px;background:linear-gradient(90deg,rgba(201,168,76,.18),rgba(201,168,76,.06));border:1px solid rgba(201,168,76,.4);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ou2);text-align:center;}
+.mv-btn-row{display:flex;gap:8px;align-items:stretch;margin-top:4px;}
+.mv-btn-cancel{background:transparent;border:1px solid var(--oud);color:var(--cr3);font-family:'Barlow',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:0 14px;cursor:pointer;transition:all .2s;}
+.mv-btn-cancel:hover{border-color:var(--cr2);color:var(--cr);}
+/* Badge da ganhadora no ranking */
+.mv-rank-winner{display:inline-block;font-size:8px;letter-spacing:1.2px;color:var(--ou);margin-left:8px;background:rgba(201,168,76,.18);padding:2px 6px;border:1px solid rgba(201,168,76,.45);font-weight:600;vertical-align:middle;}
+/* Vendedoras sem registro no ranking */
+.mv-rank-sem{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.08);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cr3);}
+.mv-rank-sem-lbl{font-style:italic;opacity:.7;margin-right:auto;}
+.mv-rank-sem-nome{color:var(--cr2);}
 @media(max-width:640px){.mv-layout{grid-template-columns:1fr;}}
 
 /* ── Card status de atualização ── */
@@ -1698,15 +1732,11 @@ svg{display:inline-block;vertical-align:middle;}
                 <label>Data da venda</label>
                 <input class="mv-inp" type="date" id="mv-data">
               </div>
-              <div class="mv-atual" id="mv-atual">
-                <div class="mv-atual-header">
-                  <div class="mv-atual-info">Registro atual: <strong id="mv-atual-val">—</strong> em <span id="mv-atual-data">—</span>
-                    <button onclick="editarMaiorVenda()" style="background:transparent;border:none;color:var(--ou);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;margin-left:10px;text-decoration:underline;">Editar</button>
-                  </div>
-                </div>
+              <div class="mv-btn-row">
+                <button class="mv-btn" id="mv-btn" onclick="registrarMaiorVenda()">✓ Registrar</button>
+                <button class="mv-btn-cancel" id="mv-btn-cancel" style="display:none;" onclick="cancelarEdicaoMV()">Cancelar</button>
               </div>
-              <button class="mv-btn" id="mv-btn" onclick="registrarMaiorVenda()">✓ Registrar</button>
-              <button class="mv-btn-del" id="mv-btn-del" style="display:none;" onclick="excluirMaiorVenda()">✕ Excluir registro</button>
+              <div class="mv-atual" id="mv-atual"></div>
             </div>
             <div class="mv-ranking">
               <div class="mv-ranking-titulo">Ranking do mês</div>
@@ -1929,7 +1959,7 @@ function iniciarListeners(){
   VENDEDORAS.forEach(v=>{
     const k=keyMV(v.id,anoAtivo,mesAtivo);
     const unsub=db.collection('ls_maior_venda').doc(k).onSnapshot(doc=>{
-      cacheHist[k]=doc.exists?doc.data():null;
+      cacheHist[k]=doc.exists?normalizarRegistroMV(doc.data()):null;
       renderMaiorVenda();
     });
     unsubscribers.push(unsub);
@@ -2609,7 +2639,10 @@ function renderStatusAtualizacao(){
   })();
 
   grid.innerHTML = VENDEDORAS.map(v => {
-    const hist = histAtualCache(v.id).filter(d => !d.especial);
+    // Conta qualquer registro como atualização — incluindo dias especiais
+    // (Domingo, Feriado, Fechado, Férias, Atestado, Reunião).
+    // A vendedora atualizou o sistema, mesmo que não tenha havido venda.
+    const hist = histAtualCache(v.id);
     const vObj = VENDEDORAS.find(x => x.id === v.id);
 
     let ultimaData = null;
@@ -2664,47 +2697,106 @@ function renderStatusAtualizacao(){
 // ══ MAIOR VENDA DO MÊS ══
 const keyMV = (v,ano,mes) => `ls_mv_${v}_${ano}_${String(mes).padStart(2,'0')}`;
 
+// Gera ID único pra cada venda (permite múltiplas vendas por vendedora no mesmo mês)
+function gerarIdVenda(){
+  return 'mv_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+}
+
+// Normaliza o registro lido do Firestore para o formato atual {vendedora, vendas: [...]}.
+// O formato antigo era {vendedora, valor, data} — migra transparentemente, sem perda.
+function normalizarRegistroMV(data){
+  if(!data) return null;
+  if(Array.isArray(data.vendas)){
+    return data;
+  }
+  if(data.valor !== undefined && data.data){
+    return {
+      vendedora: data.vendedora,
+      vendas: [{ id: gerarIdVenda(), valor: data.valor, data: data.data }]
+    };
+  }
+  return { vendedora: data.vendedora, vendas: [] };
+}
+
 async function carregarMaiorVendas(){
-  // Carregar de todos os jogadores do mês ativo
   await Promise.all(VENDEDORAS.map(async v => {
     const k = keyMV(v.id, anoAtivo, mesAtivo);
     if(cacheHist[k] !== undefined) return;
     try{
       const doc = await db.collection('ls_maior_venda').doc(k).get();
-      cacheHist[k] = doc.exists ? doc.data() : null;
+      cacheHist[k] = doc.exists ? normalizarRegistroMV(doc.data()) : null;
     }catch(e){ cacheHist[k] = null; }
   }));
 }
 
-function editarMaiorVenda(){
+function editarMaiorVenda(saleId){
   const k = keyMV(usuario, anoAtivo, mesAtivo);
   const meu = cacheHist[k];
-  if(!meu) return;
+  if(!meu?.vendas) return;
+  const venda = meu.vendas.find(s => s.id === saleId);
+  if(!venda) return;
+
   const campo = document.getElementById('mv-valor');
+  const campoData = document.getElementById('mv-data');
   if(campo){
-    campo.value = meu.valor;
-    campo.dataset.editando = '1';
+    campo.value = venda.valor;
+    campo.dataset.editandoId = saleId;
     campo.focus();
+  }
+  if(campoData){
+    // Converte "23/05/2026" -> "2026-05-23"
+    const [dd, mm, yyyy] = venda.data.split('/');
+    campoData.value = `${yyyy}-${mm}-${dd}`;
   }
   const tituloEl = document.getElementById('mv-form-titulo');
   const btnEl = document.getElementById('mv-btn');
-  if(tituloEl) tituloEl.textContent = 'Editar minha maior venda';
+  const cancelBtn = document.getElementById('mv-btn-cancel');
+  if(tituloEl) tituloEl.textContent = 'Editar venda';
   if(btnEl) btnEl.textContent = '↺ Salvar alteração';
+  if(cancelBtn) cancelBtn.style.display = 'block';
+  renderMaiorVenda(); // pra destacar a linha em edição
 }
 
-async function excluirMaiorVenda(){
-  if(!confirm('Excluir seu registro de maior venda deste mês?')) return;
-  const btn = document.getElementById('mv-btn-del');
-  btn.disabled = true;
-  loading(true);
+function cancelarEdicaoMV(){
+  const campo = document.getElementById('mv-valor');
+  if(campo){ campo.value = ''; delete campo.dataset.editandoId; }
+  const tituloEl = document.getElementById('mv-form-titulo');
+  const btnEl = document.getElementById('mv-btn');
+  const cancelBtn = document.getElementById('mv-btn-cancel');
   const k = keyMV(usuario, anoAtivo, mesAtivo);
-  await db.collection('ls_maior_venda').doc(k).delete();
-  cacheHist[k] = null;
-  loading(false);
-  btn.disabled = false;
-  document.getElementById('mv-valor').value = '';
-  toast('Registro excluído.');
+  const temVendas = cacheHist[k]?.vendas?.length > 0;
+  if(tituloEl) tituloEl.textContent = temVendas ? 'Adicionar nova venda' : 'Registrar minha maior venda';
+  if(btnEl) btnEl.textContent = temVendas ? '✓ Adicionar venda' : '✓ Registrar';
+  if(cancelBtn) cancelBtn.style.display = 'none';
   renderMaiorVenda();
+}
+
+async function excluirMaiorVenda(saleId){
+  if(!confirm('Excluir esta venda?')) return;
+  const k = keyMV(usuario, anoAtivo, mesAtivo);
+  const meu = cacheHist[k];
+  if(!meu?.vendas) return;
+
+  loading(true);
+  const novasVendas = meu.vendas.filter(s => s.id !== saleId);
+  if(novasVendas.length === 0){
+    await db.collection('ls_maior_venda').doc(k).delete();
+    cacheHist[k] = null;
+  } else {
+    const reg = { vendedora: usuario, vendas: novasVendas };
+    await db.collection('ls_maior_venda').doc(k).set(reg);
+    cacheHist[k] = reg;
+  }
+  loading(false);
+
+  // Se estava editando justamente a venda excluída, reseta o form
+  const campo = document.getElementById('mv-valor');
+  if(campo?.dataset.editandoId === saleId){
+    cancelarEdicaoMV();
+  } else {
+    toast('Venda excluída.');
+    renderMaiorVenda();
+  }
 }
 
 async function registrarMaiorVenda(){
@@ -2721,11 +2813,10 @@ async function registrarMaiorVenda(){
     return;
   }
 
-  // Validar que a data pertence ao mês ativo
+  // Valida que a data pertence ao mês ativo
   const [y,m,d] = dataStr.split('-').map(Number);
   if(m !== mesAtivo || y !== anoAtivo){
     toast(`⚠ Data inválida — use uma data de ${MESES_NOMES[mesAtivo-1]} ${anoAtivo}.`);
-    // Resetar para hoje
     const mvInp=document.getElementById('mv-data');
     if(mvInp){
       const dn=new Date();
@@ -2733,7 +2824,7 @@ async function registrarMaiorVenda(){
     }
     return;
   }
-  // Bloquear datas futuras
+  // Bloqueia datas futuras
   const djMV=new Date(), djD=djMV.getDate(), djM=djMV.getMonth()+1, djA=djMV.getFullYear();
   if(y===djA && m===djM && d>djD){
     toast('⚠ Não é possível registrar datas futuras.');
@@ -2743,23 +2834,49 @@ async function registrarMaiorVenda(){
   const valor = parseFloat(valorStr);
   const dataFormatada = `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
 
+  const k = keyMV(usuario, anoAtivo, mesAtivo);
+  const existente = cacheHist[k];
+  const campo = document.getElementById('mv-valor');
+  const editandoId = campo?.dataset.editandoId;
+
+  // Bloqueia duplicata exata (mesmo valor + mesma data) — só em adição, não em edição
+  if(!editandoId && existente?.vendas){
+    const duplicada = existente.vendas.find(s => s.valor === valor && s.data === dataFormatada);
+    if(duplicada){
+      toast('Você já registrou uma venda idêntica (mesmo valor e data).');
+      return;
+    }
+  }
+
   btn.disabled = true;
   loading(true);
 
-  const k = keyMV(usuario, anoAtivo, mesAtivo);
-  const reg = { vendedora: usuario, valor, data: dataFormatada };
+  let novasVendas;
+  if(editandoId && existente?.vendas){
+    // Editando venda existente — atualiza pelo ID
+    novasVendas = existente.vendas.map(s =>
+      s.id === editandoId ? { ...s, valor, data: dataFormatada } : s
+    );
+  } else {
+    // Adicionando nova venda — empilha
+    const novaVenda = { id: gerarIdVenda(), valor, data: dataFormatada };
+    novasVendas = [...(existente?.vendas || []), novaVenda];
+  }
+
+  const reg = { vendedora: usuario, vendas: novasVendas };
   await db.collection('ls_maior_venda').doc(k).set(reg);
   cacheHist[k] = reg;
 
   loading(false);
   btn.disabled = false;
-  const campoV = document.getElementById('mv-valor');
-  if(campoV){ campoV.value=''; delete campoV.dataset.editando; }
+  if(campo){ campo.value=''; delete campo.dataset.editandoId; }
   const tituloEl2 = document.getElementById('mv-form-titulo');
   const btnEl2 = document.getElementById('mv-btn');
-  if(tituloEl2) tituloEl2.textContent = 'Registrar minha maior venda';
-  if(btnEl2) btnEl2.textContent = '✓ Registrar';
-  toast('✓ Maior venda registrada!');
+  const cancelBtn = document.getElementById('mv-btn-cancel');
+  if(tituloEl2) tituloEl2.textContent = 'Adicionar nova venda';
+  if(btnEl2) btnEl2.textContent = '✓ Adicionar venda';
+  if(cancelBtn) cancelBtn.style.display = 'none';
+  toast(editandoId ? '✓ Venda atualizada!' : '✓ Venda registrada!');
   renderMaiorVenda();
 }
 
@@ -2772,38 +2889,70 @@ function renderMaiorVenda(){
   const formArea = document.getElementById('mv-form-area');
   if(formArea) formArea.style.display = isG ? 'none' : 'block';
 
-  // Mostrar registro atual da vendedora
+  // Painel das minhas vendas
   if(!isG){
     const k = keyMV(usuario, anoAtivo, mesAtivo);
     const meu = cacheHist[k];
     const atualEl = document.getElementById('mv-atual');
     const btnEl   = document.getElementById('mv-btn');
     const tituloEl = document.getElementById('mv-form-titulo');
-    const delBtn = document.getElementById('mv-btn-del');
-    if(meu){
-      document.getElementById('mv-atual-val').textContent = `R$ ${meu.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-      document.getElementById('mv-atual-data').textContent = meu.data;
+    const campoValor = document.getElementById('mv-valor');
+    const cancelBtn = document.getElementById('mv-btn-cancel');
+    const editandoId = campoValor?.dataset.editandoId;
+
+    if(meu?.vendas?.length > 0){
+      // Ordena minhas vendas por valor (maior primeiro)
+      const vendasOrdenadas = [...meu.vendas].sort((a,b) => b.valor - a.valor);
+      const minhaMaior = vendasOrdenadas[0].valor;
+
+      // Maior do mês geral (entre todas as vendedoras) — pra saber se ela está liderando
+      let maxGeral = 0;
+      VENDEDORAS.forEach(v => {
+        const reg = cacheHist[keyMV(v.id, anoAtivo, mesAtivo)];
+        reg?.vendas?.forEach(s => { if(s.valor > maxGeral) maxGeral = s.valor; });
+      });
+      const liderando = minhaMaior >= maxGeral && maxGeral > 0;
+
+      atualEl.innerHTML = `
+        <div class="mv-minhas-header">
+          <span>Minhas vendas registradas</span>
+          <span class="mv-minhas-count">${meu.vendas.length} ${meu.vendas.length === 1 ? 'venda' : 'vendas'}</span>
+        </div>
+        <div class="mv-minhas-lista">
+          ${vendasOrdenadas.map(s => `
+            <div class="mv-minhas-item ${editandoId === s.id ? 'editando' : ''}">
+              <div class="mv-minhas-val">R$ ${s.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+              <div class="mv-minhas-data">${s.data}</div>
+              <div class="mv-minhas-acoes">
+                <button class="mv-minhas-btn" onclick="editarMaiorVenda('${s.id}')">Editar</button>
+                <button class="mv-minhas-btn del" onclick="excluirMaiorVenda('${s.id}')">Excluir</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        ${liderando ? `<div class="mv-minhas-lider">⭐ Você está liderando o mês com R$ ${minhaMaior.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
+      `;
       atualEl.classList.add('show');
-      if(tituloEl) tituloEl.textContent = 'Registrar minha maior venda';
-      if(btnEl) btnEl.textContent = '✓ Registrar';
-      if(delBtn) delBtn.style.display='block';
-      // Não pré-preencher o campo — deixar limpo para novo registro
-      // O campo só é preenchido se a vendedora clicar em "Editar"
-      const campoValor = document.getElementById('mv-valor');
-      if(campoValor && !campoValor.dataset.editando) campoValor.value = '';
     } else {
+      atualEl.innerHTML = '';
       atualEl.classList.remove('show');
-      if(tituloEl) tituloEl.textContent = 'Registrar minha maior venda';
-      if(btnEl) btnEl.textContent = '✓ Registrar';
-      if(delBtn) delBtn.style.display='none';
     }
-    // Restringir e definir data padrão da maior venda
+
+    // Texto do form (só altera se NÃO está editando — preserva título "Editar venda")
+    if(!editandoId){
+      const temVendas = meu?.vendas?.length > 0;
+      if(tituloEl) tituloEl.textContent = temVendas ? 'Adicionar nova venda' : 'Registrar minha maior venda';
+      if(btnEl) btnEl.textContent = temVendas ? '✓ Adicionar venda' : '✓ Registrar';
+      if(cancelBtn) cancelBtn.style.display = 'none';
+      if(campoValor && !campoValor.dataset.editandoId && document.activeElement !== campoValor) campoValor.value = '';
+    }
+
+    // Data padrão
     const mvInp = document.getElementById('mv-data');
     if(mvInp){
       const totalDiasMV=new Date(anoAtivo,mesAtivo,0).getDate();
       const dNow=new Date(), mesH=dNow.getMonth()+1, anoH=dNow.getFullYear(), diaH=dNow.getDate();
       mvInp.min=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-01`;
-      // Max: se mês ativo = hoje → hoje; senão → último dia do mês
       if(mesH===mesAtivo&&anoH===anoAtivo){
         mvInp.max=`${anoH}-${String(mesH).padStart(2,'0')}-${String(diaH).padStart(2,'0')}`;
       } else {
@@ -2819,53 +2968,73 @@ function renderMaiorVenda(){
     }
   }
 
-  // Ranking
+  // Ranking — uma linha POR VENDA (todas as vendas qualificadas, ordenadas por valor)
   const lista = document.getElementById('mv-rank-lista');
   if(!lista) return;
 
-  const dados = VENDEDORAS.map(v => {
-    const k = keyMV(v.id, anoAtivo, mesAtivo);
-    const reg = cacheHist[k];
-    return { v, reg, valor: reg?.valor || 0 };
-  }).sort((a,b) => b.valor - a.valor);
+  const todasVendas = [];
+  VENDEDORAS.forEach(v => {
+    const reg = cacheHist[keyMV(v.id, anoAtivo, mesAtivo)];
+    if(reg?.vendas){
+      reg.vendas.forEach(s => todasVendas.push({ ...s, vendedora: v }));
+    }
+  });
+  todasVendas.sort((a,b) => b.valor - a.valor);
 
-  const max = dados[0]?.valor || 1;
-  const temAlgum = dados.some(d => d.valor > 0);
-  const pc = ['p1','p2','p3',''];
-
-  if(!temAlgum){
+  if(todasVendas.length === 0){
     lista.innerHTML = '<div class="mv-vazio">NENHUM REGISTRO AINDA</div>';
     return;
   }
 
-  lista.innerHTML = dados.map((d,i) => {
-    if(!d.reg) return `<div class="mv-rank-row">
-      <div class="mv-rank-pos ${pc[i]||''}">${i+1}</div>
-      <div class="mv-rank-avatar">${d.v.nome[0]}</div>
+  const max = todasVendas[0].valor;
+  const pc = ['p1','p2','p3'];
+
+  // Vendedoras sem nenhum registro — entram como linhas no fim do ranking,
+  // seguindo a numeração sequencial e o mesmo visual (estilo do print).
+  const semRegistro = VENDEDORAS.filter(v => {
+    const reg = cacheHist[keyMV(v.id, anoAtivo, mesAtivo)];
+    return !reg?.vendas?.length;
+  });
+
+  const linhasHTML = todasVendas.map((s, i) => {
+    const avatarHtml = s.vendedora.foto
+      ? `<img src="${s.vendedora.foto}" alt="${s.vendedora.nome}">`
+      : s.vendedora.nome[0];
+    const posClass = pc[i] || '';
+    // Apenas a 1ª venda no ranking ganha o badge — é a ganhadora do bônus
+    const winnerBadge = i === 0 ? '<span class="mv-rank-winner">🏆 Ganhadora</span>' : '';
+
+    return `<div class="mv-rank-row">
+      <div class="mv-rank-pos ${posClass}">${i+1}</div>
+      <div class="mv-rank-avatar">${avatarHtml}</div>
       <div class="mv-rank-info">
-        <div class="mv-rank-nome">${d.v.nome}</div>
+        <div class="mv-rank-nome">${s.vendedora.nome}${winnerBadge}</div>
+        <div class="mv-rank-data">${s.data}</div>
+        <div class="mv-rank-bar"><div class="mv-rank-bar-f" style="width:${(s.valor/max*100)}%"></div></div>
+      </div>
+      <div class="mv-rank-val">R$ ${s.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+    </div>`;
+  }).join('');
+
+  // Linhas das vendedoras sem registro — continuam a numeração após a última venda
+  const offsetPos = todasVendas.length;
+  const semRegHTML = semRegistro.map((v, idx) => {
+    const avatarHtml = v.foto
+      ? `<img src="${v.foto}" alt="${v.nome}">`
+      : v.nome[0];
+    return `<div class="mv-rank-row">
+      <div class="mv-rank-pos">${offsetPos + idx + 1}</div>
+      <div class="mv-rank-avatar">${avatarHtml}</div>
+      <div class="mv-rank-info">
+        <div class="mv-rank-nome">${v.nome}</div>
         <div class="mv-rank-data">sem registro</div>
       </div>
       <div class="mv-rank-val" style="color:var(--cr3);font-size:14px;">—</div>
     </div>`;
-
-    const avatarHtml = d.v.foto
-      ? `<img src="${d.v.foto}" alt="${d.v.nome}">`
-      : d.v.nome[0];
-
-    return `<div class="mv-rank-row">
-      <div class="mv-rank-pos ${pc[i]||''}">${i+1}</div>
-      <div class="mv-rank-avatar">${avatarHtml}</div>
-      <div class="mv-rank-info">
-        <div class="mv-rank-nome">${d.v.nome}</div>
-        <div class="mv-rank-data">${d.reg.data}</div>
-        <div class="mv-rank-bar"><div class="mv-rank-bar-f" style="width:${max>0?(d.valor/max*100):0}%"></div></div>
-      </div>
-      <div class="mv-rank-val">R$ ${d.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
-    </div>`;
   }).join('');
-}
 
+  lista.innerHTML = linhasHTML + semRegHTML;
+}
 function renderRanking(){
   const pv=accPorV(),pc=['p1','p2','p3',''];
   // Card "Geral" soma todos os acessórios + cards individuais por categoria
