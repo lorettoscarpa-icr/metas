@@ -1989,6 +1989,27 @@ function accPorV(){
   return r;
 }
 
+// ══ CONTAGEM REAL DE DIAS ÚTEIS TRABALHADOS (GLOBAL) ══
+// Retorna o nº de DATAS DISTINTAS em que qualquer vendedora (ativa ou
+// arquivada) registrou uma venda NORMAL (sem flag .especial) no mês ativo.
+// Reflete dias úteis efetivamente trabalhados pela loja — domingos,
+// feriados, fechados, férias, etc. ficam de fora porque são marcados como
+// dia especial e não contam aqui.
+function diasTrabalhadosGlobal(){
+  const datas=new Set();
+  VENDEDORAS.forEach(v=>{
+    histAtualCache(v.id).forEach(d=>{
+      if(!d.especial && d.data) datas.add(d.data);
+    });
+  });
+  ARQUIVADAS.forEach(nome=>{
+    histAtualCache(nome).forEach(d=>{
+      if(!d.especial && d.data) datas.add(d.data);
+    });
+  });
+  return datas.size;
+}
+
 // ══ MAPEAMENTO EMAIL → VENDEDORA ══
 const EMAIL_MAP = {
   'ialeylorettoscarpa@gmail.com':     'Ialey',
@@ -2230,19 +2251,22 @@ function renderCards(ag,cfg){
 
 function renderCats(ag,cfg,isG){
   const diasUteis=cfg.diasUteis||26;
-  // Calcular dias corridos passados no mês atual com base na data real
+  // ══ CONTAGEM REAL DE DIAS ÚTEIS PASSADOS ══
+  // Antes era estimado por proporção (dia/total × diasUteis). Agora conta
+  // os dias efetivamente trabalhados: datas distintas em que qualquer
+  // vendedora registrou venda normal (não-especial). Domingos, feriados e
+  // dias marcados como especiais ficam fora naturalmente.
+  // Para meses passados/futuros mantemos o comportamento anterior
+  // (todos os dias úteis considerados como passados) para não distorcer
+  // visualizações históricas.
   const hoje_calc=new Date();
-  const diaHoje=hoje_calc.getDate();
   const mesHoje=hoje_calc.getMonth()+1;
   const anoHoje=hoje_calc.getFullYear();
-  // Se estamos no mês ativo, usar o dia atual como referência proporcional
+  const mesEhAtual=(anoAtivo===anoHoje && mesAtivo===mesHoje);
   let diasPassados;
-  if(anoAtivo===anoHoje&&mesAtivo===mesHoje){
-    // Proporção: dia atual / total de dias no mês * dias úteis configurados
-    const totalDiasMes=new Date(anoHoje,mesHoje,0).getDate();
-    diasPassados=Math.round((diaHoje/totalDiasMes)*diasUteis);
+  if(mesEhAtual){
+    diasPassados=Math.min(diasTrabalhadosGlobal(),diasUteis);
   } else {
-    // Mês passado — considerar todos os dias úteis como passados
     diasPassados=diasUteis;
   }
   const diasRestantes=Math.max(diasUteis-diasPassados,1);
