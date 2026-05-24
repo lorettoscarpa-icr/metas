@@ -2594,10 +2594,15 @@ function renderDestaques(){
   const lidConv = rankConv[0];
 
   // ── 4. Maior Venda do Mês ──
+  // Lê o novo formato {vendas:[{valor,data,id},...]} e pega a maior venda de cada vendedora
   const mvDados = VENDEDORAS.map(v=>{
     const k = keyMV(v.id, anoAtivo, mesAtivo);
     const reg = cacheHist[k];
-    return {v, val:reg?.valor||0, data:reg?.data||null};
+    if(reg?.vendas?.length > 0){
+      const maior = [...reg.vendas].sort((a,b) => b.valor - a.valor)[0];
+      return {v, val:maior.valor, data:maior.data};
+    }
+    return {v, val:0, data:null};
   }).sort((a,b)=>b.val-a.val);
   const lidMV = mvDados[0];
 
@@ -3573,9 +3578,15 @@ async function gerarApresentacaoMes() {
     const campea  = [...VENDS].map(v=>({...v,tot:ACESS.reduce((s,c)=>s+v[c],0)})).sort((a,b)=>b.tot-a.tot)[0]?.nome||'—';
 
     // Top vendas (Maior Venda do Mês por vendedora → ranking)
+    // Lê o novo formato {vendas:[...]} e pega a maior venda de cada vendedora
     const mvRaw = VENDEDORAS.map(v => {
       const k = keyMV(v.id, anoAtivo, mesAtivo);
-      return {nome:v.id, valor:cacheHist[k]?.valor||0, destaque:''};
+      const reg = cacheHist[k];
+      if(reg?.vendas?.length > 0){
+        const maior = [...reg.vendas].sort((a,b) => b.valor - a.valor)[0];
+        return {nome:v.id, valor:maior.valor, destaque:''};
+      }
+      return {nome:v.id, valor:0, destaque:''};
     }).filter(x=>x.valor>0).sort((a,b)=>b.valor-a.valor);
     if(mvRaw.length>0) mvRaw[0].destaque = '⭐ RECORDE DO MÊS';
     const TOP_VENDAS = mvRaw.length>0 ? mvRaw : [{nome:'—',valor:0,destaque:''}];
