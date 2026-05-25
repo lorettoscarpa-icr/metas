@@ -2688,17 +2688,32 @@ function renderStatusAtualizacao(){
 
       ultimaData = datas[0].str;
 
-      // Referência: ONTEM (vendedoras registram o dia anterior; hoje ainda não fechou)
+      // Referência: último dia útil (não-domingo) anterior a hoje.
+      // Vendedoras registram o dia anterior; hoje ainda não fechou.
+      // Domingos a loja está fechada → não contam como dia em atraso.
       const dtUlt = datas[0].ts;
       const dtHoje = new Date(); dtHoje.setHours(0,0,0,0);
-      const dtOntem = new Date(dtHoje); dtOntem.setDate(dtOntem.getDate() - 1);
-      const diff = Math.round((dtOntem - dtUlt) / (1000*60*60*24));
+      const dtRef = new Date(dtHoje);
+      dtRef.setDate(dtRef.getDate() - 1);
+      while(dtRef.getDay() === 0) dtRef.setDate(dtRef.getDate() - 1);
+
+      // Conta apenas dias úteis (segunda a sábado) entre dtUlt e dtRef
+      let diff = 0;
+      if(dtUlt < dtRef) {
+        const cur = new Date(dtUlt);
+        while(cur < dtRef) {
+          cur.setDate(cur.getDate() + 1);
+          if(cur.getDay() !== 0) diff++;
+        }
+      }
 
       if(diff <= 0) {
-        // Em dia (atualizou ontem ou hoje)
+        // Em dia (atualizou no último dia útil, hoje ou em data futura)
         badge = 'ok';
         badgeLabel = 'Em dia ✓';
-        diasStr = (ultimaData === hoje_dt) ? 'hoje' : 'ontem';
+        diasStr = (ultimaData === hoje_dt)
+          ? 'hoje'
+          : (ultimaData === ontem ? 'ontem' : ultimaData);
       } else if(diff === 1) {
         badge = 'atencao';
         badgeLabel = '1 dia atrasada';
