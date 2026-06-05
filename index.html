@@ -898,8 +898,7 @@ body.light-mode .mes-tem-dados{background:#b8921a;}
 html{zoom:1.2;}
 /* No mobile remove o zoom — a tela já é pequena */
 @media(max-width:768px){html{zoom:1;}}
-body{font-family:'Barlow',sans-serif;background:var(--v0);color:var(--cr);min-height:100vh;overflow-x:hidden;font-variant-numeric:lining-nums;-moz-font-feature-settings:"lnum" 1,"onum" 0;-webkit-font-feature-settings:"lnum" 1,"onum" 0;font-feature-settings:"lnum" 1,"onum" 0;}
-input,button,select,textarea{font-variant-numeric:lining-nums;-moz-font-feature-settings:"lnum" 1,"onum" 0;-webkit-font-feature-settings:"lnum" 1,"onum" 0;font-feature-settings:"lnum" 1,"onum" 0;}
+body{font-family:'Barlow',sans-serif;background:var(--v0);color:var(--cr);min-height:100vh;overflow-x:hidden;}
 
 /* ── SELEÇÃO ── */
 #tela-sel{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(201,168,76,.09),transparent),var(--v0);}
@@ -1577,6 +1576,43 @@ svg{display:inline-block;vertical-align:middle;}
 .loading-spin{width:32px;height:32px;border:2px solid rgba(201,168,76,.2);border-top-color:var(--ou);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .loading-txt{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cr3);}
+
+/* ── Tab Navigation ── */
+.tabnav{display:flex;gap:4px;border-bottom:1px solid var(--oud2);margin-bottom:24px;}
+.tabnav-btn{background:transparent;border:none;padding:12px 22px;font-size:11px;letter-spacing:2px;color:var(--cr3);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;text-transform:uppercase;transition:color .2s,border-color .2s;}
+.tabnav-btn.active{color:var(--ou2);border-bottom-color:var(--ou);}
+.tabnav-btn:hover:not(.active){color:var(--cr);}
+
+/* ── Histórico Anual ── */
+#hist-sec select{background:var(--bg2);color:var(--cr);border:1px solid var(--oud);padding:6px 10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-family:inherit;cursor:pointer;}
+.hist-loading{text-align:center;padding:24px;font-size:10px;letter-spacing:2px;color:var(--cr3);text-transform:uppercase;}
+.hist-empty{text-align:center;padding:40px 20px;font-size:12px;color:var(--cr3);letter-spacing:1px;background:var(--bg2);border:1px solid var(--oud2);}
+
+/* Intro contextual */
+.hist-intro{background:var(--bg2);border-left:2px solid var(--ou);padding:14px 18px;margin-bottom:18px;}
+.hist-intro-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--ou2);margin-bottom:6px;letter-spacing:.5px;}
+.hist-intro-desc{font-size:11px;color:var(--cr3);letter-spacing:.5px;line-height:1.6;}
+.hist-intro-desc b{color:var(--cr);font-weight:500;}
+
+/* Grid de cards (lado a lado, adapta a tela) */
+.hist-cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;}
+
+/* Card de categoria */
+.hist-cat-card{background:var(--bg2);border:1px solid var(--oud2);padding:18px 14px 14px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;position:relative;min-height:220px;justify-content:space-between;}
+.hist-cat-card::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:var(--ou);opacity:.5;}
+.hist-cat-icon{width:32px;height:32px;color:var(--ou2);opacity:.85;}
+.hist-cat-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.hist-cat-nome{font-size:10px;letter-spacing:2px;color:var(--cr3);text-transform:uppercase;font-weight:500;}
+.hist-cat-yr-block{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hist-cat-yr-label{font-size:9px;letter-spacing:1.2px;color:var(--cr3);text-transform:uppercase;}
+.hist-cat-yr-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:var(--cr);line-height:1;}
+.hist-cat-yr-block.atual .hist-cat-yr-val{color:var(--ou2);font-size:32px;font-weight:400;}
+.hist-cat-arrow{color:var(--cr3);font-size:13px;opacity:.6;line-height:1;}
+.hist-cat-delta{font-size:11px;font-weight:600;letter-spacing:1px;padding:4px 11px;border-radius:3px;}
+.hist-cat-delta.up{color:#7fbf7f;background:rgba(109,191,109,.12);border:1px solid rgba(109,191,109,.25);}
+.hist-cat-delta.down{color:#d97560;background:rgba(217,117,96,.12);border:1px solid rgba(217,117,96,.25);}
+.hist-cat-delta.eq{color:var(--cr3);background:rgba(255,255,255,.04);border:1px solid var(--oud2);}
+.hist-cat-delta.sem{color:var(--cr3);font-style:italic;font-weight:400;font-size:10px;background:transparent;border:none;padding:2px 0;}
 </style>
 </style>
 </head>
@@ -1660,6 +1696,12 @@ svg{display:inline-block;vertical-align:middle;}
     </div>
 
     <div id="conteudo-principal">
+      <div class="tabnav">
+        <button class="tabnav-btn active" data-tab="painel" onclick="trocarTab('painel')">Painel</button>
+        <button class="tabnav-btn" data-tab="historico" onclick="trocarTab('historico')">Histórico</button>
+      </div>
+
+      <div class="tab-content" id="tab-painel">
       <div class="cards3" id="cards-top" style="display:none;"></div>
       <!-- Destaques do Mês -->
       <div class="dest-card" id="dest-card">
@@ -1751,11 +1793,17 @@ svg{display:inline-block;vertical-align:middle;}
         <div class="slbl"><span>Competição · Mix de Acessórios</span></div>
         <div class="rank-grid" id="rank-grid"></div>
       </div>
-      <hr class="dv">
-      <div id="conv-sec">
-        <div class="slbl"><span>Conversão · Acessórios por Sapato</span></div>
-        <div id="conv-body"></div>
+      </div><!-- /tab-painel -->
+
+      <div class="tab-content" id="tab-historico" style="display:none;">
+      <div id="hist-sec">
+        <div class="slbl">
+          <span>Histórico Anual · 2025 vs 2026</span>
+          <select id="hist-vend-sel" style="display:none;" onchange="onTrocarHistVend()"></select>
+        </div>
+        <div id="hist-body"></div>
       </div>
+      </div><!-- /tab-historico -->
     </div>
   </main>
 </div>
@@ -1763,7 +1811,7 @@ svg{display:inline-block;vertical-align:middle;}
 <!-- CELEBRAÇÃO -->
 <div class="celebra" id="celebra" onclick="this.classList.remove('show')">
   <div class="celebra-box">
-    <div class="celebra-ico">🏆</div>
+    <div class="celebra-ico" id="celebra-ico">🏆</div>
     <div class="celebra-t" id="celebra-t">Meta Atingida!</div>
     <div class="celebra-s" id="celebra-s">A equipe chegou lá.</div>
     <button class="celebra-fechar" onclick="document.getElementById('celebra').classList.remove('show')">Continuar</button>
@@ -1880,6 +1928,12 @@ const keyHist = (v,ano,mes) => `${v}_${keyMes(ano,mes)}`;
 
 // ══ ESTADO ══
 let usuario=null, diaInp={}, diaEsp='', metasCelebradas={};
+// Flags adicionais de celebração (in-memory, resetam no reload do navegador)
+let ultraCelebradas={};      // {catId: true} — ultrameta da equipe por categoria
+let hiperCelebradaSap=false; // hipermeta de sapatos da equipe
+let individualCelebradaSap=false; // meta individual de sapatos da vendedora logada
+let melhorMixLider=null;     // ID da vendedora líder do Melhor Mix de Acessórios
+let melhorConvLider=null;    // ID da vendedora líder da Melhor Conversão de Mix
 let anoAtivo=new Date().getFullYear(), mesAtivo=new Date().getMonth()+1;
 CATS.forEach(c=>diaInp[c.id]=0);
 
@@ -2120,6 +2174,7 @@ async function entrarComUsuario(u){
   loading(false);
   const ag=accGlobal(), cfg=cfgAtualCache();
   CATS.forEach(c=>metasCelebradas[c.id]=(ag[c.id]>=(cfg.metas[c.id]||1)));
+  inicializarFlagsCelebracao(ag, cfg);
   renderMesSelector();
   setTimeout(inicializarDataLancamento,50);
   render();
@@ -2200,6 +2255,7 @@ async function aoTrocarMes(){
   loading(false);
   const ag=accGlobal(),cfg=cfgAtualCache();
   CATS.forEach(c=>metasCelebradas[c.id]=(ag[c.id]>=(cfg.metas[c.id]||1)));
+  inicializarFlagsCelebracao(ag, cfg);
   renderMesSelector();
   if(!mesFuturo()){
     setTimeout(inicializarDataLancamento,50);
@@ -2207,6 +2263,8 @@ async function aoTrocarMes(){
     setTimeout(()=>renderMaiorVenda(),100);
   }
   render();
+  // Se a aba Histórico está ativa, re-renderiza pra refletir o novo mês
+  if(abaAtiva === 'historico') renderHistorico();
 }
 
 // ══ RENDER ══
@@ -2473,20 +2531,165 @@ async function finalizarRegistroComHistorico(h, novoReg){
   verificarCelebracoes(); renderMesSelector();
 }
 
-function verificarCelebracoes(){
-  const ag=accGlobal(),cfg=cfgAtualCache();
-  CATS.forEach(cat=>{
-    const m=cfg.metas[cat.id]||0;
-    if(!metasCelebradas[cat.id]&&ag[cat.id]>=m&&m>0){
-      setTimeout(()=>celebrar(cat.nome),400);
-      metasCelebradas[cat.id]=true;
+// ══ SISTEMA DE CELEBRAÇÕES ══
+// Tipos: Meta normal (equipe) · Ultrameta (equipe) · Hipermeta sapatos (equipe)
+//        Meta individual sapatos (vendedora logada) · Maior Venda (líder novo)
+// Todas as flags são in-memory e resetam quando o navegador é fechado.
+
+function metaIndividualSapatos(cfg){
+  // Meta da equipe dividida igualmente pelas vendedoras ativas.
+  const metaEq = cfg.metas?.sapatos || 0;
+  const n = VENDEDORAS.length || 1;
+  return metaEq > 0 ? Math.ceil(metaEq / n) : 0;
+}
+
+function maiorVendaLiderInfo(){
+  // Retorna {idLider, valor} considerando a maior venda única de cada vendedora.
+  let lider = null, maxVal = 0;
+  VENDEDORAS.forEach(v=>{
+    const k = keyMV(v.id, anoAtivo, mesAtivo);
+    const reg = cacheHist[k];
+    if(!reg?.vendas?.length) return;
+    const max = Math.max(...reg.vendas.map(s=>s.valor));
+    if(max > maxVal){ maxVal = max; lider = v.id; }
+  });
+  return { idLider: lider, valor: maxVal };
+}
+
+function melhorMixLiderAtual(pv){
+  // ID da vendedora líder do Melhor Mix (categorias lideradas, com desempate por unidades).
+  // Retorna null se ninguém vendeu acessórios ainda.
+  const liderancas = {};
+  const totais = {};
+  VENDEDORAS.forEach(v=>{
+    liderancas[v.id] = 0;
+    totais[v.id] = ACESS.reduce((s,c)=>s+(pv[v.id][c.id]||0),0);
+  });
+  ACESS.forEach(cat=>{
+    const vals = VENDEDORAS.map(v=>({id:v.id, val:pv[v.id][cat.id]||0}));
+    const maxVal = Math.max(...vals.map(x=>x.val));
+    if(maxVal > 0){
+      vals.filter(x=>x.val===maxVal).forEach(l=>liderancas[l.id]++);
     }
   });
+  const rank = VENDEDORAS.map(v=>({id:v.id, lid:liderancas[v.id], tot:totais[v.id]}))
+    .sort((a,b)=>{
+      if(b.lid !== a.lid) return b.lid - a.lid;
+      return b.tot - a.tot;
+    });
+  return (rank[0] && rank[0].lid > 0) ? rank[0].id : null;
 }
-function celebrar(nome){
-  document.getElementById('celebra-t').textContent='Meta Atingida! 🎉';
-  document.getElementById('celebra-s').textContent=`A equipe bateu a meta de ${nome}!`;
+
+function melhorConvLiderAtual(pv){
+  // ID da vendedora líder da Melhor Conversão (acess/sap), considerando só
+  // vendedoras com sapatos > 0. Retorna null se ninguém tem conversão calculável.
+  const rank = VENDEDORAS.map(v=>{
+    const sap = pv[v.id]['sapatos']||0;
+    const acess = ACESS.reduce((s,c)=>s+(pv[v.id][c.id]||0),0);
+    return {id:v.id, conv: sap>0 ? acess/sap : 0};
+  }).sort((a,b)=>b.conv - a.conv);
+  return (rank[0] && rank[0].conv > 0) ? rank[0].id : null;
+}
+
+function inicializarFlagsCelebracao(ag, cfg){
+  // Marca como "já celebrado" tudo que já estava batido antes do load
+  // pra não disparar popups antigos.
+  CATS.forEach(c=>{
+    const um = cfg.ultrametas?.[c.id] || 0;
+    ultraCelebradas[c.id] = (cfg.ultraAtiva && um > 0 && ag[c.id] >= um);
+  });
+  // Hipermeta de sapatos
+  const hipSap = cfg.hipermetas?.sapatos || 0;
+  hiperCelebradaSap = (hipSap > 0 && ag.sapatos >= hipSap);
+  // Meta individual da vendedora logada
+  if(usuario && usuario !== '__gestor__'){
+    const pv = accPorV();
+    const minhaSap = pv[usuario]?.sapatos || 0;
+    const metaInd = metaIndividualSapatos(cfg);
+    individualCelebradaSap = (metaInd > 0 && minhaSap >= metaInd);
+    // Líderes atuais de Mix e Conversão (snapshot pra detectar mudanças depois)
+    melhorMixLider = melhorMixLiderAtual(pv);
+    melhorConvLider = melhorConvLiderAtual(pv);
+  } else {
+    individualCelebradaSap = true;  // gestor não recebe celebração pessoal
+    melhorMixLider = null;
+    melhorConvLider = null;
+  }
+}
+
+function celebrar(opts){
+  // Aceita string (compatibilidade antiga) ou objeto {titulo, subtitulo, icone}
+  if(typeof opts === 'string'){
+    opts = { titulo: 'Meta Atingida! 🎉', subtitulo: `A equipe bateu a meta de ${opts}!`, icone: '🏆' };
+  }
+  document.getElementById('celebra-ico').textContent = opts.icone || '🏆';
+  document.getElementById('celebra-t').textContent   = opts.titulo;
+  document.getElementById('celebra-s').textContent   = opts.subtitulo;
   document.getElementById('celebra').classList.add('show');
+}
+
+function verificarCelebracoes(){
+  const ag = accGlobal(), cfg = cfgAtualCache();
+  const fila = []; // empilha celebrações pra não sobrepor uma na outra
+
+  // ── 1. Meta normal da equipe (por categoria) ──
+  CATS.forEach(cat=>{
+    const m = cfg.metas[cat.id] || 0;
+    if(!metasCelebradas[cat.id] && ag[cat.id] >= m && m > 0){
+      fila.push({ titulo: 'Meta Atingida! 🎉', subtitulo: `A equipe bateu a meta de ${cat.nome}!`, icone: '🏆' });
+      metasCelebradas[cat.id] = true;
+    }
+  });
+
+  // ── 2. Ultrameta da equipe (por categoria) ──
+  if(cfg.ultraAtiva){
+    CATS.forEach(cat=>{
+      const um = cfg.ultrametas?.[cat.id] || 0;
+      if(!ultraCelebradas[cat.id] && ag[cat.id] >= um && um > 0){
+        fila.push({ titulo: 'Ultrameta Atingida! ⚡', subtitulo: `A equipe quebrou a ultrameta de ${cat.nome}!`, icone: '⚡' });
+        ultraCelebradas[cat.id] = true;
+      }
+    });
+  }
+
+  // ── 3. Hipermeta de sapatos (equipe) ──
+  const hipSap = cfg.hipermetas?.sapatos || 0;
+  if(!hiperCelebradaSap && hipSap > 0 && ag.sapatos >= hipSap){
+    fila.push({ titulo: 'Hipermeta Atingida! 🔥', subtitulo: 'A equipe explodiu a hipermeta de sapatos!', icone: '🔥' });
+    hiperCelebradaSap = true;
+  }
+
+  // ── 4. Meta individual de sapatos (só pra vendedora logada) ──
+  if(usuario && usuario !== '__gestor__' && !individualCelebradaSap){
+    const minhaSap = (accPorV()[usuario]?.sapatos) || 0;
+    const metaInd = metaIndividualSapatos(cfg);
+    if(metaInd > 0 && minhaSap >= metaInd){
+      fila.push({ titulo: 'Você bateu sua meta! 🎯', subtitulo: `Meta individual de ${metaInd} sapatos atingida. Continua!`, icone: '🎯' });
+      individualCelebradaSap = true;
+    }
+  }
+
+  // ── 5. Liderança de Melhor Mix e Melhor Conversão (vendedora logada) ──
+  if(usuario && usuario !== '__gestor__'){
+    const pv = accPorV();
+
+    // Melhor Mix de Acessórios — tomou a liderança
+    const novoMix = melhorMixLiderAtual(pv);
+    if(novoMix === usuario && melhorMixLider !== usuario){
+      fila.push({ titulo: 'Líder do Mix! 🎒', subtitulo: 'Você está em 1º no Melhor Mix de Acessórios!', icone: '🎒' });
+    }
+    melhorMixLider = novoMix;
+
+    // Melhor Conversão de Mix — tomou a liderança
+    const novoConv = melhorConvLiderAtual(pv);
+    if(novoConv === usuario && melhorConvLider !== usuario){
+      fila.push({ titulo: 'Líder da Conversão! 📊', subtitulo: 'Sua conversão de acessórios é a melhor da equipe!', icone: '📊' });
+    }
+    melhorConvLider = novoConv;
+  }
+
+  // Dispara em sequência (cada uma aparece 400ms depois da anterior fechar)
+  fila.forEach((c, i) => setTimeout(()=>celebrar(c), 400 + i*100));
 }
 
 function renderHist(){
@@ -2579,10 +2782,32 @@ function renderDestaques(){
   const lidSap = rankSap[0];
 
   // ── 2. Melhor Mix de Acessórios ──
-  const rankAcess = VENDEDORAS.map(v=>{
-    const tot = ACESS.reduce((s,c)=>s+(pv[v.id][c.id]||0),0);
-    return {v, val:tot};
-  }).sort((a,b)=>b.val-a.val);
+  // Vencedora = a vendedora que lidera em MAIS CATEGORIAS de acessórios.
+  // Empate dentro de uma categoria: ambas contam como líderes (ninguém perdeu).
+  // Empate no total de lideranças: desempata por total de unidades vendidas.
+  const liderancasPorVend = {};
+  const totalAcessPorVend = {};
+  VENDEDORAS.forEach(v=>{
+    liderancasPorVend[v.id] = 0;
+    totalAcessPorVend[v.id] = ACESS.reduce((s,c)=>s+(pv[v.id][c.id]||0),0);
+  });
+  ACESS.forEach(cat=>{
+    const valores = VENDEDORAS.map(v=>({id:v.id, val:pv[v.id][cat.id]||0}));
+    const maxVal = Math.max(...valores.map(x=>x.val));
+    if(maxVal > 0){
+      valores.filter(x=>x.val===maxVal).forEach(lider=>{
+        liderancasPorVend[lider.id]++;
+      });
+    }
+  });
+  const rankAcess = VENDEDORAS.map(v=>({
+    v,
+    val: liderancasPorVend[v.id],
+    totalUnid: totalAcessPorVend[v.id]
+  })).sort((a,b)=>{
+    if(b.val !== a.val) return b.val - a.val;
+    return b.totalUnid - a.totalUnid;
+  });
   const lidAcess = rankAcess[0];
 
   // ── 3. Melhor Conversão de Mix ──
@@ -2618,7 +2843,7 @@ function renderDestaques(){
       label:'Melhor Mix de Acessórios',
       v: lidAcess.val>0 ? lidAcess.v : null,
       valor: lidAcess.val>0 ? lidAcess.val : null,
-      unid: 'unid.'
+      unid: lidAcess.val === 1 ? 'categoria' : 'categorias'
     },
     {
       label:'Melhor Conversão de Mix de Acessórios',
@@ -2908,9 +3133,25 @@ async function registrarMaiorVenda(){
     novasVendas = [...(existente?.vendas || []), novaVenda];
   }
 
+  // Captura líder ANTES da gravação pra detectar tomada de liderança
+  const liderAntes = maiorVendaLiderInfo();
+
   const reg = { vendedora: usuario, vendas: novasVendas };
   await db.collection('ls_maior_venda').doc(k).set(reg);
   cacheHist[k] = reg;
+
+  // Celebração: a vendedora acabou de tomar a liderança do Maior Venda do Mês?
+  // (Só dispara em venda nova, não em edição)
+  if(!editandoId){
+    const liderAgora = maiorVendaLiderInfo();
+    if(liderAgora.idLider === usuario && liderAntes.idLider !== usuario){
+      setTimeout(()=>celebrar({
+        titulo: 'Nova líder! 💎',
+        subtitulo: `Sua venda de R$ ${valor.toLocaleString('pt-BR',{minimumFractionDigits:2})} é a maior do mês!`,
+        icone: '💎'
+      }), 400);
+    }
+  }
 
   loading(false);
   btn.disabled = false;
@@ -3180,6 +3421,254 @@ function renderConversao(){
       }).join('')}
     </div>`;
   body.innerHTML=indHtml+rankHtml;
+}
+
+// ══ HISTÓRICO ANUAL (ano atual vs anterior, mesmo mês) ══
+// Dados estáticos 2025 baseados no histórico de canais de venda.
+// Mapeamento de canais para vendedoras 2026:
+//   Canal Amanda/Jhennifer → Michelly
+//   Canal Ialey            → Ialey
+//   Canal Michelly         → Natália
+//   Canal Joice            → Jhennifer
+// Colunas do file: sap=Sapatos / ace=Acessórios (cintos+carteiras+prendedor grupo)
+//                  mei=Meias / lim=Produtos limpeza
+const HIST_2025 = {
+  Michelly: {
+    2:{sap:206,ace:29,mei:53,lim:24}, 3:{sap:218,ace:27,mei:42,lim:17},
+    4:{sap:195,ace:43,mei:64,lim:27}, 5:{sap:279,ace:51,mei:89,lim:35},
+    6:{sap:328,ace:70,mei:100,lim:0}, 7:{sap:284,ace:52,mei:63,lim:0},
+    8:{sap:444,ace:101,mei:133,lim:52}, 9:{sap:266,ace:54,mei:64,lim:40},
+    10:{sap:224,ace:33,mei:63,lim:37}, 11:{sap:442,ace:56,mei:90,lim:36},
+    12:{sap:526,ace:77,mei:156,lim:55}
+  },
+  Ialey: {
+    2:{sap:282,ace:56,mei:75,lim:19}, 3:{sap:216,ace:34,mei:63,lim:15},
+    4:{sap:227,ace:21,mei:63,lim:0}, 5:{sap:287,ace:61,mei:0,lim:26},
+    6:{sap:330,ace:91,mei:123,lim:0}, 7:{sap:271,ace:68,mei:82,lim:0},
+    8:{sap:307,ace:42,mei:108,lim:22}, 9:{sap:262,ace:45,mei:86,lim:38},
+    10:{sap:232,ace:46,mei:78,lim:28}, 11:{sap:334,ace:36,mei:90,lim:14},
+    12:{sap:457,ace:74,mei:156,lim:48}
+  },
+  'Natália': {
+    2:{sap:131,ace:29,mei:19,lim:12}, 3:{sap:90,ace:20,mei:23,lim:12},
+    4:{sap:139,ace:18,mei:33,lim:13}, 5:{sap:153,ace:31,mei:47,lim:21},
+    6:{sap:219,ace:58,mei:70,lim:0}, 7:{sap:221,ace:30,mei:56,lim:0},
+    8:{sap:253,ace:86,mei:74,lim:33}, 9:{sap:187,ace:39,mei:56,lim:33},
+    10:{sap:154,ace:22,mei:46,lim:23}, 11:{sap:230,ace:24,mei:51,lim:22},
+    12:{sap:353,ace:53,mei:96,lim:36}
+  },
+  Jhennifer: {
+    2:{sap:76,ace:9,mei:22,lim:2}, 3:{sap:324,ace:26,mei:48,lim:19},
+    4:{sap:361,ace:54,mei:78,lim:13}, 5:{sap:417,ace:53,mei:124,lim:25},
+    6:{sap:521,ace:90,mei:123,lim:0}, 7:{sap:457,ace:71,mei:117,lim:0},
+    8:{sap:555,ace:82,mei:118,lim:30}, 9:{sap:389,ace:46,mei:84,lim:29},
+    10:{sap:266,ace:42,mei:55,lim:18}, 11:{sap:571,ace:67,mei:123,lim:30},
+    12:{sap:759,ace:91,mei:167,lim:43}
+  }
+};
+
+let histVendSelecionada = null;  // ID da vendedora sendo exibida (ou '__equipe__')
+let histDadosCache = {};         // {vid: {ano_mes: hist}} cache pra evitar refetch
+let histLoading = false;
+
+async function carregarHistMes(vid, ano, mes){
+  // Carrega apenas um mês específico (usado pelo comparativo do histórico)
+  if(!histDadosCache[vid]) histDadosCache[vid] = {};
+  const key = keyMes(ano, mes);
+  if(histDadosCache[vid][key] !== undefined) return;
+
+  // 2025: dados estáticos do histórico de canais (lump "Acessórios" como cintos)
+  if(ano === 2025){
+    const d = HIST_2025[vid] && HIST_2025[vid][mes];
+    histDadosCache[vid][key] = d ? [{
+      data: `2025-${String(mes).padStart(2,'0')}-01`,
+      sapatos: d.sap||0, meias: d.mei||0,
+      cintos: d.ace||0,  // lumpado: acessórios virou cintos no agregado
+      carteiras: 0, limpeza: d.lim||0, prendedor: 0,
+      especial: ''
+    }] : [];
+    return;
+  }
+
+  // 2026+ : Firestore
+  const k = keyHist(vid, ano, mes);
+  try {
+    const doc = await db.collection('ls_historico').doc(k).get();
+    histDadosCache[vid][key] = doc.exists ? (doc.data().registros||[]) : [];
+  } catch(e) {
+    histDadosCache[vid][key] = [];
+  }
+}
+
+function histAggMes(vids, ano, mes){
+  // Soma totais e retorna granularmente: sapatos, meias, acess_grupo, limpeza,
+  // acess_total (todos não-sapato), conv
+  const tot = {}; CATS.forEach(c=>tot[c.id]=0);
+  vids.forEach(vid=>{
+    const reg = histDadosCache[vid]?.[keyMes(ano,mes)] || [];
+    reg.forEach(d=>{
+      if(!d.especial) CATS.forEach(c=>tot[c.id]+=(d[c.id]||0));
+    });
+  });
+  const sap = tot.sapatos||0;
+  const meias = tot.meias||0;
+  const limpeza = tot.limpeza||0;
+  const acess_grupo = (tot.cintos||0) + (tot.carteiras||0) + (tot.prendedor||0);
+  const acess_total = meias + acess_grupo + limpeza;
+  const conv = sap>0 ? acess_total/sap : 0;
+  return { sap, meias, acess_grupo, limpeza, acess_total, conv };
+}
+
+function makeCatCard(nome, svg, valAnt, valAtu, mes, fmt){
+  // Renderiza um card de categoria com 2025 → 2026 + delta. Trata casos de "sem dado".
+  const f = fmt || (v=>v);
+  const iconHtml = svg ? `<div class="hist-cat-icon">${svg}</div>` : '';
+
+  if(valAnt === 0 && valAtu === 0){
+    return `<div class="hist-cat-card">
+      ${iconHtml}
+      <div class="hist-cat-nome">${nome}</div>
+      <div class="hist-cat-delta sem">sem registros</div>
+    </div>`;
+  }
+  if(valAnt === 0){
+    return `<div class="hist-cat-card">
+      ${iconHtml}
+      <div class="hist-cat-nome">${nome}</div>
+      <div class="hist-cat-yr-block atual">
+        <div class="hist-cat-yr-label">${mes} ${anoAtivo}</div>
+        <div class="hist-cat-yr-val">${f(valAtu)}</div>
+      </div>
+      <div class="hist-cat-delta sem">sem base ${anoAtivo-1}</div>
+    </div>`;
+  }
+  if(valAtu === 0){
+    return `<div class="hist-cat-card">
+      ${iconHtml}
+      <div class="hist-cat-nome">${nome}</div>
+      <div class="hist-cat-yr-block">
+        <div class="hist-cat-yr-label">${mes} ${anoAtivo-1}</div>
+        <div class="hist-cat-yr-val">${f(valAnt)}</div>
+      </div>
+      <div class="hist-cat-delta sem">aguardando ${anoAtivo}</div>
+    </div>`;
+  }
+  const d = valAtu - valAnt;
+  const pct = (d/valAnt*100);
+  let cls = 'eq', sym = '≈', txt = `${pct>=0?'+':''}${pct.toFixed(0)}%`;
+  if(Math.abs(pct) >= 2){
+    if(d > 0){ cls='up'; sym='⬆'; } else { cls='down'; sym='⬇'; }
+  }
+  return `<div class="hist-cat-card">
+    ${iconHtml}
+    <div class="hist-cat-nome">${nome}</div>
+    <div class="hist-cat-yr-block">
+      <div class="hist-cat-yr-label">${mes} ${anoAtivo-1}</div>
+      <div class="hist-cat-yr-val">${f(valAnt)}</div>
+    </div>
+    <div class="hist-cat-arrow">↓</div>
+    <div class="hist-cat-yr-block atual">
+      <div class="hist-cat-yr-label">${mes} ${anoAtivo}</div>
+      <div class="hist-cat-yr-val">${f(valAtu)}</div>
+    </div>
+    <div class="hist-cat-delta ${cls}">${sym} ${txt}</div>
+  </div>`;
+}
+
+async function renderHistorico(){
+  const sec = document.getElementById('hist-sec');
+  if(!sec) return;
+  const isG = usuario === '__gestor__';
+  const body = document.getElementById('hist-body');
+  const sel = document.getElementById('hist-vend-sel');
+  const tituloEl = sec.querySelector('.slbl span');
+
+  // Seletor: gestor vê todas, vendedora vê apenas a si mesma
+  if(isG){
+    sel.style.display = 'inline-block';
+    if(!sel.dataset.popul){
+      const opts = [
+        '<option value="__equipe__">Equipe (total)</option>',
+        ...VENDEDORAS.map(v=>`<option value="${v.id}">${v.nome}</option>`)
+      ].join('');
+      sel.innerHTML = opts;
+      sel.dataset.popul = '1';
+    }
+    if(!histVendSelecionada) histVendSelecionada = '__equipe__';
+    sel.value = histVendSelecionada;
+  } else {
+    sel.style.display = 'none';
+    histVendSelecionada = usuario;
+  }
+
+  const alvoIds = histVendSelecionada === '__equipe__'
+    ? [...VENDEDORAS.map(v=>v.id), ...ARQUIVADAS]
+    : [histVendSelecionada];
+
+  const nomeMes = MESES_NOMES[mesAtivo-1];
+  tituloEl.textContent = `Comparativo · ${nomeMes} ${anoAtivo-1} vs ${nomeMes} ${anoAtivo}`;
+
+  if(histLoading) return;
+  body.innerHTML = '<div class="hist-loading">Carregando histórico…</div>';
+  histLoading = true;
+  try {
+    for(const vid of alvoIds){
+      await carregarHistMes(vid, anoAtivo, mesAtivo);
+      await carregarHistMes(vid, anoAtivo-1, mesAtivo);
+    }
+
+    const ant = histAggMes(alvoIds, anoAtivo-1, mesAtivo);
+    const atu = histAggMes(alvoIds, anoAtivo, mesAtivo);
+
+    if(ant.sap===0 && ant.acess_total===0 && atu.sap===0 && atu.acess_total===0){
+      body.innerHTML = '<div class="hist-empty">Sem dados pra comparar neste mês.</div>';
+      return;
+    }
+
+    // Intro contextual
+    const nomeAlvo = histVendSelecionada === '__equipe__' ? 'da equipe' : 'seu';
+    const introHtml = `<div class="hist-intro">
+      <div class="hist-intro-title">Como foi a evolução ${histVendSelecionada === '__equipe__' ? 'da equipe' : ''} em ${nomeMes}?</div>
+      <div class="hist-intro-desc">Compare o desempenho ${nomeAlvo} entre <b>${nomeMes} ${anoAtivo-1}</b> e <b>${nomeMes} ${anoAtivo}</b> em cada categoria. A porcentagem indica o quanto cresceu (⬆) ou caiu (⬇) ano contra ano.</div>
+    </div>`;
+
+    // Cards lado a lado
+    const ICONS = Object.fromEntries(CATS.map(c=>[c.id, c.svg]));
+    const iconConv = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 17l6-6 4 4 8-8"/><polyline points="15 7 21 7 21 13"/></svg>';
+
+    const cards = [
+      makeCatCard('Sapatos', ICONS.sapatos, ant.sap, atu.sap, nomeMes, v=>v),
+      makeCatCard('Meias', ICONS.meias, ant.meias, atu.meias, nomeMes, v=>v),
+      makeCatCard('Acessórios', ICONS.cintos, ant.acess_grupo, atu.acess_grupo, nomeMes, v=>v),
+      makeCatCard('Limpeza', ICONS.limpeza, ant.limpeza, atu.limpeza, nomeMes, v=>v),
+      makeCatCard('Conversão', iconConv, ant.conv, atu.conv, nomeMes, v=>v.toFixed(2))
+    ];
+
+    body.innerHTML = introHtml + `<div class="hist-cards-grid">${cards.join('')}</div>`;
+  } finally {
+    histLoading = false;
+  }
+}
+
+function onTrocarHistVend(){
+  const sel = document.getElementById('hist-vend-sel');
+  histVendSelecionada = sel.value;
+  renderHistorico();
+}
+
+// ══ Navegação entre abas (Painel / Histórico) ══
+let abaAtiva = 'painel';
+
+function trocarTab(t){
+  abaAtiva = t;
+  document.querySelectorAll('.tabnav-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===t);
+  });
+  document.querySelectorAll('.tab-content').forEach(c=>{
+    c.style.display = (c.id === 'tab-'+t) ? 'block' : 'none';
+  });
+  // Sempre re-renderiza histórico ao abrir (cache evita refetch Firestore)
+  if(t === 'historico') renderHistorico();
 }
 
 async function abrirCfg(){
