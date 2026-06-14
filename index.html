@@ -1577,6 +1577,25 @@ svg{display:inline-block;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .loading-txt{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cr3);}
 
+/* ── Metas Individuais · Card de topo ── */
+.mi-card{background:linear-gradient(135deg,rgba(201,168,76,.06),rgba(201,168,76,.02));border:1px solid var(--oud);padding:18px 18px 16px;margin-bottom:18px;position:relative;}
+.mi-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--ou);}
+.mi-header{margin-bottom:16px;}
+.mi-titulo{font-family:'Playfair Display',serif;font-size:19px;color:var(--ou2);letter-spacing:.5px;line-height:1.2;}
+.mi-subtitulo{font-size:11px;color:var(--cr3);letter-spacing:.5px;margin-top:4px;}
+.mi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+@media(max-width:640px){.mi-grid{grid-template-columns:repeat(2,1fr);}}
+.mi-cell{background:var(--bg2);border:1px solid var(--oud2);padding:12px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:120px;justify-content:center;}
+.mi-cell-nome{font-size:9px;letter-spacing:1.8px;color:var(--cr3);text-transform:uppercase;font-weight:500;}
+.mi-cell-badge{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;padding:2px 8px;border-radius:2px;font-weight:600;}
+.mi-cell-badge.falta{color:var(--ou2);background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);}
+.mi-cell-badge.sup{color:#7fbf7f;background:rgba(109,191,109,.12);border:1px solid rgba(109,191,109,.3);}
+.mi-cell-num{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:var(--ou2);line-height:1;margin-top:2px;}
+.mi-cell.superada .mi-cell-num{color:#9fd49f;}
+.mi-cell-base{font-size:10px;color:var(--cr3);letter-spacing:.5px;line-height:1.3;}
+.mi-cell.sem{opacity:.55;}
+.mi-cell.sem .mi-cell-status{font-size:10px;color:var(--cr3);font-style:italic;}
+
 /* ── Tab Navigation ── */
 .tabnav{display:flex;gap:4px;border-bottom:1px solid var(--oud2);margin-bottom:24px;}
 .tabnav-btn{background:transparent;border:none;padding:12px 22px;font-size:11px;letter-spacing:2px;color:var(--cr3);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;text-transform:uppercase;transition:color .2s,border-color .2s;}
@@ -1698,10 +1717,12 @@ svg{display:inline-block;vertical-align:middle;}
     <div id="conteudo-principal">
       <div class="tabnav">
         <button class="tabnav-btn active" data-tab="painel" onclick="trocarTab('painel')">Painel</button>
-        <button class="tabnav-btn" data-tab="historico" onclick="trocarTab('historico')">Histórico</button>
+        <button class="tabnav-btn" data-tab="historico" onclick="trocarTab('historico')">Metas Individuais</button>
       </div>
 
       <div class="tab-content" id="tab-painel">
+      <!-- Metas Individuais (forward-looking · o mínimo pra superar ano passado) -->
+      <div id="metas-ind-card"></div>
       <div class="cards3" id="cards-top" style="display:none;"></div>
       <!-- Destaques do Mês -->
       <div class="dest-card" id="dest-card">
@@ -2295,7 +2316,7 @@ function render(){
   renderCards(ag,cfg);renderCats(ag,cfg,isG);
   document.getElementById('bloco-reg').style.display=isG?'none':'block';
   if(!isG){renderReg(ag,cfg);renderHist();}
-  renderDestaques();renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();
+  renderMetasIndividuais();renderDestaques();renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();
 }
 
 function renderCards(ag,cfg){
@@ -2767,6 +2788,104 @@ async function zerarHist(){
   if(!confirm(`Zerar histórico de ${usuario} em ${MESES_NOMES[mesAtivo-1]}?`))return;
   loading(true);await saveHistMes(usuario,anoAtivo,mesAtivo,[]);loading(false);
   toast('Zerado.');
+}
+
+// ══ METAS INDIVIDUAIS · CARD DE TOPO ══
+// Card forward-looking: mostra o mínimo que precisa pra superar o mesmo
+// mês do ano passado. Vendedora vê suas metas; gestor vê meta da equipe.
+function renderMetasIndividuais(){
+  const card = document.getElementById('metas-ind-card');
+  if(!card) return;
+
+  // Esconde se estiver visualizando mês futuro
+  if(mesFuturo()){ card.innerHTML=''; return; }
+
+  // Esconde só pra 2025 (ano em que os dados de 2024 não existem)
+  if(anoAtivo < 2026){ card.innerHTML=''; return; }
+
+  const isG = usuario === '__gestor__';
+  const nomeMes = MESES_NOMES[mesAtivo-1];
+
+  // Coleta totais do ano passado (HIST_2025) por categoria
+  // - Vendedora: só ela | Gestor: soma de todas vendedoras (incluindo arquivadas mapeadas)
+  const alvos = isG ? Object.keys(HIST_2025) : [usuario];
+  let antSap=0, antMei=0, antAce=0, antLim=0;
+  alvos.forEach(vid=>{
+    const d = HIST_2025[vid] && HIST_2025[vid][mesAtivo];
+    if(d){
+      antSap += d.sap||0;
+      antMei += d.mei||0;
+      antAce += d.ace||0;
+      antLim += d.lim||0;
+    }
+  });
+
+  // Se nenhuma categoria tem base 2025 (ex: Janeiro), esconde
+  if(antSap===0 && antMei===0 && antAce===0 && antLim===0){ card.innerHTML=''; return; }
+
+  // Coleta totais atuais do mês ativo
+  let atuSap=0, atuMei=0, atuAce=0, atuLim=0;
+  if(isG){
+    const ag = accGlobal();
+    atuSap = ag.sapatos||0;
+    atuMei = ag.meias||0;
+    atuAce = (ag.cintos||0)+(ag.carteiras||0)+(ag.prendedor||0);
+    atuLim = ag.limpeza||0;
+  } else {
+    const pv = accPorV();
+    const a = pv[usuario] || {};
+    atuSap = a.sapatos||0;
+    atuMei = a.meias||0;
+    atuAce = (a.cintos||0)+(a.carteiras||0)+(a.prendedor||0);
+    atuLim = a.limpeza||0;
+  }
+
+  const tituloPrincipal = isG
+    ? `Metas Individuais · ${nomeMes}`
+    : `Suas Metas Individuais · ${nomeMes}`;
+  const subTexto = isG
+    ? `O mínimo da equipe pra superar ${nomeMes} de ${anoAtivo-1}`
+    : `O mínimo pra você superar seu ${nomeMes} de ${anoAtivo-1}`;
+
+  function celula(nome, atu, ant){
+    if(ant === 0){
+      return `<div class="mi-cell sem">
+        <div class="mi-cell-nome">${nome}</div>
+        <div class="mi-cell-status">sem base ${anoAtivo-1}</div>
+      </div>`;
+    }
+    if(atu > ant){
+      // Já superou
+      const acima = atu - ant;
+      return `<div class="mi-cell superada">
+        <div class="mi-cell-nome">${nome}</div>
+        <div class="mi-cell-badge sup">✓ Superada</div>
+        <div class="mi-cell-num">+${acima}</div>
+        <div class="mi-cell-base">acima de ${ant}</div>
+      </div>`;
+    }
+    // Ainda falta superar (precisa pelo menos +1 acima de ant)
+    const falta = ant - atu + 1;
+    return `<div class="mi-cell pendente">
+      <div class="mi-cell-nome">${nome}</div>
+      <div class="mi-cell-badge falta">Falta</div>
+      <div class="mi-cell-num">+${falta}</div>
+      <div class="mi-cell-base">pra superar ${ant}</div>
+    </div>`;
+  }
+
+  card.innerHTML = `<div class="mi-card">
+    <div class="mi-header">
+      <div class="mi-titulo">${tituloPrincipal}</div>
+      <div class="mi-subtitulo">${subTexto}</div>
+    </div>
+    <div class="mi-grid">
+      ${celula('Sapatos', atuSap, antSap)}
+      ${celula('Meias', atuMei, antMei)}
+      ${celula('Acessórios', atuAce, antAce)}
+      ${celula('Limpeza', atuLim, antLim)}
+    </div>
+  </div>`;
 }
 
 function renderDestaques(){
@@ -3555,10 +3674,14 @@ function makeCatCard(nome, svg, valAnt, valAtu, mes, fmt){
   }
   const d = valAtu - valAnt;
   const pct = (d/valAnt*100);
-  let cls = 'eq', sym = '≈', txt = `${pct>=0?'+':''}${pct.toFixed(0)}%`;
+  let cls = 'eq', sym = '≈';
   if(Math.abs(pct) >= 2){
     if(d > 0){ cls='up'; sym='⬆'; } else { cls='down'; sym='⬇'; }
   }
+  // Quantidade primeiro, porcentagem em seguida (sinal + na frente quando positivo)
+  const qtySign = d >= 0 ? '+' : '';
+  const pctSign = pct >= 0 ? '+' : '';
+  const deltaTxt = `${sym} ${qtySign}${f(d)} · ${pctSign}${pct.toFixed(0)}%`;
   return `<div class="hist-cat-card">
     ${iconHtml}
     <div class="hist-cat-nome">${nome}</div>
@@ -3571,7 +3694,7 @@ function makeCatCard(nome, svg, valAnt, valAtu, mes, fmt){
       <div class="hist-cat-yr-label">${mes} ${anoAtivo}</div>
       <div class="hist-cat-yr-val">${f(valAtu)}</div>
     </div>
-    <div class="hist-cat-delta ${cls}">${sym} ${txt}</div>
+    <div class="hist-cat-delta ${cls}">${deltaTxt}</div>
   </div>`;
 }
 
@@ -3606,7 +3729,7 @@ async function renderHistorico(){
     : [histVendSelecionada];
 
   const nomeMes = MESES_NOMES[mesAtivo-1];
-  tituloEl.textContent = `Comparativo · ${nomeMes} ${anoAtivo-1} vs ${nomeMes} ${anoAtivo}`;
+  tituloEl.textContent = `Metas Individuais · ${nomeMes} ${anoAtivo-1} vs ${nomeMes} ${anoAtivo}`;
 
   if(histLoading) return;
   body.innerHTML = '<div class="hist-loading">Carregando histórico…</div>';
@@ -3626,10 +3749,16 @@ async function renderHistorico(){
     }
 
     // Intro contextual
-    const nomeAlvo = histVendSelecionada === '__equipe__' ? 'da equipe' : 'seu';
+    const ehEquipe = histVendSelecionada === '__equipe__';
+    const introTitulo = ehEquipe
+      ? `Meta global da equipe em ${nomeMes}`
+      : `Sua meta individual em ${nomeMes}`;
+    const introDesc = ehEquipe
+      ? `A equipe tem como meta superar o próprio desempenho do mesmo mês do ano anterior. Compare <b>${nomeMes} ${anoAtivo-1}</b> com <b>${nomeMes} ${anoAtivo}</b> em cada categoria — a diferença mostra quanto cresceu (⬆) ou caiu (⬇) em quantidade e em porcentagem.`
+      : `Sua meta individual é superar o seu próprio desempenho do ano anterior. Compare <b>${nomeMes} ${anoAtivo-1}</b> com <b>${nomeMes} ${anoAtivo}</b> em cada categoria — a diferença mostra quanto cresceu (⬆) ou caiu (⬇) em quantidade e em porcentagem.`;
     const introHtml = `<div class="hist-intro">
-      <div class="hist-intro-title">Como foi a evolução ${histVendSelecionada === '__equipe__' ? 'da equipe' : ''} em ${nomeMes}?</div>
-      <div class="hist-intro-desc">Compare o desempenho ${nomeAlvo} entre <b>${nomeMes} ${anoAtivo-1}</b> e <b>${nomeMes} ${anoAtivo}</b> em cada categoria. A porcentagem indica o quanto cresceu (⬆) ou caiu (⬇) ano contra ano.</div>
+      <div class="hist-intro-title">${introTitulo}</div>
+      <div class="hist-intro-desc">${introDesc}</div>
     </div>`;
 
     // Cards lado a lado
