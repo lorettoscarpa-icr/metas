@@ -1585,7 +1585,9 @@ svg{display:inline-block;vertical-align:middle;}
 .mi-subtitulo{font-size:11px;color:var(--cr3);letter-spacing:.5px;margin-top:4px;}
 .mi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
 @media(max-width:640px){.mi-grid{grid-template-columns:repeat(2,1fr);}}
-.mi-cell{background:var(--bg2);border:1px solid var(--oud2);padding:12px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:120px;justify-content:center;}
+.mi-cell{background:var(--bg2);border:1px solid var(--oud2);padding:12px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:140px;justify-content:center;}
+.mi-cell-icon{width:26px;height:26px;color:var(--ou2);opacity:.85;margin-bottom:2px;}
+.mi-cell-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
 .mi-cell-nome{font-size:9px;letter-spacing:1.8px;color:var(--cr3);text-transform:uppercase;font-weight:500;}
 .mi-cell-badge{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;padding:2px 8px;border-radius:2px;font-weight:600;}
 .mi-cell-badge.falta{color:var(--ou2);background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);}
@@ -1813,6 +1815,11 @@ svg{display:inline-block;vertical-align:middle;}
       <div class="rank-sec">
         <div class="slbl"><span>Competição · Mix de Acessórios</span></div>
         <div class="rank-grid" id="rank-grid"></div>
+      </div>
+      <hr class="dv">
+      <div id="conv-sec">
+        <div class="slbl"><span>Conversão · Acessórios por Sapato</span></div>
+        <div id="conv-body"></div>
       </div>
       </div><!-- /tab-painel -->
 
@@ -2847,9 +2854,11 @@ function renderMetasIndividuais(){
     ? `O mínimo da equipe pra superar ${nomeMes} de ${anoAtivo-1}`
     : `O mínimo pra você superar seu ${nomeMes} de ${anoAtivo-1}`;
 
-  function celula(nome, atu, ant){
+  function celula(nome, svg, atu, ant){
+    const iconHtml = svg ? `<div class="mi-cell-icon">${svg}</div>` : '';
     if(ant === 0){
       return `<div class="mi-cell sem">
+        ${iconHtml}
         <div class="mi-cell-nome">${nome}</div>
         <div class="mi-cell-status">sem base ${anoAtivo-1}</div>
       </div>`;
@@ -2858,6 +2867,7 @@ function renderMetasIndividuais(){
       // Já superou
       const acima = atu - ant;
       return `<div class="mi-cell superada">
+        ${iconHtml}
         <div class="mi-cell-nome">${nome}</div>
         <div class="mi-cell-badge sup">✓ Superada</div>
         <div class="mi-cell-num">+${acima}</div>
@@ -2867,6 +2877,7 @@ function renderMetasIndividuais(){
     // Ainda falta superar (precisa pelo menos +1 acima de ant)
     const falta = ant - atu + 1;
     return `<div class="mi-cell pendente">
+      ${iconHtml}
       <div class="mi-cell-nome">${nome}</div>
       <div class="mi-cell-badge falta">Falta</div>
       <div class="mi-cell-num">+${falta}</div>
@@ -2874,16 +2885,19 @@ function renderMetasIndividuais(){
     </div>`;
   }
 
+  // Ícones extraídos do array CATS (mesmos da aba Metas Individuais)
+  const ICONS = Object.fromEntries(CATS.map(c=>[c.id, c.svg]));
+
   card.innerHTML = `<div class="mi-card">
     <div class="mi-header">
       <div class="mi-titulo">${tituloPrincipal}</div>
       <div class="mi-subtitulo">${subTexto}</div>
     </div>
     <div class="mi-grid">
-      ${celula('Sapatos', atuSap, antSap)}
-      ${celula('Meias', atuMei, antMei)}
-      ${celula('Acessórios', atuAce, antAce)}
-      ${celula('Limpeza', atuLim, antLim)}
+      ${celula('Sapatos', ICONS.sapatos, atuSap, antSap)}
+      ${celula('Meias', ICONS.meias, atuMei, antMei)}
+      ${celula('Cintos', ICONS.cintos, atuAce, antAce)}
+      ${celula('Limpeza', ICONS.limpeza, atuLim, antLim)}
     </div>
   </div>`;
 }
@@ -3768,7 +3782,7 @@ async function renderHistorico(){
     const cards = [
       makeCatCard('Sapatos', ICONS.sapatos, ant.sap, atu.sap, nomeMes, v=>v),
       makeCatCard('Meias', ICONS.meias, ant.meias, atu.meias, nomeMes, v=>v),
-      makeCatCard('Acessórios', ICONS.cintos, ant.acess_grupo, atu.acess_grupo, nomeMes, v=>v),
+      makeCatCard('Cintos', ICONS.cintos, ant.acess_grupo, atu.acess_grupo, nomeMes, v=>v),
       makeCatCard('Limpeza', ICONS.limpeza, ant.limpeza, atu.limpeza, nomeMes, v=>v),
       makeCatCard('Conversão', iconConv, ant.conv, atu.conv, nomeMes, v=>v.toFixed(2))
     ];
