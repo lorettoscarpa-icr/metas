@@ -1143,7 +1143,7 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .ci-meta-linha{
   font-size:12px;color:var(--cr);letter-spacing:.5px;
   padding-top:12px;border-top:1px solid var(--oud2);
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;
 }
 .ci-meta-linha strong{
   font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700;
@@ -3142,7 +3142,7 @@ function renderMetasIndividuais(){
     const atualDia = diasPassados>0 ? (atu/diasPassados).toFixed(1) : null;
     const noRitmo = atualDia!==null && necessario!==null && parseFloat(atualDia) >= parseFloat(necessario);
     const ritmoHtml = mesEhAtual
-      ? `<div class="cat-ritmo"><span class="cat-ritmo-info">Precisa <strong>${necessario}</strong>/dia</span><span class="cat-ritmo-badge ${noRitmo?'ok':'er'}">${noRitmo?'No ritmo':'⚠ Atrás'}</span></div>`
+      ? `<div class="cat-ritmo"><span class="cat-ritmo-info">Precisa de <strong>${necessario}</strong>/dia</span><span class="cat-ritmo-badge ${noRitmo?'ok':'er'}">${noRitmo?'No ritmo':'⚠ Atrás'}</span></div>`
       : '';
     return `<div class="mi-cell pendente">
       ${iconHtml}
@@ -3156,7 +3156,7 @@ function renderMetasIndividuais(){
       <div class="mi-foot">
         <span class="mi-foot-pct">${pctFeito}%</span>
         <span class="mi-foot-sep">·</span>
-        <span class="mi-foot-falta">Falta +${falta}</span>
+        <span class="mi-foot-falta">Faltam +${falta}</span>
       </div>
       ${ritmoHtml}
     </div>`;
