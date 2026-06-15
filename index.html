@@ -1261,7 +1261,7 @@ hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
 }
 .dest-grid{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(3,1fr);
   gap:12px;
 }
 .dest-item{
@@ -1586,6 +1586,10 @@ svg{display:inline-block;vertical-align:middle;}
 .mi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
 @media(max-width:640px){.mi-grid{grid-template-columns:repeat(2,1fr);}}
 .mi-cell{background:var(--bg2);border:1px solid var(--oud2);padding:14px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:170px;justify-content:center;}
+.mi-cell .cat-ritmo{width:100%;margin-top:4px;padding-top:8px;border-top:1px solid var(--oud2);display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+.mi-cell .cat-ritmo-info{font-size:10px;color:var(--cr3);}
+.mi-cell .cat-ritmo-info strong{color:var(--cr);font-weight:600;}
+.mi-cell .cat-ritmo-badge{font-size:8px;letter-spacing:1.2px;padding:3px 7px;}
 .mi-cell-icon{width:26px;height:26px;color:var(--ou2);opacity:.85;margin-bottom:2px;}
 .mi-cell-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
 .mi-cell-nome{font-size:9px;letter-spacing:1.8px;color:var(--cr3);text-transform:uppercase;font-weight:500;}
@@ -1606,11 +1610,11 @@ svg{display:inline-block;vertical-align:middle;}
 .mi-bar-f.superada{background:linear-gradient(90deg,#7fbf7f,#9fd49f);}
 
 /* Footer com % e Falta centralizados */
-.mi-foot{display:flex;justify-content:center;align-items:center;gap:14px;font-size:11px;font-weight:600;letter-spacing:.5px;}
-.mi-foot-pct{color:var(--cr3);}
-.mi-foot-sep{color:var(--cr3);opacity:.4;}
-.mi-foot-falta{color:#d97560;}
-.mi-foot-falta.superada{color:#7fbf7f;}
+.mi-foot{display:flex;justify-content:center;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;letter-spacing:.3px;}
+.mi-foot-pct{color:var(--cr);}
+.mi-foot-sep{color:var(--cr3);opacity:.5;font-size:14px;}
+.mi-foot-falta{color:#e88a78;font-weight:600;}
+.mi-foot-falta.superada{color:#9fd49f;}
 
 .mi-cell.sem{opacity:.55;}
 .mi-cell.sem .mi-cell-status{font-size:10px;color:var(--cr3);font-style:italic;}
@@ -1800,25 +1804,18 @@ svg{display:inline-block;vertical-align:middle;}
         </div>
         <div class="hist-wrap">
           <div class="slbl" id="hist-header" style="margin-top:32px;cursor:pointer;" onclick="toggleHistMinimizado()">
-            <span>Meu histórico do mês <span class="hist-resumo-inline" id="hist-resumo-inline" style="font-family:'Cormorant Garamond',serif;color:var(--cr);text-transform:none;letter-spacing:0;margin-left:8px;font-size:14px;">— carregando…</span></span>
-            <span style="display:flex;gap:10px;align-items:center;">
-              <button class="bsm" style="color:rgba(192,80,74,.9);border-color:rgba(192,80,74,.6);background:rgba(192,80,74,.15);" onclick="event.stopPropagation();zerarHist()">Zerar</button>
-              <span id="hist-toggle-icon" style="font-size:12px;color:var(--ou2);transition:transform .2s;">▼</span>
+            <span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="display:flex;align-items:center;gap:8px;">Meu histórico do mês <span id="hist-toggle-icon" style="font-size:12px;color:var(--ou2);transition:transform .2s;">▼</span></span>
+              <span class="hist-resumo-inline" id="hist-resumo-inline" style="font-family:'Cormorant Garamond',serif;color:var(--ou2);text-transform:none;letter-spacing:.3px;font-size:16px;font-weight:500;">— carregando…</span>
             </span>
+            <button class="bsm" style="color:rgba(192,80,74,.9);border-color:rgba(192,80,74,.6);background:rgba(192,80,74,.15);" onclick="event.stopPropagation();zerarHist()">Zerar</button>
           </div>
           <div id="hist-lista" style="display:none;"></div>
         </div>
       </div>
 
       <hr class="dv">
-      <!-- 7. Minha Conversão · Acessórios por Sapato (individual, só pra vendedora) -->
-      <div id="conv-ind-sec">
-        <div class="slbl"><span>Minha Conversão · Acessórios por Sapato</span></div>
-        <div id="conv-ind-body"></div>
-      </div>
-
-      <hr class="dv">
-      <!-- 8. Competição · Maior Venda do Mês -->
+      <!-- 6. Competição · Maior Venda do Mês (logo após Meu histórico) -->
       <div id="mv-sec">
         <div class="slbl"><span>Competição · Maior Venda do Mês</span></div>
         <div class="mv-card">
@@ -1851,14 +1848,20 @@ svg{display:inline-block;vertical-align:middle;}
         </div>
       </div>
 
-      <!-- 9. Competição · Mix de Acessórios -->
+      <!-- 7. Competição · Mix de Acessórios -->
       <div class="rank-sec">
         <div class="slbl"><span>Competição · Mix de Acessórios</span></div>
         <div class="rank-grid" id="rank-grid"></div>
       </div>
 
       <hr class="dv">
-      <!-- 10. Competição · Conversão de Acessórios · Equipe -->
+      <!-- 8. Minha Conversão · Acessórios por Sapato (logo antes da Competição Conversão) -->
+      <div id="conv-ind-sec">
+        <div class="slbl"><span>Minha Conversão · Acessórios por Sapato</span></div>
+        <div id="conv-ind-body"></div>
+      </div>
+
+      <!-- 9. Competição · Conversão de Acessórios · Equipe -->
       <div id="conv-comp-sec">
         <div class="slbl"><span>Competição · Conversão de Acessórios · Equipe</span></div>
         <div id="conv-comp-body"></div>
@@ -1991,6 +1994,54 @@ const BENCH={
   limpeza:  {min:10.4,max:13.8,ref:'Melhor: Jhennifer abr 10,4% / mar 13,8%'},
   carteiras:null,prendedor:null
 };
+
+// Calcula benchmark dinâmico pra categorias sem referência fixa (carteiras, prendedor).
+// Lógica: itera pelos meses fechados em 2026 (cacheHist) e calcula a taxa de
+// conversão de cada vendedora ativa por mês. Pega a 1ª e a 2ª melhor taxa como
+// max/min do benchmark. Retorna null se não tiver dados suficientes (< 2 amostras).
+function calcularBenchDinamico(catId){
+  const taxas = [];
+  const hoje_calc = new Date();
+  const mesHojeNum = hoje_calc.getMonth()+1;
+  const anoHojeNum = hoje_calc.getFullYear();
+
+  Object.keys(cacheHist).forEach(key => {
+    // Ignora chaves de Maior Venda (formato diferente)
+    if(key.startsWith('MV_')) return;
+    // Match esperado: "Vendedora_AAAA_MM"
+    const m = key.match(/^(.+)_(\d{4})_(\d{2})$/);
+    if(!m) return;
+    const vend = m[1], anoN = parseInt(m[2]), mesN = parseInt(m[3]);
+    // Só meses fechados (não o atual nem futuros)
+    if(anoN > anoHojeNum) return;
+    if(anoN === anoHojeNum && mesN >= mesHojeNum) return;
+    // Só vendedoras ativas (ignora arquivadas)
+    if(!VENDEDORAS.some(v => v.id === vend)) return;
+
+    const registros = cacheHist[key];
+    if(!Array.isArray(registros) || registros.length === 0) return;
+
+    let sapatos = 0, alvo = 0;
+    registros.forEach(r => {
+      if(r && typeof r === 'object'){
+        sapatos += r.sapatos || 0;
+        alvo    += r[catId] || 0;
+      }
+    });
+    // Mínimo de sapatos pra ter relevância estatística (evita ruído de meses curtos)
+    if(sapatos >= 20 && alvo > 0){
+      taxas.push((alvo / sapatos) * 100);
+    }
+  });
+
+  if(taxas.length < 2) return null;
+  taxas.sort((a,b) => b-a);
+  return {
+    min: Math.round(taxas[1]*10)/10,
+    max: Math.round(taxas[0]*10)/10,
+    ref: 'Top 2 do histórico das vendedoras'
+  };
+}
 
 // Chaves Firestore
 const keyMes = (ano,mes) => `${ano}_${String(mes).padStart(2,'0')}`;
@@ -3009,6 +3060,16 @@ function renderMetasIndividuais(){
     ? `O mínimo da equipe pra superar ${nomeMes} de ${anoAtivo-1}`
     : `O mínimo pra você superar seu ${nomeMes} de ${anoAtivo-1}`;
 
+  // ══ Dias úteis: mesma lógica do renderCats ══
+  const cfg = cfgAtualCache();
+  const diasUteis = cfg.diasUteis || 26;
+  const hoje_calc = new Date();
+  const mesHoje = hoje_calc.getMonth()+1;
+  const anoHoje = hoje_calc.getFullYear();
+  const mesEhAtual = (anoAtivo===anoHoje && mesAtivo===mesHoje);
+  const diasPassados = mesEhAtual ? Math.min(diasTrabalhadosGlobal(),diasUteis) : diasUteis;
+  const diasRestantes = Math.max(diasUteis - diasPassados, 1);
+
   function celula(nome, svg, atu, ant){
     const iconHtml = svg ? `<div class="mi-cell-icon">${svg}</div>` : '';
 
@@ -3045,6 +3106,13 @@ function renderMetasIndividuais(){
     // Caso 3: ainda falta superar
     const falta = ant - atu + 1;
     const pctFeito = ant > 0 ? Math.round((atu/ant)*100) : 0;
+    // Cálculo de ritmo (mesma lógica do renderCats)
+    const necessario = diasRestantes>0 ? (falta/diasRestantes).toFixed(1) : null;
+    const atualDia = diasPassados>0 ? (atu/diasPassados).toFixed(1) : null;
+    const noRitmo = atualDia!==null && necessario!==null && parseFloat(atualDia) >= parseFloat(necessario);
+    const ritmoHtml = mesEhAtual
+      ? `<div class="cat-ritmo"><span class="cat-ritmo-info">Precisa <strong>${necessario}</strong>/dia</span><span class="cat-ritmo-badge ${noRitmo?'ok':'er'}">${noRitmo?'No ritmo':'⚠ Atrás'}</span></div>`
+      : '';
     return `<div class="mi-cell pendente">
       ${iconHtml}
       <div class="mi-cell-nome">${nome}</div>
@@ -3059,6 +3127,7 @@ function renderMetasIndividuais(){
         <span class="mi-foot-sep">·</span>
         <span class="mi-foot-falta">Falta +${falta}</span>
       </div>
+      ${ritmoHtml}
     </div>`;
   }
 
@@ -3677,7 +3746,8 @@ function renderConversao(){
         const v=vd[cat.id]||0;
         const pct=sapatos>0?(v/sapatos*100):null;
         const pctStr=pct!==null?pct.toFixed(1)+'%':'—';
-        const bench=BENCH[cat.id]||null;
+        // Tenta benchmark fixo; se nulo (carteiras/prendedor), calcula dinamicamente
+        const bench=BENCH[cat.id] || calcularBenchDinamico(cat.id);
         const status=pct!==null&&bench?statusBench(pct,bench):null;
         const stClass=status||'';
         let rodape='';
@@ -3887,7 +3957,7 @@ function makeCatCard(nome, svg, valAnt, valAtu, mes, fmt){
       </div>
       <div class="hist-cat-delta-sep"></div>
       <div class="hist-cat-delta-blk">
-        <div class="hist-cat-delta-val">${sym} ${pctSign}${pct.toFixed(0)}%</div>
+        <div class="hist-cat-delta-val">${pctSign}${pct.toFixed(0)}%</div>
         <div class="hist-cat-delta-key">variação</div>
       </div>
     </div>
