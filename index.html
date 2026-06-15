@@ -1097,7 +1097,7 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 
 /* ── CONVERSÃO ── */
 /* conv-hero removido */
-.conv-itens{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;}
+.conv-itens{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:24px;}
 .conv-item{background:rgba(255,255,255,.025);border:1px solid var(--oud);padding:14px 16px;text-align:center;}
 .conv-item .ci-nome{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cr3);margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;}
 .conv-item .ci-nome svg{width:12px;height:12px;stroke:var(--ou);stroke-width:1.5;fill:none;opacity:.5;}
@@ -1105,7 +1105,7 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .conv-item .ci-sub{font-size:15px;color:var(--cr);font-weight:500;margin-top:3px;}
 /* benchmark */
 /* conv-item redesenhado */
-.conv-itens{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.conv-itens{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:24px;}
 .conv-item{
   background:rgba(255,255,255,.025);border:1px solid var(--oud);
   padding:20px 18px;position:relative;overflow:hidden;
@@ -1152,7 +1152,10 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .ci-meta-linha strong.acima{color:#6dbf6d;}
 .ci-meta-linha strong.media{color:var(--ou);}
 .ci-meta-linha strong.abaixo{color:#e07070;}
-@media(max-width:640px){.conv-itens{grid-template-columns:repeat(2,1fr);}}
+/* Breakpoints responsivos: 5 cols em desktop → 3 → 2 → 1 */
+@media(max-width:1200px){.conv-itens{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:800px){.conv-itens{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.conv-itens{grid-template-columns:1fr;}}
 .conv-rank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
 .conv-rk{background:rgba(255,255,255,.025);border:1px solid var(--oud);padding:18px 16px;}
 .conv-rk-tit{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--cr3);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
@@ -1301,8 +1304,9 @@ hr.dv{border:none;border-top:1px solid var(--oud2);margin:36px 0;}
   color:var(--ou2);line-height:1;
 }
 .dest-unid{
-  font-size:9px;color:var(--cr3);letter-spacing:1px;
-  margin-left:4px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:14px;color:var(--cr);letter-spacing:.3px;
+  margin-left:6px;font-style:italic;opacity:.85;
 }
 .dest-vazio{
   font-size:10px;color:var(--cr3);
@@ -2320,6 +2324,8 @@ async function entrarComUsuario(u){
   if(usuario!=='__gestor__') verificarPrimeiroAcesso();
   // Pré-carrega meses vizinhos em background pra primeira navegação ser instantânea
   prefetchVizinhos();
+  // Pré-carrega histórico fechado de 2026 pra alimentar benchmark dinâmico
+  prefetchHistoricoBenchmark();
 }
 
 // Listener de estado de autenticação
@@ -2390,6 +2396,31 @@ function prefetchVizinhos(){
       }).catch(()=>{ cacheHist[k] = null; });
     });
   });
+}
+
+// Pré-carrega TODOS os meses fechados de 2026 silenciosamente.
+// Necessário pra alimentar o cálculo dinâmico de benchmark (Carteiras / Prendedor)
+// na seção "Minha Conversão · Acessórios por Sapato".
+// Roda uma vez no login. Fire-and-forget.
+function prefetchHistoricoBenchmark(){
+  const hoje = new Date();
+  const anoHoje = hoje.getFullYear();
+  const mesHoje = hoje.getMonth()+1;
+  // Só faz sentido pra 2026 (HIST_2025 é estático). Não puxa meses futuros.
+  if(anoHoje < 2026) return;
+
+  for(let m = 1; m < mesHoje; m++){
+    if(mesNoCache(anoHoje, m)) continue;
+    VENDEDORAS.forEach(v => {
+      getHistMes(v.id, anoHoje, m).then(()=>{
+        // Quando o último vendedora do último mês carrega, re-renderiza
+        // a conversão pra ativar o benchmark dinâmico
+        if(typeof renderConversao === 'function' && abaAtiva === 'painel'){
+          renderConversao();
+        }
+      }).catch(()=>{});
+    });
+  }
 }
 
 // ══ SELETOR MÊS ══
@@ -3741,6 +3772,8 @@ function renderConversao(){
   } else {
     if(indSec) indSec.style.display = 'block';
     const vd=pv[usuario],sapatos=vd['sapatos']||0;
+    // Nomes encurtados pra caber no layout de 5 colunas
+    const NOMES_CURTOS={meias:'Meias',cintos:'Cintos',carteiras:'Carteiras',limpeza:'Limpeza',prendedor:'Prendedor'};
     indBody.innerHTML=`<div class="conv-itens">
       ${ACESS.map(cat=>{
         const v=vd[cat.id]||0;
@@ -3750,16 +3783,17 @@ function renderConversao(){
         const bench=BENCH[cat.id] || calcularBenchDinamico(cat.id);
         const status=pct!==null&&bench?statusBench(pct,bench):null;
         const stClass=status||'';
+        const nomeCurto=NOMES_CURTOS[cat.id]||cat.nome;
         let rodape='';
         if(bench&&status){
-          const labels={acima:'▲ Acima da meta',media:'✓ Na faixa meta',abaixo:'▼ Abaixo da meta'};
-          rodape=`<div class="ci-meta-linha"><strong class="${status}">${labels[status]}</strong><span>ref. ${bench.min}%–${bench.max}%</span></div>`;
+          const labels={acima:'▲ Acima',media:'✓ Na faixa',abaixo:'▼ Abaixo'};
+          rodape=`<div class="ci-meta-linha"><strong class="${status}">${labels[status]}</strong><span>ref. ${bench.min}–${bench.max}%</span></div>`;
         }else if(!bench&&pct!==null){
           rodape=`<div class="ci-meta-linha"><span>Sem referência ainda</span></div>`;
         }
         return `<div class="conv-item ${stClass?'st-'+stClass:''}">
           <div class="ci-header">
-            <div class="ci-nome">${cat.svg} ${cat.nome}</div>
+            <div class="ci-nome">${cat.svg} ${nomeCurto}</div>
             <div class="ci-indicador ${status||'sem'}"></div>
           </div>
           <div class="ci-pct ${stClass}">${pctStr}</div>
