@@ -1585,16 +1585,33 @@ svg{display:inline-block;vertical-align:middle;}
 .mi-subtitulo{font-size:11px;color:var(--cr3);letter-spacing:.5px;margin-top:4px;}
 .mi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
 @media(max-width:640px){.mi-grid{grid-template-columns:repeat(2,1fr);}}
-.mi-cell{background:var(--bg2);border:1px solid var(--oud2);padding:12px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:140px;justify-content:center;}
+.mi-cell{background:var(--bg2);border:1px solid var(--oud2);padding:14px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:170px;justify-content:center;}
 .mi-cell-icon{width:26px;height:26px;color:var(--ou2);opacity:.85;margin-bottom:2px;}
 .mi-cell-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
 .mi-cell-nome{font-size:9px;letter-spacing:1.8px;color:var(--cr3);text-transform:uppercase;font-weight:500;}
-.mi-cell-badge{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;padding:2px 8px;border-radius:2px;font-weight:600;}
-.mi-cell-badge.falta{color:var(--ou2);background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);}
-.mi-cell-badge.sup{color:#7fbf7f;background:rgba(109,191,109,.12);border:1px solid rgba(109,191,109,.3);}
-.mi-cell-num{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:var(--ou2);line-height:1;margin-top:2px;}
-.mi-cell.superada .mi-cell-num{color:#9fd49f;}
-.mi-cell-base{font-size:10px;color:var(--cr3);letter-spacing:.5px;line-height:1.3;}
+
+/* "Você → Meta" lado a lado */
+.mi-pair{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;width:100%;}
+.mi-blk{display:flex;flex-direction:column;align-items:center;line-height:1;}
+.mi-lbl{font-size:8px;letter-spacing:1.5px;color:var(--cr3);text-transform:uppercase;margin-bottom:3px;}
+.mi-val{font-family:'Cormorant Garamond',serif;font-size:22px;line-height:1;}
+.mi-val.feito{color:var(--ou2);}
+.mi-val.meta{color:var(--cr3);}
+.mi-val.feito.superada{color:#9fd49f;}
+.mi-arrow{color:var(--cr3);font-size:13px;opacity:.6;}
+
+/* Barra de progresso grossa */
+.mi-bar{width:100%;height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;}
+.mi-bar-f{height:100%;background:linear-gradient(90deg,var(--ou),var(--ou2));transition:width .4s;}
+.mi-bar-f.superada{background:linear-gradient(90deg,#7fbf7f,#9fd49f);}
+
+/* Footer com % e Falta centralizados */
+.mi-foot{display:flex;justify-content:center;align-items:center;gap:14px;font-size:11px;font-weight:600;letter-spacing:.5px;}
+.mi-foot-pct{color:var(--cr3);}
+.mi-foot-sep{color:var(--cr3);opacity:.4;}
+.mi-foot-falta{color:#d97560;}
+.mi-foot-falta.superada{color:#7fbf7f;}
+
 .mi-cell.sem{opacity:.55;}
 .mi-cell.sem .mi-cell-status{font-size:10px;color:var(--cr3);font-style:italic;}
 
@@ -1629,11 +1646,18 @@ svg{display:inline-block;vertical-align:middle;}
 .hist-cat-yr-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:var(--cr);line-height:1;}
 .hist-cat-yr-block.atual .hist-cat-yr-val{color:var(--ou2);font-size:32px;font-weight:400;}
 .hist-cat-arrow{color:var(--cr3);font-size:13px;opacity:.6;line-height:1;}
-.hist-cat-delta{font-size:11px;font-weight:600;letter-spacing:1px;padding:4px 11px;border-radius:3px;}
-.hist-cat-delta.up{color:#7fbf7f;background:rgba(109,191,109,.12);border:1px solid rgba(109,191,109,.25);}
-.hist-cat-delta.down{color:#d97560;background:rgba(217,117,96,.12);border:1px solid rgba(217,117,96,.25);}
-.hist-cat-delta.eq{color:var(--cr3);background:rgba(255,255,255,.04);border:1px solid var(--oud2);}
-.hist-cat-delta.sem{color:var(--cr3);font-style:italic;font-weight:400;font-size:10px;background:transparent;border:none;padding:2px 0;}
+.hist-cat-delta{display:flex;gap:14px;align-items:center;justify-content:center;padding:6px 12px;border-radius:3px;border:1px solid var(--oud2);}
+.hist-cat-delta.up{background:rgba(109,191,109,.10);border-color:rgba(109,191,109,.30);}
+.hist-cat-delta.down{background:rgba(217,117,96,.10);border-color:rgba(217,117,96,.30);}
+.hist-cat-delta.eq{background:rgba(255,255,255,.04);border-color:var(--oud2);}
+.hist-cat-delta-blk{display:flex;flex-direction:column;align-items:center;line-height:1.1;}
+.hist-cat-delta-val{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;}
+.hist-cat-delta.up .hist-cat-delta-val{color:#7fbf7f;}
+.hist-cat-delta.down .hist-cat-delta-val{color:#d97560;}
+.hist-cat-delta.eq .hist-cat-delta-val{color:var(--cr3);}
+.hist-cat-delta-key{font-size:8px;color:var(--cr3);letter-spacing:1.2px;text-transform:uppercase;margin-top:3px;}
+.hist-cat-delta-sep{width:1px;height:24px;background:currentColor;opacity:.25;}
+.hist-cat-delta.sem{color:var(--cr3);font-style:italic;font-weight:400;font-size:10px;background:transparent;border:none;padding:2px 0;display:block;text-align:center;}
 </style>
 </style>
 </head>
@@ -1723,16 +1747,11 @@ svg{display:inline-block;vertical-align:middle;}
       </div>
 
       <div class="tab-content" id="tab-painel">
-      <!-- Metas Individuais (forward-looking · o mínimo pra superar ano passado) -->
+      <!-- 1. Metas Individuais (forward-looking · o mínimo pra superar ano passado) -->
       <div id="metas-ind-card"></div>
       <div class="cards3" id="cards-top" style="display:none;"></div>
-      <!-- Destaques do Mês -->
-      <div class="dest-card" id="dest-card">
-        <div class="dest-titulo">Destaques do Mês</div>
-        <div class="dest-grid" id="dest-grid"></div>
-      </div>
 
-      <!-- Card status de atualização -->
+      <!-- 2. Última atualização · Vendedoras (selo de confiança antes dos dados de equipe) -->
       <div class="status-card" id="status-atualizacao">
         <div class="status-card-titulo">
           <span>Última atualização · Vendedoras</span>
@@ -1740,9 +1759,18 @@ svg{display:inline-block;vertical-align:middle;}
         <div class="status-grid" id="status-grid"></div>
       </div>
 
+      <!-- 3. Metas por Categoria · Equipe -->
       <div class="slbl"><span>Metas por Categoria · Equipe</span></div>
       <div class="cats-grid" id="cats-grid"></div>
+
+      <!-- 4. Destaques do Mês -->
+      <div class="dest-card" id="dest-card">
+        <div class="dest-titulo">Destaques do Mês</div>
+        <div class="dest-grid" id="dest-grid"></div>
+      </div>
+
       <hr class="dv">
+      <!-- 5. Registrar Vendas + 6. Meu histórico do mês (minimizado) -->
       <div id="bloco-reg">
         <div class="slbl">
           <span>Registrar Vendas</span>
@@ -1771,15 +1799,26 @@ svg{display:inline-block;vertical-align:middle;}
           <button class="btn-reg" style="opacity:.7;" onclick="registrarDia()">✓ Registrar Dia Especial</button>
         </div>
         <div class="hist-wrap">
-          <div class="slbl" style="margin-top:32px;">
-            <span>Meu histórico do mês</span>
-            <button class="bsm" style="color:rgba(192,80,74,.9);border-color:rgba(192,80,74,.6);background:rgba(192,80,74,.15);" onclick="zerarHist()">Zerar</button>
+          <div class="slbl" id="hist-header" style="margin-top:32px;cursor:pointer;" onclick="toggleHistMinimizado()">
+            <span>Meu histórico do mês <span class="hist-resumo-inline" id="hist-resumo-inline" style="font-family:'Cormorant Garamond',serif;color:var(--cr);text-transform:none;letter-spacing:0;margin-left:8px;font-size:14px;">— carregando…</span></span>
+            <span style="display:flex;gap:10px;align-items:center;">
+              <button class="bsm" style="color:rgba(192,80,74,.9);border-color:rgba(192,80,74,.6);background:rgba(192,80,74,.15);" onclick="event.stopPropagation();zerarHist()">Zerar</button>
+              <span id="hist-toggle-icon" style="font-size:12px;color:var(--ou2);transition:transform .2s;">▼</span>
+            </span>
           </div>
-          <div id="hist-lista"></div>
+          <div id="hist-lista" style="display:none;"></div>
         </div>
       </div>
+
       <hr class="dv">
-      <!-- Maior Venda do Mês -->
+      <!-- 7. Minha Conversão · Acessórios por Sapato (individual, só pra vendedora) -->
+      <div id="conv-ind-sec">
+        <div class="slbl"><span>Minha Conversão · Acessórios por Sapato</span></div>
+        <div id="conv-ind-body"></div>
+      </div>
+
+      <hr class="dv">
+      <!-- 8. Competição · Maior Venda do Mês -->
       <div id="mv-sec">
         <div class="slbl"><span>Competição · Maior Venda do Mês</span></div>
         <div class="mv-card">
@@ -1812,14 +1851,17 @@ svg{display:inline-block;vertical-align:middle;}
         </div>
       </div>
 
+      <!-- 9. Competição · Mix de Acessórios -->
       <div class="rank-sec">
         <div class="slbl"><span>Competição · Mix de Acessórios</span></div>
         <div class="rank-grid" id="rank-grid"></div>
       </div>
+
       <hr class="dv">
-      <div id="conv-sec">
-        <div class="slbl"><span>Conversão · Acessórios por Sapato</span></div>
-        <div id="conv-body"></div>
+      <!-- 10. Competição · Conversão de Acessórios · Equipe -->
+      <div id="conv-comp-sec">
+        <div class="slbl"><span>Competição · Conversão de Acessórios · Equipe</span></div>
+        <div id="conv-comp-body"></div>
       </div>
       </div><!-- /tab-painel -->
 
@@ -1969,9 +2011,21 @@ CATS.forEach(c=>diaInp[c.id]=0);
 let cacheHist = {}; // {vendedora_ano_mes: [registros]}
 let cacheCfg  = {};  // {ano_mes: {diasUteis, metas}}
 let unsubscribers = []; // listeners ativos
+let _loadingTimeoutId = null;
 
 function loading(show){
   document.getElementById('loading-ov').classList.toggle('show', show);
+  if(show){
+    // Fallback: se algo travar, esconde sozinho depois de 15s + avisa
+    if(_loadingTimeoutId) clearTimeout(_loadingTimeoutId);
+    _loadingTimeoutId = setTimeout(() => {
+      document.getElementById('loading-ov').classList.remove('show');
+      _loadingTimeoutId = null;
+      toast('A sincronização demorou demais. Verifique sua conexão.');
+    }, 15000);
+  } else {
+    if(_loadingTimeoutId){ clearTimeout(_loadingTimeoutId); _loadingTimeoutId = null; }
+  }
 }
 
 // ══ FIRESTORE — CONFIG ══
@@ -2198,8 +2252,14 @@ async function entrarComUsuario(u){
   document.getElementById('tela-sel').style.display='none';
   document.getElementById('tela-dash').style.display='block';
   loading(true);
-  await carregarMes();
-  loading(false);
+  try {
+    await carregarMes();
+  } catch(e){
+    console.error('Erro no login (carregarMes):', e);
+    toast('Erro ao carregar dados. Verifique sua conexão.');
+  } finally {
+    loading(false);
+  }
   const ag=accGlobal(), cfg=cfgAtualCache();
   CATS.forEach(c=>metasCelebradas[c.id]=(ag[c.id]>=(cfg.metas[c.id]||1)));
   inicializarFlagsCelebracao(ag, cfg);
@@ -2207,6 +2267,8 @@ async function entrarComUsuario(u){
   setTimeout(inicializarDataLancamento,50);
   render();
   if(usuario!=='__gestor__') verificarPrimeiroAcesso();
+  // Pré-carrega meses vizinhos em background pra primeira navegação ser instantânea
+  prefetchVizinhos();
 }
 
 // Listener de estado de autenticação
@@ -2233,6 +2295,50 @@ async function carregarMes(){
   await Promise.all(todos.map(vid=>getHistMes(vid,anoAtivo,mesAtivo)));
   await carregarMaiorVendas();
   iniciarListeners();
+}
+
+// Checa se TODOS os dados de um mês já estão no cache em memória
+function mesNoCache(ano, mes){
+  if(cacheCfg[keyMes(ano,mes)] === undefined) return false;
+  const todos = [...VENDEDORAS.map(v=>v.id), ...ARQUIVADAS];
+  for(const vid of todos){
+    if(cacheHist[keyHist(vid, ano, mes)] === undefined) return false;
+  }
+  for(const v of VENDEDORAS){
+    if(cacheHist[keyMV(v.id, ano, mes)] === undefined) return false;
+  }
+  return true;
+}
+
+// Pré-carrega meses vizinhos (M-1 e M+1) silenciosamente em background.
+// Quando a vendedora clicar nas setas, os dados já estarão prontos.
+function prefetchVizinhos(){
+  const candidatos = [];
+  // Mês anterior
+  let pM = mesAtivo - 1, pA = anoAtivo;
+  if(pM < 1){ pM = 12; pA--; }
+  if(pA >= 2026) candidatos.push([pA, pM]); // só fetch a partir de 2026
+  // Próximo mês (se não for futuro)
+  let nM = mesAtivo + 1, nA = anoAtivo;
+  if(nM > 12){ nM = 1; nA++; }
+  const hoje = new Date();
+  const ehFuturo = nA > hoje.getFullYear() || (nA === hoje.getFullYear() && nM > hoje.getMonth()+1);
+  if(!ehFuturo) candidatos.push([nA, nM]);
+
+  candidatos.forEach(([a,m])=>{
+    if(mesNoCache(a, m)) return;
+    // Fire-and-forget — não bloqueia nada
+    getCfgMes(a, m).catch(()=>{});
+    const todos = [...VENDEDORAS.map(v=>v.id), ...ARQUIVADAS];
+    todos.forEach(vid => getHistMes(vid, a, m).catch(()=>{}));
+    VENDEDORAS.forEach(v=>{
+      const k = keyMV(v.id, a, m);
+      if(cacheHist[k] !== undefined) return;
+      db.collection('ls_maior_venda').doc(k).get().then(doc=>{
+        cacheHist[k] = doc.exists ? normalizarRegistroMV(doc.data()) : null;
+      }).catch(()=>{ cacheHist[k] = null; });
+    });
+  });
 }
 
 // ══ SELETOR MÊS ══
@@ -2274,25 +2380,47 @@ async function selecionarMes(m){
   mesAtivo=m;fecharDropdown();
   await aoTrocarMes();
 }
+let _trocandoMes = false;
 async function aoTrocarMes(){
-  CATS.forEach(c=>diaInp[c.id]=0);diaEsp='';
-  document.querySelectorAll('.tag-opcao').forEach(b=>b.classList.remove('ativo'));
-  const tn=document.getElementById('tag-nenhum');if(tn)tn.classList.add('ativo');
-  loading(true);
-  await carregarMes();
-  loading(false);
-  const ag=accGlobal(),cfg=cfgAtualCache();
-  CATS.forEach(c=>metasCelebradas[c.id]=(ag[c.id]>=(cfg.metas[c.id]||1)));
-  inicializarFlagsCelebracao(ag, cfg);
-  renderMesSelector();
-  if(!mesFuturo()){
-    setTimeout(inicializarDataLancamento,50);
-    // Forçar atualização do input de maior venda também
-    setTimeout(()=>renderMaiorVenda(),100);
+  // Lock: impede múltiplos cliques rápidos de empilhar operações concorrentes
+  if(_trocandoMes) return;
+  _trocandoMes = true;
+  try {
+    CATS.forEach(c=>diaInp[c.id]=0);diaEsp='';
+    document.querySelectorAll('.tag-opcao').forEach(b=>b.classList.remove('ativo'));
+    const tn=document.getElementById('tag-nenhum');if(tn)tn.classList.add('ativo');
+
+    // Cache hit: troca instantânea, sem overlay
+    const jaTemTudo = mesNoCache(anoAtivo, mesAtivo);
+    if(!jaTemTudo) loading(true);
+
+    try {
+      await carregarMes();
+    } catch(e){
+      console.error('Erro em carregarMes:', e);
+      toast('Erro na sincronização. Verifique sua conexão.');
+    } finally {
+      loading(false);
+    }
+
+    const ag=accGlobal(),cfg=cfgAtualCache();
+    CATS.forEach(c=>metasCelebradas[c.id]=(ag[c.id]>=(cfg.metas[c.id]||1)));
+    inicializarFlagsCelebracao(ag, cfg);
+    renderMesSelector();
+    if(!mesFuturo()){
+      setTimeout(inicializarDataLancamento,50);
+      // Forçar atualização do input de maior venda também
+      setTimeout(()=>renderMaiorVenda(),100);
+    }
+    render();
+    // Se a aba Histórico está ativa, re-renderiza pra refletir o novo mês
+    if(abaAtiva === 'historico') renderHistorico();
+
+    // Pré-carrega meses vizinhos em background pra próxima navegação ser instantânea
+    prefetchVizinhos();
+  } finally {
+    _trocandoMes = false;
   }
-  render();
-  // Se a aba Histórico está ativa, re-renderiza pra refletir o novo mês
-  if(abaAtiva === 'historico') renderHistorico();
 }
 
 // ══ RENDER ══
@@ -2323,7 +2451,7 @@ function render(){
   renderCards(ag,cfg);renderCats(ag,cfg,isG);
   document.getElementById('bloco-reg').style.display=isG?'none':'block';
   if(!isG){renderReg(ag,cfg);renderHist();}
-  renderMetasIndividuais();renderDestaques();renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();
+  renderMetasIndividuais();renderDestaques();renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();atualizarResumoHistInline();
 }
 
 function renderCards(ag,cfg){
@@ -2701,17 +2829,17 @@ function verificarCelebracoes(){
   if(usuario && usuario !== '__gestor__'){
     const pv = accPorV();
 
-    // Melhor Mix de Acessórios — tomou a liderança
+    // Líder de Mix de Acessórios — tomou a liderança
     const novoMix = melhorMixLiderAtual(pv);
     if(novoMix === usuario && melhorMixLider !== usuario){
-      fila.push({ titulo: 'Líder do Mix! 🎒', subtitulo: 'Você está em 1º no Melhor Mix de Acessórios!', icone: '🎒' });
+      fila.push({ titulo: 'Líder do Mix! 🎒', subtitulo: 'Você é a líder do Mix de Acessórios!', icone: '🎒' });
     }
     melhorMixLider = novoMix;
 
-    // Melhor Conversão de Mix — tomou a liderança
+    // Maior Conversão de Mix — tomou a liderança
     const novoConv = melhorConvLiderAtual(pv);
     if(novoConv === usuario && melhorConvLider !== usuario){
-      fila.push({ titulo: 'Líder da Conversão! 📊', subtitulo: 'Sua conversão de acessórios é a melhor da equipe!', icone: '📊' });
+      fila.push({ titulo: 'Maior Conversão! 📊', subtitulo: 'Sua conversão de acessórios é a melhor da equipe!', icone: '📊' });
     }
     melhorConvLider = novoConv;
   }
@@ -2797,6 +2925,35 @@ async function zerarHist(){
   toast('Zerado.');
 }
 
+// ══ Meu histórico do mês · minimização e resumo inline ══
+function toggleHistMinimizado(){
+  const lista = document.getElementById('hist-lista');
+  const icon = document.getElementById('hist-toggle-icon');
+  if(!lista || !icon) return;
+  const aberto = lista.style.display !== 'none';
+  lista.style.display = aberto ? 'none' : 'block';
+  icon.textContent = aberto ? '▼' : '▲';
+}
+
+function atualizarResumoHistInline(){
+  const span = document.getElementById('hist-resumo-inline');
+  if(!span) return;
+  if(usuario === '__gestor__'){ span.textContent = ''; return; }
+  const reg = histAtualCache(usuario) || [];
+  let sap=0, mei=0, acc=0, lim=0;
+  const dias = new Set();
+  reg.forEach(d=>{
+    if(d.especial) return;
+    sap += d.sapatos||0;
+    mei += d.meias||0;
+    acc += (d.cintos||0)+(d.carteiras||0)+(d.prendedor||0);
+    lim += d.limpeza||0;
+    if(d.data) dias.add(d.data);
+  });
+  const totalAcc = mei + acc + lim;
+  span.textContent = `— ${dias.size} dia${dias.size===1?'':'s'} · ${sap} sapatos · ${totalAcc} acessórios`;
+}
+
 // ══ METAS INDIVIDUAIS · CARD DE TOPO ══
 // Card forward-looking: mostra o mínimo que precisa pra superar o mesmo
 // mês do ano passado. Vendedora vê suas metas; gestor vê meta da equipe.
@@ -2847,41 +3004,61 @@ function renderMetasIndividuais(){
     atuLim = a.limpeza||0;
   }
 
-  const tituloPrincipal = isG
-    ? `Metas Individuais · ${nomeMes}`
-    : `Suas Metas Individuais · ${nomeMes}`;
+  const tituloPrincipal = `Metas Individuais · ${nomeMes}`;
   const subTexto = isG
     ? `O mínimo da equipe pra superar ${nomeMes} de ${anoAtivo-1}`
     : `O mínimo pra você superar seu ${nomeMes} de ${anoAtivo-1}`;
 
   function celula(nome, svg, atu, ant){
     const iconHtml = svg ? `<div class="mi-cell-icon">${svg}</div>` : '';
+
+    // Caso 1: sem base ano anterior — só mostra o "Você fez X"
     if(ant === 0){
       return `<div class="mi-cell sem">
         ${iconHtml}
         <div class="mi-cell-nome">${nome}</div>
+        <div class="mi-pair">
+          <div class="mi-blk"><div class="mi-lbl">Você</div><div class="mi-val feito">${atu}</div></div>
+        </div>
         <div class="mi-cell-status">sem base ${anoAtivo-1}</div>
       </div>`;
     }
+
+    // Caso 2: já superou — barra cheia + acima de
     if(atu > ant){
-      // Já superou
       const acima = atu - ant;
       return `<div class="mi-cell superada">
         ${iconHtml}
         <div class="mi-cell-nome">${nome}</div>
-        <div class="mi-cell-badge sup">✓ Superada</div>
-        <div class="mi-cell-num">+${acima}</div>
-        <div class="mi-cell-base">acima de ${ant}</div>
+        <div class="mi-pair">
+          <div class="mi-blk"><div class="mi-lbl">Você</div><div class="mi-val feito superada">${atu}</div></div>
+          <div class="mi-arrow">→</div>
+          <div class="mi-blk"><div class="mi-lbl">Meta</div><div class="mi-val meta">${ant}</div></div>
+        </div>
+        <div class="mi-bar"><div class="mi-bar-f superada" style="width:100%"></div></div>
+        <div class="mi-foot">
+          <span class="mi-foot-falta superada">✓ Superada · +${acima} acima</span>
+        </div>
       </div>`;
     }
-    // Ainda falta superar (precisa pelo menos +1 acima de ant)
+
+    // Caso 3: ainda falta superar
     const falta = ant - atu + 1;
+    const pctFeito = ant > 0 ? Math.round((atu/ant)*100) : 0;
     return `<div class="mi-cell pendente">
       ${iconHtml}
       <div class="mi-cell-nome">${nome}</div>
-      <div class="mi-cell-badge falta">Falta</div>
-      <div class="mi-cell-num">+${falta}</div>
-      <div class="mi-cell-base">pra superar ${ant}</div>
+      <div class="mi-pair">
+        <div class="mi-blk"><div class="mi-lbl">Você</div><div class="mi-val feito">${atu}</div></div>
+        <div class="mi-arrow">→</div>
+        <div class="mi-blk"><div class="mi-lbl">Meta</div><div class="mi-val meta">${ant}</div></div>
+      </div>
+      <div class="mi-bar"><div class="mi-bar-f" style="width:${Math.min(100,pctFeito)}%"></div></div>
+      <div class="mi-foot">
+        <span class="mi-foot-pct">${pctFeito}%</span>
+        <span class="mi-foot-sep">·</span>
+        <span class="mi-foot-falta">Falta +${falta}</span>
+      </div>
     </div>`;
   }
 
@@ -2909,12 +3086,7 @@ function renderDestaques(){
   const pv = accPorV();
   const cfg = cfgAtualCache();
 
-  // ── 1. Melhor em Sapatos ──
-  const rankSap = VENDEDORAS.map(v=>({v, val:pv[v.id]['sapatos']||0}))
-    .sort((a,b)=>b.val-a.val);
-  const lidSap = rankSap[0];
-
-  // ── 2. Melhor Mix de Acessórios ──
+  // ── 1. Melhor Mix de Acessórios ──
   // Vencedora = a vendedora que lidera em MAIS CATEGORIAS de acessórios.
   // Empate dentro de uma categoria: ambas contam como líderes (ninguém perdeu).
   // Empate no total de lideranças: desempata por total de unidades vendidas.
@@ -2943,7 +3115,7 @@ function renderDestaques(){
   });
   const lidAcess = rankAcess[0];
 
-  // ── 3. Melhor Conversão de Mix ──
+  // ── 2. Melhor Conversão de Mix ──
   const rankConv = VENDEDORAS.map(v=>{
     const sap = pv[v.id]['sapatos']||0;
     const acess = ACESS.reduce((s,c)=>s+(pv[v.id][c.id]||0),0);
@@ -2952,7 +3124,7 @@ function renderDestaques(){
   }).sort((a,b)=>b.val-a.val);
   const lidConv = rankConv[0];
 
-  // ── 4. Maior Venda do Mês ──
+  // ── 3. Maior Venda do Mês ──
   // Lê o novo formato {vendas:[{valor,data,id},...]} e pega a maior venda de cada vendedora
   const mvDados = VENDEDORAS.map(v=>{
     const k = keyMV(v.id, anoAtivo, mesAtivo);
@@ -2967,19 +3139,13 @@ function renderDestaques(){
 
   const destaques = [
     {
-      label:'Melhor em Sapatos',
-      v: lidSap.val>0 ? lidSap.v : null,
-      valor: lidSap.val>0 ? lidSap.val : null,
-      unid: 'pares'
-    },
-    {
-      label:'Melhor Mix de Acessórios',
+      label:'Líder de Mix de Acessórios',
       v: lidAcess.val>0 ? lidAcess.v : null,
       valor: lidAcess.val>0 ? lidAcess.val : null,
       unid: lidAcess.val === 1 ? 'categoria' : 'categorias'
     },
     {
-      label:'Melhor Conversão de Mix de Acessórios',
+      label:'Maior Conversão de Mix',
       v: lidConv.val>0 ? lidConv.v : null,
       valor: lidConv.val>0 ? lidConv.val.toFixed(2) : null,
       unid: 'acess./par'
@@ -3493,13 +3659,20 @@ function statusBench(pct,bench){
 
 function renderConversao(){
   const isG=usuario==='__gestor__';
-  const body=document.getElementById('conv-body');
-  if(!body)return;
+  const indBody=document.getElementById('conv-ind-body');
+  const compBody=document.getElementById('conv-comp-body');
+  if(!indBody || !compBody) return;
   const pv=accPorV();
-  let indHtml='';
-  if(!isG){
+
+  // ─── Bloco individual: "Minha Conversão · Acessórios por Sapato" ───
+  // Aparece SÓ pra vendedora. Gestor vê uma mensagem ou esconde a seção.
+  const indSec = document.getElementById('conv-ind-sec');
+  if(isG){
+    if(indSec) indSec.style.display = 'none';
+  } else {
+    if(indSec) indSec.style.display = 'block';
     const vd=pv[usuario],sapatos=vd['sapatos']||0;
-    indHtml=`<div class="conv-itens">
+    indBody.innerHTML=`<div class="conv-itens">
       ${ACESS.map(cat=>{
         const v=vd[cat.id]||0;
         const pct=sapatos>0?(v/sapatos*100):null;
@@ -3526,34 +3699,34 @@ function renderConversao(){
       }).join('')}
     </div>`;
   }
+
+  // ─── Bloco competição: "Competição · Conversão de Acessórios · Equipe" ───
+  // Aparece pra todos (gestor + vendedora). Título já está no container.
   const rankCols=[
     {id:'_geral',nome:'Geral',svg:CATS[0].svg,fn:(vd)=>{const s=vd['sapatos']||0;const a=ACESS.reduce((sum,c)=>sum+(vd[c.id]||0),0);return s>0?a/s:0;}},
     ...ACESS.map(cat=>{return{id:cat.id,nome:cat.nome,svg:cat.svg,fn:(vd)=>{const s=vd['sapatos']||0;return s>0?(vd[cat.id]||0)/s:0;}};}  )
   ];
   const pc=['p1','p2','p3',''];
-  const rankHtml=`
-    <div class="slbl" style="margin-top:24px;margin-bottom:14px;"><span>Ranking de Conversão de Acessórios · Equipe</span></div>
-    <div class="conv-rank-grid">
-      ${rankCols.map(col=>{
-        const dados=VENDEDORAS.map(v=>{return{nome:v.nome,val:col.fn(pv[v.id]),foto:v.foto||null};} ).sort((a,b)=>b.val-a.val);
-        const max=dados[0]?.val||0.01;
-        return `<div class="conv-rk"><div class="conv-rk-tit">${col.svg} ${col.nome}</div>
-          ${dados.map((d,i)=>{
-            const av=d.foto?'<img src="'+d.foto+'" alt="'+d.nome+'">':d.nome[0];
-            return `<div class="conv-rk-row">
-              <div class="conv-rk-pos ${pc[i]||''}">${i+1}</div>
-              <div class="conv-rk-avatar">${av}</div>
-              <div class="conv-rk-info">
-                <div class="conv-rk-nome">${d.nome}${i===0&&d.val>0?'<span class="conv-rk-dest">Líder</span>':''}</div>
-                <div class="conv-rk-bar"><div class="conv-rk-bar-f" style="width:${max>0?(d.val/max*100):0}%"></div></div>
-              </div>
-              <div class="conv-rk-val">${d.val>0?d.val.toFixed(2):'—'}</div>
-            </div>`;
-          }).join('')}
-        </div>`;
-      }).join('')}
-    </div>`;
-  body.innerHTML=indHtml+rankHtml;
+  compBody.innerHTML=`<div class="conv-rank-grid">
+    ${rankCols.map(col=>{
+      const dados=VENDEDORAS.map(v=>{return{nome:v.nome,val:col.fn(pv[v.id]),foto:v.foto||null};} ).sort((a,b)=>b.val-a.val);
+      const max=dados[0]?.val||0.01;
+      return `<div class="conv-rk"><div class="conv-rk-tit">${col.svg} ${col.nome}</div>
+        ${dados.map((d,i)=>{
+          const av=d.foto?'<img src="'+d.foto+'" alt="'+d.nome+'">':d.nome[0];
+          return `<div class="conv-rk-row">
+            <div class="conv-rk-pos ${pc[i]||''}">${i+1}</div>
+            <div class="conv-rk-avatar">${av}</div>
+            <div class="conv-rk-info">
+              <div class="conv-rk-nome">${d.nome}${i===0&&d.val>0?'<span class="conv-rk-dest">Líder</span>':''}</div>
+              <div class="conv-rk-bar"><div class="conv-rk-bar-f" style="width:${max>0?(d.val/max*100):0}%"></div></div>
+            </div>
+            <div class="conv-rk-val">${d.val>0?d.val.toFixed(2):'—'}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 // ══ HISTÓRICO ANUAL (ano atual vs anterior, mesmo mês) ══
@@ -3692,10 +3865,9 @@ function makeCatCard(nome, svg, valAnt, valAtu, mes, fmt){
   if(Math.abs(pct) >= 2){
     if(d > 0){ cls='up'; sym='⬆'; } else { cls='down'; sym='⬇'; }
   }
-  // Quantidade primeiro, porcentagem em seguida (sinal + na frente quando positivo)
+  // Dois blocos labelados lado a lado: Unidades | Variação (separados por linha vertical)
   const qtySign = d >= 0 ? '+' : '';
   const pctSign = pct >= 0 ? '+' : '';
-  const deltaTxt = `${sym} ${qtySign}${f(d)} · ${pctSign}${pct.toFixed(0)}%`;
   return `<div class="hist-cat-card">
     ${iconHtml}
     <div class="hist-cat-nome">${nome}</div>
@@ -3708,7 +3880,17 @@ function makeCatCard(nome, svg, valAnt, valAtu, mes, fmt){
       <div class="hist-cat-yr-label">${mes} ${anoAtivo}</div>
       <div class="hist-cat-yr-val">${f(valAtu)}</div>
     </div>
-    <div class="hist-cat-delta ${cls}">${deltaTxt}</div>
+    <div class="hist-cat-delta ${cls}">
+      <div class="hist-cat-delta-blk">
+        <div class="hist-cat-delta-val">${qtySign}${f(d)}</div>
+        <div class="hist-cat-delta-key">unidades</div>
+      </div>
+      <div class="hist-cat-delta-sep"></div>
+      <div class="hist-cat-delta-blk">
+        <div class="hist-cat-delta-val">${sym} ${pctSign}${pct.toFixed(0)}%</div>
+        <div class="hist-cat-delta-key">variação</div>
+      </div>
+    </div>
   </div>`;
 }
 
@@ -3799,8 +3981,6 @@ function onTrocarHistVend(){
   renderHistorico();
 }
 
-// ══ Navegação entre abas (Painel / Histórico) ══
-let abaAtiva = 'painel';
 
 function trocarTab(t){
   abaAtiva = t;
@@ -3810,7 +3990,6 @@ function trocarTab(t){
   document.querySelectorAll('.tab-content').forEach(c=>{
     c.style.display = (c.id === 'tab-'+t) ? 'block' : 'none';
   });
-  // Sempre re-renderiza histórico ao abrir (cache evita refetch Firestore)
   if(t === 'historico') renderHistorico();
 }
 
