@@ -3247,8 +3247,8 @@ function renderDestaques(){
     {
       label:'Maior Conversão de Mix',
       v: lidConv.val>0 ? lidConv.v : null,
-      valor: lidConv.val>0 ? lidConv.val.toFixed(2) : null,
-      unid: 'acess./par'
+      valor: lidConv.val>0 ? Math.round(lidConv.val*100)+'%' : null,
+      unid: ''
     },
     {
       label:'Maior Venda do Mês',
@@ -3778,7 +3778,7 @@ function renderConversao(){
       ${ACESS.map(cat=>{
         const v=vd[cat.id]||0;
         const pct=sapatos>0?(v/sapatos*100):null;
-        const pctStr=pct!==null?pct.toFixed(1)+'%':'—';
+        const pctStr=pct!==null?Math.round(pct)+'%':'—';
         // Tenta benchmark fixo; se nulo (carteiras/prendedor), calcula dinamicamente
         const bench=BENCH[cat.id] || calcularBenchDinamico(cat.id);
         const status=pct!==null&&bench?statusBench(pct,bench):null;
@@ -3787,7 +3787,10 @@ function renderConversao(){
         let rodape='';
         if(bench&&status){
           const labels={acima:'▲ Acima',media:'✓ Na faixa',abaixo:'▼ Abaixo'};
-          rodape=`<div class="ci-meta-linha"><strong class="${status}">${labels[status]}</strong><span>ref. ${bench.min}–${bench.max}%</span></div>`;
+          const minR = Math.round(bench.min);
+          const maxR = Math.round(bench.max);
+          const refStr = minR === maxR ? `${minR}%` : `${minR}–${maxR}%`;
+          rodape=`<div class="ci-meta-linha"><strong class="${status}">${labels[status]}</strong><span>ref. ${refStr}</span></div>`;
         }else if(!bench&&pct!==null){
           rodape=`<div class="ci-meta-linha"><span>Sem referência ainda</span></div>`;
         }
@@ -3825,7 +3828,7 @@ function renderConversao(){
               <div class="conv-rk-nome">${d.nome}${i===0&&d.val>0?'<span class="conv-rk-dest">Líder</span>':''}</div>
               <div class="conv-rk-bar"><div class="conv-rk-bar-f" style="width:${max>0?(d.val/max*100):0}%"></div></div>
             </div>
-            <div class="conv-rk-val">${d.val>0?d.val.toFixed(2):'—'}</div>
+            <div class="conv-rk-val">${d.val>0?Math.round(d.val*100)+'%':'—'}</div>
           </div>`;
         }).join('')}
       </div>`;
