@@ -1992,23 +1992,31 @@ const MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julh
 const METAS_DEF = {sapatos:950,meias:275,cintos:185,carteiras:20,limpeza:90,prendedor:30};
 
 // Benchmarks de conversão
+// Todos dinâmicos: calculados pelo top-2 do histórico (calcularBenchDinamico).
+// Mantido como objeto vazio pra preservar a estrutura `BENCH[cat.id] || calc(...)`.
 const BENCH={
-  meias:    {min:31.1,max:31.4,ref:'Melhor: Michelly 31,1% / Ialey 31,4%'},
-  cintos:   {min:21.6,max:26.9,ref:'Melhor: Ialey abr 21,6% / mar 26,9%'},
-  limpeza:  {min:10.4,max:13.8,ref:'Melhor: Jhennifer abr 10,4% / mar 13,8%'},
-  carteiras:null,prendedor:null
+  meias:null, cintos:null, limpeza:null, carteiras:null, prendedor:null
 };
 
-// Calcula benchmark dinâmico pra categorias sem referência fixa (carteiras, prendedor).
-// Lógica: itera pelos meses fechados em 2026 (cacheHist) e calcula a taxa de
-// conversão de cada vendedora ativa por mês. Pega a 1ª e a 2ª melhor taxa como
-// max/min do benchmark. Retorna null se não tiver dados suficientes (< 2 amostras).
+// Calcula benchmark dinâmico de conversão pra TODAS as categorias de acessório.
+// Lógica: monta uma lista de taxas de conversão (item/sapatos*100) por vendedora-mês
+// e pega a 1ª e a 2ª maiores como max/min do benchmark (pode ser a mesma vendedora
+// em meses diferentes). Retorna null se houver menos de 2 amostras.
+//
+// Janela de dados por item:
+//   • 2026 (meses fechados, cacheHist) → todas as categorias (dados já separados por item)
+//   • 2025 (HIST_2025 estático)        → só meias, cintos e limpeza, porque em 2025 os
+//     acessórios foram gravados agrupados no campo `ace`. Tratamos `ace` como Cintos
+//     (era o que as vendedoras consideravam acessório na época). Carteiras e Prendedor
+//     só passaram a ser contabilizados separadamente em 2026, então não usam 2025.
+const CAMPO_HIST_2025 = { meias:'mei', cintos:'ace', limpeza:'lim' }; // carteiras/prendedor: sem 2025
 function calcularBenchDinamico(catId){
   const taxas = [];
   const hoje_calc = new Date();
   const mesHojeNum = hoje_calc.getMonth()+1;
   const anoHojeNum = hoje_calc.getFullYear();
 
+  // ── 2026: meses fechados, dados granulares por item (cacheHist) ──
   Object.keys(cacheHist).forEach(key => {
     // Ignora chaves de Maior Venda (formato diferente)
     if(key.startsWith('MV_')) return;
@@ -2037,6 +2045,23 @@ function calcularBenchDinamico(catId){
       taxas.push((alvo / sapatos) * 100);
     }
   });
+
+  // ── 2025: só meias, cintos (via `ace`) e limpeza ──
+  const campo2025 = CAMPO_HIST_2025[catId];
+  if(campo2025){
+    Object.keys(HIST_2025).forEach(vid => {
+      // Só vendedoras ativas (HIST_2025 já vem remapeado pras ativas, mas garantimos)
+      if(!VENDEDORAS.some(v => v.id === vid)) return;
+      const meses = HIST_2025[vid];
+      Object.keys(meses).forEach(mk => {
+        const d = meses[mk] || {};
+        const sapatos = d.sap || 0, alvo = d[campo2025] || 0;
+        if(sapatos >= 20 && alvo > 0){
+          taxas.push((alvo / sapatos) * 100);
+        }
+      });
+    });
+  }
 
   if(taxas.length < 2) return null;
   taxas.sort((a,b) => b-a);
