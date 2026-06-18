@@ -1597,6 +1597,12 @@ svg{display:inline-block;vertical-align:middle;}
 .mi-cell-icon{width:26px;height:26px;color:var(--ou2);opacity:.85;margin-bottom:2px;}
 .mi-cell-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
 .mi-cell-nome{font-size:9px;letter-spacing:1.8px;color:var(--cr3);text-transform:uppercase;font-weight:500;}
+.mi-selbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.mi-sel-chip{background:transparent;border:1px solid var(--oud2);color:var(--cr3);padding:7px 16px;font-family:inherit;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.mi-sel-chip:hover{border-color:var(--oud);color:var(--ou);}
+.mi-sel-chip.on{border-color:var(--ou);color:var(--ou2);background:rgba(201,168,76,.08);font-weight:600;}
+body.light-mode .mi-sel-chip{color:rgba(14,26,8,.7);}
+body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
 
 /* "Você → Meta" lado a lado */
 .mi-pair{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;width:100%;}
@@ -2249,6 +2255,12 @@ const auth = firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 let vendedoraSelecionada = null; // quem clicou para entrar
 
+// Aba "Metas Individuais" na visão do gestor: qual visão está selecionada.
+// 'todas' (padrão) = Equipe + as 4 vendedoras em aberto; 'equipe' = só a equipe;
+// ou o id de uma vendedora específica.
+let miGestorView = 'todas';
+function setMiGestorView(v){ miGestorView = v; renderMetasIndividuais(); }
+
 // ── Modal de login ──
 function abrirLoginModal(vid){
   vendedoraSelecionada = vid;
@@ -2599,7 +2611,7 @@ function renderCats(ag,cfg,isG){
     const atual=(!ating&&diasPassados>0)?(a/diasPassados).toFixed(1):null;
     const noRitmo=atual!==null&&necessario!==null&&parseFloat(atual)>=parseFloat(necessario);
     let ritmoHtml='';
-    if(!isG&&m>0){
+    if(m>0){
       ritmoHtml=ating
         ?`<div class="cat-ritmo"><span class="cat-ritmo-info">Meta atingida!</span><span class="cat-ritmo-badge ok">✓ Meta</span></div>`
         :`<div class="cat-ritmo"><span class="cat-ritmo-info">Faltam <strong>${falt}</strong> · ${necessario}/dia</span><span class="cat-ritmo-badge ${noRitmo?'ok':'er'}">${noRitmo?'No ritmo':'⚠ Atrás'}</span></div>`;
@@ -2620,7 +2632,7 @@ function renderCats(ag,cfg,isG){
       const uNec=(!metaAting&&diasRestantes>0)?(metaFalt/diasRestantes).toFixed(1):null;
       const uAtual=diasPassados>0?(a/diasPassados).toFixed(1):'0';
       const uNoR=uNec!==null&&parseFloat(uAtual)>=parseFloat(uNec);
-      if(!isG&&um>0){
+      if(um>0){
         metaRitmoHtml=metaAting
           ?'<div class="cat-ritmo"><span class="cat-ritmo-info">⚡ Ultrameta atingida!</span><span class="cat-ritmo-badge ok">✓ Ultra</span></div>'
           :'<div class="cat-ritmo"><div class="cat-ritmo-info"><span class="ritmo-label">Faltam</span><span class="ritmo-num">'+metaFalt+'</span><span class="ritmo-sep">·</span><span class="ritmo-num">'+uNec+'</span><span class="ritmo-label">/dia necessário</span></div><span class="cat-ritmo-badge '+(uNoR?'ok':'er')+'">'+(uNoR?'No ritmo':'⚠ Atrás')+'</span></div>';
@@ -3077,45 +3089,6 @@ function renderMetasIndividuais(){
   const isG = usuario === '__gestor__';
   const nomeMes = MESES_NOMES[mesAtivo-1];
 
-  // Coleta totais do ano passado (HIST_2025) por categoria
-  // - Vendedora: só ela | Gestor: soma de todas vendedoras (incluindo arquivadas mapeadas)
-  const alvos = isG ? Object.keys(HIST_2025) : [usuario];
-  let antSap=0, antMei=0, antAce=0, antLim=0;
-  alvos.forEach(vid=>{
-    const d = HIST_2025[vid] && HIST_2025[vid][mesAtivo];
-    if(d){
-      antSap += d.sap||0;
-      antMei += d.mei||0;
-      antAce += d.ace||0;
-      antLim += d.lim||0;
-    }
-  });
-
-  // Se nenhuma categoria tem base 2025 (ex: Janeiro), esconde
-  if(antSap===0 && antMei===0 && antAce===0 && antLim===0){ card.innerHTML=''; return; }
-
-  // Coleta totais atuais do mês ativo
-  let atuSap=0, atuMei=0, atuAce=0, atuLim=0;
-  if(isG){
-    const ag = accGlobal();
-    atuSap = ag.sapatos||0;
-    atuMei = ag.meias||0;
-    atuAce = (ag.cintos||0)+(ag.carteiras||0)+(ag.prendedor||0);
-    atuLim = ag.limpeza||0;
-  } else {
-    const pv = accPorV();
-    const a = pv[usuario] || {};
-    atuSap = a.sapatos||0;
-    atuMei = a.meias||0;
-    atuAce = (a.cintos||0)+(a.carteiras||0)+(a.prendedor||0);
-    atuLim = a.limpeza||0;
-  }
-
-  const tituloPrincipal = `Metas Individuais · ${nomeMes}`;
-  const subTexto = isG
-    ? `O mínimo da equipe pra superar ${nomeMes} de ${anoAtivo-1}`
-    : `O mínimo pra você superar seu ${nomeMes} de ${anoAtivo-1}`;
-
   // ══ Dias úteis: mesma lógica do renderCats ══
   const cfg = cfgAtualCache();
   const diasUteis = cfg.diasUteis || 26;
@@ -3125,6 +3098,33 @@ function renderMetasIndividuais(){
   const mesEhAtual = (anoAtivo===anoHoje && mesAtivo===mesHoje);
   const diasPassados = mesEhAtual ? Math.min(diasTrabalhadosGlobal(),diasUteis) : diasUteis;
   const diasRestantes = Math.max(diasUteis - diasPassados, 1);
+
+  // Coleta {ant*, atu*} para um alvo:
+  // 'equipe' = soma de todas vendedoras | id de vendedora = só ela.
+  function coletaDados(modo){
+    let antSap=0, antMei=0, antAce=0, antLim=0;
+    let atuSap=0, atuMei=0, atuAce=0, atuLim=0;
+    if(modo === 'equipe'){
+      Object.keys(HIST_2025).forEach(vid=>{
+        const d = HIST_2025[vid] && HIST_2025[vid][mesAtivo];
+        if(d){ antSap+=d.sap||0; antMei+=d.mei||0; antAce+=d.ace||0; antLim+=d.lim||0; }
+      });
+      const ag = accGlobal();
+      atuSap = ag.sapatos||0;
+      atuMei = ag.meias||0;
+      atuAce = (ag.cintos||0)+(ag.carteiras||0)+(ag.prendedor||0);
+      atuLim = ag.limpeza||0;
+    } else {
+      const d = HIST_2025[modo] && HIST_2025[modo][mesAtivo];
+      if(d){ antSap=d.sap||0; antMei=d.mei||0; antAce=d.ace||0; antLim=d.lim||0; }
+      const a = accPorV()[modo] || {};
+      atuSap = a.sapatos||0;
+      atuMei = a.meias||0;
+      atuAce = (a.cintos||0)+(a.carteiras||0)+(a.prendedor||0);
+      atuLim = a.limpeza||0;
+    }
+    return {antSap, antMei, antAce, antLim, atuSap, atuMei, atuAce, atuLim};
+  }
 
   function celula(nome, svg, atu, ant){
     const iconHtml = svg ? `<div class="mi-cell-icon">${svg}</div>` : '';
@@ -3190,18 +3190,73 @@ function renderMetasIndividuais(){
   // Ícones extraídos do array CATS (mesmos da aba Metas Individuais)
   const ICONS = Object.fromEntries(CATS.map(c=>[c.id, c.svg]));
 
-  card.innerHTML = `<div class="mi-card">
-    <div class="mi-header">
-      <div class="mi-titulo">${tituloPrincipal}</div>
-      <div class="mi-subtitulo">${subTexto}</div>
-    </div>
-    <div class="mi-grid">
-      ${celula('Sapatos', ICONS.sapatos, atuSap, antSap)}
-      ${celula('Meias', ICONS.meias, atuMei, antMei)}
-      ${celula('Cintos', ICONS.cintos, atuAce, antAce)}
-      ${celula('Limpeza', ICONS.limpeza, atuLim, antLim)}
-    </div>
-  </div>`;
+  // Monta um card completo (.mi-card) para um alvo. Retorna '' se não houver
+  // base 2025 nenhuma (mantém o comportamento de esconder, ex: Janeiro).
+  function bloco(titulo, sub, modo){
+    const d = coletaDados(modo);
+    if(d.antSap===0 && d.antMei===0 && d.antAce===0 && d.antLim===0) return '';
+    return `<div class="mi-card">
+      <div class="mi-header">
+        <div class="mi-titulo">${titulo}</div>
+        <div class="mi-subtitulo">${sub}</div>
+      </div>
+      <div class="mi-grid">
+        ${celula('Sapatos', ICONS.sapatos, d.atuSap, d.antSap)}
+        ${celula('Meias', ICONS.meias, d.atuMei, d.antMei)}
+        ${celula('Cintos', ICONS.cintos, d.atuAce, d.antAce)}
+        ${celula('Limpeza', ICONS.limpeza, d.atuLim, d.antLim)}
+      </div>
+    </div>`;
+  }
+
+  // ── VENDEDORA: vê só as próprias metas (comportamento original) ──
+  if(!isG){
+    card.innerHTML = bloco(
+      `Metas Individuais · ${nomeMes}`,
+      `O mínimo pra você superar seu ${nomeMes} de ${anoAtivo-1}`,
+      usuario
+    );
+    return;
+  }
+
+  // ── GESTOR: seletor + visões ──
+  // 'todas' (padrão): Equipe + as 4 vendedoras em aberto, na ordem pedida
+  // (Jhennifer, Ialey, Michelly, Natália). 'equipe': só a equipe. id: só ela.
+  const view = miGestorView || 'todas';
+  const ORDEM_GESTOR = ['Jhennifer','Ialey','Michelly','Natália'];
+  const vendOrden = ORDEM_GESTOR
+    .map(id=>VENDEDORAS.find(v=>v.id===id))
+    .filter(Boolean);
+  // Segurança: inclui qualquer vendedora ativa não listada acima, no fim.
+  VENDEDORAS.forEach(v=>{ if(!ORDEM_GESTOR.includes(v.id)) vendOrden.push(v); });
+
+  const chips = [
+    {id:'todas',  label:'Todas'},
+    {id:'equipe', label:'Equipe'},
+    ...vendOrden.map(v=>({id:v.id, label:v.nome}))
+  ];
+  const chipsHtml = chips.map(c=>
+    `<button class="mi-sel-chip${view===c.id?' on':''}" onclick="setMiGestorView('${c.id}')">${c.label}</button>`
+  ).join('');
+
+  const subEquipe = `O mínimo da equipe pra superar ${nomeMes} de ${anoAtivo-1}`;
+  let blocosHtml = '';
+  if(view === 'equipe'){
+    blocosHtml = bloco(`Metas Individuais · ${nomeMes}`, subEquipe, 'equipe');
+  } else if(view === 'todas'){
+    blocosHtml = bloco(`Equipe · ${nomeMes}`, subEquipe, 'equipe');
+    vendOrden.forEach(v=>{
+      blocosHtml += bloco(`${v.nome} · ${nomeMes}`,
+        `O mínimo pra ${v.nome} superar ${nomeMes} de ${anoAtivo-1}`, v.id);
+    });
+  } else {
+    const vObj = VENDEDORAS.find(v=>v.id===view);
+    const nm = vObj ? vObj.nome : view;
+    blocosHtml = bloco(`${nm} · ${nomeMes}`,
+      `O mínimo pra ${nm} superar ${nomeMes} de ${anoAtivo-1}`, view);
+  }
+
+  card.innerHTML = `<div class="mi-selbar">${chipsHtml}</div>${blocosHtml}`;
 }
 
 function renderDestaques(){
