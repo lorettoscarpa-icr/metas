@@ -2359,6 +2359,7 @@ async function entrarComUsuario(u){
   setTimeout(inicializarDataLancamento,50);
   render();
   atualizarAbaRetro();
+  if(window.__retroPopup) window.__retroPopup();
   if(usuario!=='__gestor__') verificarPrimeiroAcesso();
   // Pré-carrega meses vizinhos em background pra primeira navegação ser instantânea
   prefetchVizinhos();
@@ -2533,8 +2534,12 @@ async function aoTrocarMes(){
       setTimeout(()=>renderMaiorVenda(),100);
     }
     render();
-    // Se a aba Histórico está ativa, re-renderiza pra refletir o novo mês
-    if(abaAtiva === 'historico') renderHistorico();
+    atualizarAbaRetro();
+    // Se a aba está ativa, re-renderiza pra refletir o novo mês
+    if(abaAtiva === 'historico'){
+      if(usuario && usuario !== '__gestor__' && window.__retroRender){ window.__retroRender(); }
+      else { renderHistorico(); }
+    }
 
     // Pré-carrega meses vizinhos em background pra próxima navegação ser instantânea
     prefetchVizinhos();
@@ -5351,6 +5356,7 @@ renderSel();
   #rt-report .cvr{border-top:1px solid var(--rt-linha);padding-top:9px;font-family:'DM Mono',monospace;font-size:10px;line-height:1.5;color:var(--rt-sub)}
   #rt-report .cvr.below .tg{color:var(--rt-vrm)} #rt-report .cvr.above .tg{color:var(--rt-ok)}
   #rt-report .geral-h{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--rt-ouro2);margin-bottom:14px}
+  #rt-report .geral-h svg{width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
   #rt-report .grow{display:flex;align-items:center;gap:10px;margin:11px 0}
   #rt-report .grk{width:16px;text-align:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--rt-sub)}
   #rt-report .grow.eu .grk{color:var(--rt-ouro2)}
@@ -5413,6 +5419,8 @@ renderSel();
   function acessTot(acc){ return ACESS.reduce((s,c)=>s+(acc[c.id]||0),0); }
   function maiorVenda(vend,ano,mes){ const mv=cacheHist[keyMV(vend,ano,mes)]; if(!mv||!mv.vendas||!mv.vendas.length) return 0; return Math.max.apply(null, mv.vendas.map(s=>+s.valor||0)); }
   function refConv(cid,ano,mes){ const t=VENDEDORAS.map(v=>{const a=accV(v.id,ano,mes); return a.sapatos>0?(a[cid]/a.sapatos*100):null;}).filter(x=>x!==null&&x>0).sort((a,b)=>b-a); if(t.length<2) return null; const hi=Math.round(t[0]),lo=Math.round(t[1]); return [Math.min(hi,lo),Math.max(hi,lo)]; }
+  function mediaConvEquipe(cid,ano,mes){ const t=VENDEDORAS.map(v=>{const a=accV(v.id,ano,mes); return a.sapatos>0?(a[cid]/a.sapatos*100):null;}).filter(x=>x!==null); if(!t.length) return null; return t.reduce((s,x)=>s+x,0)/t.length; }
+  function quinzenaCaiu(vend,ano,mes){ const regs=(cacheHist[keyHist(vend,ano,mes)]||[]).filter(r=>!r.especial); let p1=0,p2=0,d1=0,d2=0; regs.forEach(r=>{const dia=diaReg(r); const s=r.sapatos||0; if(dia>0&&dia<=15){p1+=s;d1++;} else if(dia>15){p2+=s;d2++;}}); if(d1===0||d2===0) return false; return (p2/d2) < (p1/d1)*0.8; }
   function hist25(vend,mes){ return (HIST_2025[vend]||{})[mes]||null; }
   function temDados(vend,ano,mes){ const r=cacheHist[keyHist(vend,ano,mes)]; return !!(r && r.length && r.some(x=>!x.especial && CATS.some(c=>(x[c.id]||0)>0))); }
   function mesFechado(vend,ano,mes){ const regs=cacheHist[keyHist(vend,ano,mes)]||[]; const ult=ultimoDiaUtil(ano,mes); return regs.some(r=>diaReg(r)>=ult); }
@@ -5468,7 +5476,7 @@ renderSel();
 
     el.innerHTML = `
       <div class="rt-mhead">${nomeMes} · ${ano}</div>
-      <div class="rt-sec"><div class="rt-tit"><span class="rt-n">1</span><span class="rt-bar"></span><h2>Você × suas metas individuais</h2></div>
+      <div class="rt-sec"><div class="rt-tit"><span class="rt-n">1</span><span class="rt-bar"></span><h2>Suas metas individuais</h2></div>
         <div class="rt-card">${linhas}${b1}</div></div>
       <div class="rt-sec"><div class="rt-tit"><span class="rt-n">2</span><span class="rt-bar"></span><h2>Destaques do mês</h2></div>
         <div class="rt-card">${b2}</div></div>
@@ -5559,12 +5567,14 @@ renderSel();
     const lc=liderConv(ano,mes); if(lc.id===vend) rec.push(`Maior <b>conversão de mix</b> da equipe: ${acc.sapatos>0?Math.round(acessTot(acc)/acc.sapatos*100):0}% de acessórios por sapato.`);
     if(h25 && h25.sap>0){ const cr=Math.round((acc.sapatos-h25.sap)/h25.sap*100); if(cr>0) rec.push(`Crescimento de <b>+${cr}%</b> em sapatos vs o mesmo mês de 2025.`); }
     if(!rec.length) rec.push(`Mês de aprendizado — vamos transformar os números do próximo em destaque.`);
-    const piores=ACESS.map(c=>({c,pct:metaInd(cfg,c.id)?Math.round((acc[c.id]||0)/metaInd(cfg,c.id)*100):0})).filter(x=>x.pct<100).sort((a,b)=>a.pct-b.pct).slice(0,2);
-    piores.forEach(x=>evo.push(`Puxar <b>${NCURTO[x.c.id]}</b> em toda venda — meta de chegar a 100%.`));
-    evo.push(`Distribuir o ritmo ao longo do mês, sem deixar a 2ª quinzena cair.`);
-    evo.push(`Registrar a <b>bandeira correta</b> (Visa/Master/Elo/Amex) em 100% das vendas no Kigi.`);
+    const abaixo=ACESS.map(c=>{ const minha=convPct(acc,c.id); const med=mediaConvEquipe(c.id,ano,mes); return {c,minha,med}; })
+      .filter(x=>x.med!=null && x.med>0 && x.minha < Math.round(x.med))
+      .sort((a,b)=>(b.med-b.minha)-(a.med-a.minha));
+    abaixo.slice(0,3).forEach(x=>evo.push(`Sua conversão de <b>${NCURTO[x.c.id]}</b> ficou em ${x.minha}%, abaixo da média da equipe (${Math.round(x.med)}%) — oferecer junto com o sapato puxa esse número pra cima.`));
+    if(quinzenaCaiu(vend,ano,mes)) evo.push(`Seu ritmo caiu na <b>2ª quinzena</b> — distribuir as vendas ao longo do mês mantém o resultado firme até o último dia.`);
+    if(!evo.length) evo.push(`Sua conversão ficou na média ou acima em todas as categorias — o próximo passo é subir o <b>ticket médio</b> por venda.`);
     const li=a=>a.map(t=>`<li>${t}</li>`).join('');
-    return `<div class="aval rec"><span class="cap">Pontos de reconhecimento</span><h3>O que brilhou em ${nomeMes}</h3><ul>${li(rec)}</ul></div>
+    return `<div class="aval rec"><span class="cap">Pontos de reconhecimento</span><h3>Você mandou bem em ${nomeMes}</h3><ul>${li(rec)}</ul></div>
       <div class="aval evo"><span class="cap">Precisa evoluir</span><h3>O foco para o próximo mês</h3><ul>${li(evo)}</ul></div>`;
   }
 
@@ -5591,42 +5601,56 @@ renderSel();
       <button class="pcta" id="rt-pop-cta">Ver minha avaliação completa →</button>
       <button class="pskip" onclick="document.getElementById('rt-pop').classList.remove('open')">Depois eu vejo</button></div>`;
     ov.classList.add('open');
-    document.getElementById('rt-pop-cta').onclick=function(){ ov.classList.remove('open'); selAtual={ano,mes}; if(window.__retroAbrirAba) window.__retroAbrirAba(); };
+    document.getElementById('rt-pop-cta').onclick=function(){ ov.classList.remove('open'); if(window.__retroAbrirAba) window.__retroAbrirAba(ano,mes); };
   }
 
-  // ---------- orquestração ----------
+  // ---------- orquestração (segue o seletor de mês do painel) ----------
+  function dispVis(vend){ return mesFechado(vend,anoAtivo,mesAtivo) && temDados(vend,anoAtivo,mesAtivo); }
+
   window.__retroRender = function(){
     const vend=usuario; if(!vend||vend==='__gestor__') return;
     const sec=document.getElementById('hist-sec'); if(sec) sec.style.display='none';
+    const oldbar=document.getElementById('rt-selbar'); if(oldbar) oldbar.remove(); // remove seletor legado
     let rep=document.getElementById('rt-report');
     if(!rep){ rep=document.createElement('div'); rep.id='rt-report'; const tab=document.getElementById('tab-historico'); if(tab) tab.appendChild(rep); }
-    rep.innerHTML='<div style="padding:34px;text-align:center;color:#a9ad97;font-family:monospace;font-size:12px">Carregando seus retrospectos…</div>';
-    const lista=candidatos();
-    carregarTodos(lista).then(()=>{
-      const com=comDados(vend,lista);
-      const bar=document.getElementById('rt-selbar');
-      if(!com.length){ if(bar) bar.innerHTML=''; rep.innerHTML='<div style="padding:34px;text-align:center;color:#a9ad97">Ainda não há um mês fechado para mostrar.</div>'; return; }
-      if(!selAtual || !com.some(p=>p.ano===selAtual.ano&&p.mes===selAtual.mes)){ selAtual=com[com.length-1]; }
-      renderSelector(vend, com, selAtual);
-      render(vend, selAtual.ano, selAtual.mes);
-    });
+    const ano=anoAtivo, mes=mesAtivo;
+    if(!dispVis(vend)){
+      rep.innerHTML='<div style="padding:36px 20px;text-align:center;color:#a9ad97;font-family:Barlow,sans-serif">O retrospecto de <b style="color:#e0c878">'+MESES_NOMES[mes-1]+'</b> fica disponível quando o mês fechar.</div>';
+      return;
+    }
+    rep.innerHTML='<div style="padding:34px;text-align:center;color:#a9ad97;font-family:monospace;font-size:12px">Carregando…</div>';
+    carregar(ano,mes).then(()=>{ if(anoAtivo===ano && mesAtivo===mes) render(vend,ano,mes); });
   };
-  window.__retroAbrirAba = function(){ if(typeof trocarTab==='function') trocarTab('historico'); };
 
-  window.__retroAtualizarAba = async function(){
+  // Navega o seletor do painel até o mês indicado e abre a aba
+  window.__retroAbrirAba = function(ano,mes){
+    if(ano && mes && typeof selecionarMes==='function'){
+      try{ anoAtivo=ano; }catch(e){}
+      Promise.resolve(selecionarMes(mes)).then(()=>{ if(typeof trocarTab==='function') trocarTab('historico'); });
+    } else { if(typeof trocarTab==='function') trocarTab('historico'); }
+  };
+
+  // Mostra/esconde a aba conforme o mês selecionado no topo do painel
+  window.__retroAtualizarAba = function(){
     const btn=document.getElementById('tab-btn-retro'); if(!btn) return;
     const vend=usuario;
     if(!vend || vend==='__gestor__'){ btn.style.display='none'; return; }
-    const lista=candidatos();
-    try{ await carregarTodos(lista); }catch(e){ btn.style.display='none'; return; }
-    const com=comDados(vend,lista);
-    btn.style.display = com.length ? '' : 'none';
-    if(!com.length) return;
+    const vis=dispVis(vend);
+    btn.style.display = vis ? '' : 'none';
+    // se a aba está aberta mas o mês atual não tem retrospecto, volta pro painel
+    if(!vis && abaAtiva==='historico' && typeof trocarTab==='function') trocarTab('painel');
+  };
+
+  // Popup do mês mais recente fechado — dispara uma vez (chamado só no login)
+  window.__retroPopup = async function(){
+    const vend=usuario; if(!vend||vend==='__gestor__') return;
     const prev=mesAnterior();
-    if(mesFechado(vend,prev.ano,prev.mes) && temDados(vend,prev.ano,prev.mes)){
-      const viu=await jaViu(vend,prev.ano,prev.mes);
-      if(!viu){ const acc=accV(vend,prev.ano,prev.mes); const h25=hist25(vend,prev.mes); abrirPopup(vend,prev.ano,prev.mes,acc,h25); marcarViu(vend,prev.ano,prev.mes); }
-    }
+    try{ await carregar(prev.ano,prev.mes); }catch(e){ return; }
+    if(!(mesFechado(vend,prev.ano,prev.mes) && temDados(vend,prev.ano,prev.mes))) return;
+    if(await jaViu(vend,prev.ano,prev.mes)) return;
+    const acc=accV(vend,prev.ano,prev.mes), h25=hist25(vend,prev.mes);
+    abrirPopup(vend,prev.ano,prev.mes,acc,h25);
+    marcarViu(vend,prev.ano,prev.mes);
   };
 })();
 
