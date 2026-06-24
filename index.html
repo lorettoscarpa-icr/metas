@@ -1757,7 +1757,7 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
     <div id="conteudo-principal">
       <div class="tabnav">
         <button class="tabnav-btn active" data-tab="painel" onclick="trocarTab('painel')">Painel</button>
-        <button class="tabnav-btn" data-tab="historico" onclick="trocarTab('historico')">Metas Individuais</button>
+        <button class="tabnav-btn" id="tab-btn-retro" data-tab="historico" onclick="trocarTab('historico')" style="display:none;">Meu Retrospecto</button>
       </div>
 
       <div class="tab-content" id="tab-painel">
@@ -1800,7 +1800,7 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
           <button class="tag-opcao ativo" id="tag-nenhum" onclick="setEspecial(this,'')">Normal</button>
           <button class="tag-opcao" onclick="setEspecial(this,'DOMINGO')">Domingo</button>
           <button class="tag-opcao" onclick="setEspecial(this,'FERIADO')">Feriado</button>
-          <button class="tag-opcao" onclick="setEspecial(this,'FECHADO')">Fechado</button>
+          <button class="tag-opcao" onclick="setEspecial(this,'FOLGA')">Folga</button>
           <button class="tag-opcao" onclick="setEspecial(this,'FÉRIAS')">Férias</button>
           <button class="tag-opcao" onclick="setEspecial(this,'ATESTADO')">Atestado</button>
           <button class="tag-opcao" onclick="setEspecial(this,'REUNIÃO')">Reunião</button>
@@ -2358,6 +2358,7 @@ async function entrarComUsuario(u){
   renderMesSelector();
   setTimeout(inicializarDataLancamento,50);
   render();
+  atualizarAbaRetro();
   if(usuario!=='__gestor__') verificarPrimeiroAcesso();
   // Pré-carrega meses vizinhos em background pra primeira navegação ser instantânea
   prefetchVizinhos();
@@ -3854,6 +3855,42 @@ function renderConversao(){
     const vd=pv[usuario],sapatos=vd['sapatos']||0;
     // Nomes encurtados pra caber no layout de 5 colunas
     const NOMES_CURTOS={meias:'Meias',cintos:'Cintos',carteiras:'Carteiras',limpeza:'Limpeza',prendedor:'Prendedor'};
+
+    // ── Card extra: Conversão geral 2025 → 2026 (mesmo mês, ano passado vs agora) ──
+    const _totAcess = ACESS.reduce((s,c)=>s+(vd[c.id]||0),0);
+    const _convAgora = sapatos>0 ? (_totAcess/sapatos*100) : null;
+    const _h25 = (HIST_2025[usuario]||{})[mesAtivo];
+    let cardYoY='';
+    if(_convAgora!==null){
+      const svgYoY='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>';
+      if(_h25 && _h25.sap>0){
+        const _acess25=(_h25.ace||0)+(_h25.mei||0)+(_h25.lim||0);
+        const _conv25=_acess25/_h25.sap*100;
+        const _delta=Math.round(_convAgora)-Math.round(_conv25);
+        const _st=_delta>0?'acima':_delta<0?'abaixo':'media';
+        const _lbl=_delta>0?`▲ +${_delta} pts`:_delta<0?`▼ ${_delta} pts`:'✓ igual';
+        cardYoY=`<div class="conv-item st-${_st}">
+          <div class="ci-header">
+            <div class="ci-nome">${svgYoY} vs 2025</div>
+            <div class="ci-indicador ${_st}"></div>
+          </div>
+          <div class="ci-pct ${_st}">${Math.round(_convAgora)}%</div>
+          <div class="ci-sub">2025: ${Math.round(_conv25)}% · agora ${Math.round(_convAgora)}%</div>
+          <div class="ci-meta-linha"><strong class="${_st}">${_lbl}</strong><span>vs ano passado</span></div>
+        </div>`;
+      } else {
+        cardYoY=`<div class="conv-item">
+          <div class="ci-header">
+            <div class="ci-nome">${svgYoY} vs 2025</div>
+            <div class="ci-indicador sem"></div>
+          </div>
+          <div class="ci-pct">${Math.round(_convAgora)}%</div>
+          <div class="ci-sub">conversão geral</div>
+          <div class="ci-meta-linha"><span>sem base 2025</span></div>
+        </div>`;
+      }
+    }
+
     indBody.innerHTML=`<div class="conv-itens">
       ${ACESS.map(cat=>{
         const v=vd[cat.id]||0;
@@ -3884,6 +3921,7 @@ function renderConversao(){
           ${rodape}
         </div>`;
       }).join('')}
+      ${cardYoY}
     </div>`;
   }
 
@@ -4177,7 +4215,16 @@ function trocarTab(t){
   document.querySelectorAll('.tab-content').forEach(c=>{
     c.style.display = (c.id === 'tab-'+t) ? 'block' : 'none';
   });
-  if(t === 'historico') renderHistorico();
+  if(t === 'historico'){
+    if(usuario && usuario !== '__gestor__' && window.__retroRender){ window.__retroRender(); }
+    else { renderHistorico(); }
+  }
+}
+
+// Mostra a aba "Meu Retrospecto" apenas para a vendedora logada (não o gestor)
+// e somente quando há um mês fechado (o mês anterior ao corrente) para mostrar.
+function atualizarAbaRetro(){
+  if(window.__retroAtualizarAba) window.__retroAtualizarAba();
 }
 
 async function abrirCfg(){
@@ -5237,6 +5284,343 @@ function renderSel(){
     </div>`).join('');
 }
 renderSel();
+
+/* ================= RETROSPECTO DA VENDEDORA (módulo) =================
+   Recalcula ao vivo a partir do histórico do mês FECHADO (mês anterior).
+   Libera quando a vendedora lança o último dia ÚTIL do mês (sábado se o
+   fim cair no domingo). Popup dispara uma vez por mês (flag em Firestore
+   ls_retrospecto/{vend}_{ano}_{mm}). Visão individual apenas.            */
+(function(){
+  // ---------- estilos (escopados em #rt-report / #rt-pop) ----------
+  const css = `
+  #rt-report{--rt-ouro:#c9a950;--rt-ouro2:#e0c878;--rt-verde:#4a5c2a;--rt-prof:#1b2110;
+    --rt-linha:rgba(201,169,80,.14);--rt-txt:#ece8da;--rt-sub:#a9ad97;--rt-ok:#7fae4f;--rt-vrm:#c4663f;
+    font-family:'Barlow',sans-serif;color:var(--rt-txt);font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+  #rt-report .rt-sec{margin-bottom:26px}
+  #rt-report .rt-tit{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+  #rt-report .rt-n{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:34px;line-height:1;color:var(--rt-ouro)}
+  #rt-report .rt-bar{width:4px;height:22px;border-radius:2px;background:var(--rt-ouro)}
+  #rt-report .rt-tit h2{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin:0}
+  #rt-report .rt-card{background:rgba(0,0,0,.18);border:1px solid var(--rt-linha);border-radius:16px;padding:18px;margin-bottom:12px}
+  #rt-report .rt-row{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--rt-linha)}
+  #rt-report .rt-row:last-child{border-bottom:none}
+  #rt-report .rt-ico{width:30px;height:30px;flex-shrink:0;color:var(--rt-ouro2)}
+  #rt-report .rt-ico svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  #rt-report .rt-body{flex:1;min-width:0}
+  #rt-report .rt-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  #rt-report .rt-nm{font-size:13.5px;font-weight:600}
+  #rt-report .rt-val b{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--rt-ouro2)}
+  #rt-report .rt-val{font-size:12px;color:var(--rt-sub)}
+  #rt-report .rt-trk{height:7px;background:var(--rt-prof);border-radius:4px;overflow:hidden;margin:3px 0 6px}
+  #rt-report .rt-fill{height:100%;border-radius:4px}
+  #rt-report .rt-fill.ok{background:linear-gradient(90deg,#6b8a3e,var(--rt-ok))}
+  #rt-report .rt-fill.mid{background:linear-gradient(90deg,#9a7b2c,var(--rt-ouro2))}
+  #rt-report .rt-fill.low{background:linear-gradient(90deg,#8a3f28,var(--rt-vrm))}
+  #rt-report .rt-foot{display:flex;justify-content:space-between;font-size:11px}
+  #rt-report .rt-pill{font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:9px}
+  #rt-report .rt-pill.ok{background:rgba(127,174,79,.16);color:var(--rt-ok)}
+  #rt-report .rt-pill.mid{background:rgba(216,168,75,.14);color:var(--rt-ouro2)}
+  #rt-report .rt-pill.low{background:rgba(196,102,63,.14);color:var(--rt-vrm)}
+  #rt-report .rt-delta{font-family:'DM Mono',monospace;color:var(--rt-sub)}
+  #rt-report .rt-delta.up{color:var(--rt-ok)} #rt-report .rt-delta.down{color:var(--rt-vrm)}
+  #rt-report .rt-analise{margin-top:14px;padding-top:13px;border-top:1px solid var(--rt-linha)}
+  #rt-report .rt-at{font-family:'DM Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--rt-ouro);opacity:.75;margin-bottom:8px}
+  #rt-report .rt-analise p{font-size:13.5px;line-height:1.6;color:var(--rt-txt);margin:0 0 9px}
+  #rt-report .rt-analise p:last-child{margin-bottom:0}
+  #rt-report .rt-analise b{color:var(--rt-ouro2)}
+  #rt-report .rt-lead{font-weight:600;color:var(--rt-ok);margin-right:4px}
+  #rt-report .rt-lead.evo{color:var(--rt-ouro2)}
+  #rt-report .cvg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  #rt-report .cvc{background:var(--rt-prof);border:1px solid var(--rt-linha);border-left:3px solid var(--rt-linha);border-radius:12px;padding:12px;text-align:center}
+  #rt-report .cvc.below{border-left-color:var(--rt-vrm)} #rt-report .cvc.above{border-left-color:var(--rt-ok)}
+  #rt-report .cvt{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  #rt-report .cvt .cvi{width:15px;height:15px;color:var(--rt-ouro2);opacity:.85}
+  #rt-report .cvt .cvi svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  #rt-report .cvnm{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--rt-sub);flex:1;text-align:left}
+  #rt-report .cvd{width:9px;height:9px;border-radius:50%;background:var(--rt-sub);opacity:.4}
+  #rt-report .cvd.below{background:var(--rt-vrm);opacity:1} #rt-report .cvd.above{background:var(--rt-ok);opacity:1}
+  #rt-report .cvp{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:400;line-height:1}
+  #rt-report .cvp.below{color:var(--rt-vrm)} #rt-report .cvp.above{color:var(--rt-ok)}
+  #rt-report .cvs{font-size:11px;color:var(--rt-sub);margin:7px 0 11px}
+  #rt-report .cvr{border-top:1px solid var(--rt-linha);padding-top:9px;font-family:'DM Mono',monospace;font-size:10px;line-height:1.5;color:var(--rt-sub)}
+  #rt-report .cvr.below .tg{color:var(--rt-vrm)} #rt-report .cvr.above .tg{color:var(--rt-ok)}
+  #rt-report .geral-h{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--rt-ouro2);margin-bottom:14px}
+  #rt-report .grow{display:flex;align-items:center;gap:10px;margin:11px 0}
+  #rt-report .grk{width:16px;text-align:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--rt-sub)}
+  #rt-report .grow.eu .grk{color:var(--rt-ouro2)}
+  #rt-report .gav{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--rt-prof);background:linear-gradient(135deg,var(--rt-ouro),var(--rt-ouro2));overflow:hidden;border:2px solid transparent}
+  #rt-report .gav img{width:100%;height:100%;object-fit:cover;object-position:center top}
+  #rt-report .grow.eu .gav{border-color:var(--rt-ouro2)}
+  #rt-report .gnm{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;width:118px;flex-shrink:0}
+  #rt-report .grow.eu .gnm{color:var(--rt-ouro2)}
+  #rt-report .lider{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.5px;background:rgba(201,169,80,.18);color:var(--rt-ouro2);padding:2px 6px;border-radius:8px}
+  #rt-report .gbar{flex:1;height:7px;background:var(--rt-prof);border-radius:4px;overflow:hidden}
+  #rt-report .gbar i{display:block;height:100%;background:linear-gradient(90deg,#8a7430,var(--rt-ouro2))}
+  #rt-report .grow.eu .gbar i{background:linear-gradient(90deg,var(--rt-ouro),var(--rt-ouro2))}
+  #rt-report .gpc{width:46px;text-align:right;font-family:'Cormorant Garamond',serif;font-size:21px}
+  #rt-report .dst{display:flex;gap:13px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--rt-linha)}
+  #rt-report .dst:last-child{border-bottom:none}
+  #rt-report .dav{width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;background:linear-gradient(135deg,var(--rt-ouro),var(--rt-ouro2));border:2px solid var(--rt-linha);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--rt-prof)}
+  #rt-report .dav img{width:100%;height:100%;object-fit:cover;object-position:center top}
+  #rt-report .dst.win .dav{border-color:var(--rt-ouro2);box-shadow:0 0 0 2px rgba(201,169,80,.18)}
+  #rt-report .dtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+  #rt-report .dlbl{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--rt-sub)}
+  #rt-report .dstt{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:9px}
+  #rt-report .dstt.win{background:rgba(201,169,80,.16);color:var(--rt-ouro2)} #rt-report .dstt.miss{background:rgba(196,102,63,.14);color:var(--rt-vrm)}
+  #rt-report .dst h4{font-size:14.5px;font-weight:600;margin:0 0 3px} #rt-report .dst h4 b{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--rt-ouro2)}
+  #rt-report .dst p{font-size:12.5px;color:var(--rt-sub);line-height:1.45;margin:0}
+  #rt-report .dst p b{color:var(--rt-ouro2)}
+  #rt-report .aval{border-radius:14px;padding:15px 16px;margin-bottom:11px}
+  #rt-report .aval.rec{background:rgba(127,174,79,.07);border:1px solid rgba(127,174,79,.2)}
+  #rt-report .aval.evo{background:rgba(216,168,75,.06);border:1px solid rgba(216,168,75,.2)}
+  #rt-report .aval .cap{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--rt-sub)}
+  #rt-report .aval h3{font-family:'Playfair Display',serif;font-size:15px;margin:2px 0 9px}
+  #rt-report .aval ul{margin:0;padding-left:18px} #rt-report .aval li{font-size:13px;line-height:1.5;margin-bottom:5px}
+  #rt-report .aval li b{color:var(--rt-ouro2)}
+  /* popup */
+  #rt-pop{position:fixed;inset:0;background:rgba(10,14,6,.78);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+  #rt-pop.open{display:flex}
+  #rt-pop .pcard{max-width:380px;width:100%;background:linear-gradient(160deg,#2c3618,#222a16);border:1px solid rgba(201,169,80,.3);border-radius:22px;padding:26px 24px;text-align:center;position:relative;font-family:'Barlow',sans-serif;color:#ece8da}
+  #rt-pop .pclose{position:absolute;top:14px;right:16px;background:none;border:none;color:#a9ad97;font-size:20px;cursor:pointer}
+  #rt-pop .pselo{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c9a950}
+  #rt-pop .ptit{font-family:'Playfair Display',serif;font-size:23px;line-height:1.2;margin:10px 0 6px}
+  #rt-pop .ptit b{font-style:italic}
+  #rt-pop .pmes{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:#a9ad97;text-transform:uppercase;margin-bottom:16px}
+  #rt-pop .pfr{font-size:13.5px;line-height:1.55;color:#cfcdbf;margin-bottom:20px} #rt-pop .pfr b{color:#e0c878}
+  #rt-pop .pcta{display:block;width:100%;background:linear-gradient(90deg,#c9a950,#e0c878);color:#222a16;font-weight:700;border:none;border-radius:13px;padding:14px;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
+  #rt-pop .pskip{background:none;border:none;color:#a9ad97;font-size:12px;margin-top:12px;cursor:pointer;font-family:'DM Mono',monospace}
+  `;
+  const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+
+  // ---------- helpers de período ----------
+  function mesAnterior(){ const h=new Date(); let mes=h.getMonth(), ano=h.getFullYear(); if(mes===0){mes=12;ano--;} return {ano,mes}; }
+  function ultimoDiaUtil(ano,mes){ let d=new Date(ano,mes,0); while(d.getDay()===0){ d.setDate(d.getDate()-1); } return d.getDate(); }
+  function diaReg(r){ const p=String(r.data||'').split('-'); return p.length===3?parseInt(p[2],10):0; }
+  function nomeDe(id){ const v=VENDEDORAS.find(x=>x.id===id); return v?v.nome:id; }
+  function fotoDe(id){ const v=VENDEDORAS.find(x=>x.id===id); return v?v.foto:null; }
+  const fmt=v=>'R$ '+(Math.round(v).toLocaleString('pt-BR'));
+
+  // ---------- dados ----------
+  function metaInd(cfg,cid){ if(cid==='sapatos') return metaIndividualSapatos(cfg); return Math.ceil((cfg.metas[cid]||0)/VENDEDORAS.length); }
+  function accV(vend,ano,mes){ const r={}; CATS.forEach(c=>r[c.id]=0); (cacheHist[keyHist(vend,ano,mes)]||[]).forEach(d=>{ if(!d.especial) CATS.forEach(c=>r[c.id]+=(d[c.id]||0)); }); return r; }
+  function convPct(acc,cid){ return acc.sapatos>0 ? Math.round((acc[cid]||0)/acc.sapatos*100) : 0; }
+  function acessTot(acc){ return ACESS.reduce((s,c)=>s+(acc[c.id]||0),0); }
+  function maiorVenda(vend,ano,mes){ const mv=cacheHist[keyMV(vend,ano,mes)]; if(!mv||!mv.vendas||!mv.vendas.length) return 0; return Math.max.apply(null, mv.vendas.map(s=>+s.valor||0)); }
+  function refConv(cid,ano,mes){ const t=VENDEDORAS.map(v=>{const a=accV(v.id,ano,mes); return a.sapatos>0?(a[cid]/a.sapatos*100):null;}).filter(x=>x!==null&&x>0).sort((a,b)=>b-a); if(t.length<2) return null; const hi=Math.round(t[0]),lo=Math.round(t[1]); return [Math.min(hi,lo),Math.max(hi,lo)]; }
+  function hist25(vend,mes){ return (HIST_2025[vend]||{})[mes]||null; }
+
+  function mesFechado(vend,ano,mes){ const regs=cacheHist[keyHist(vend,ano,mes)]||[]; const ult=ultimoDiaUtil(ano,mes); return regs.some(r=>diaReg(r)>=ult); }
+
+  async function carregar(ano,mes){
+    await getCfgMes(ano,mes);
+    await Promise.all(VENDEDORAS.map(v=>getHistMes(v.id,ano,mes)));
+    await Promise.all(VENDEDORAS.map(async v=>{ const k=keyMV(v.id,ano,mes); if(cacheHist[k]!==undefined) return; try{ const doc=await db.collection('ls_maior_venda').doc(k).get(); cacheHist[k]=doc.exists?normalizarRegistroMV(doc.data()):null; }catch(e){ cacheHist[k]=null; } }));
+  }
+
+  // ---------- flag de popup visto ----------
+  function fk(vend,ano,mes){ return `${vend}_${ano}_${String(mes).padStart(2,'0')}`; }
+  async function jaViu(vend,ano,mes){ try{ const d=await db.collection('ls_retrospecto').doc(fk(vend,ano,mes)).get(); return d.exists && d.data().popupVisto===true; }catch(e){ return false; } }
+  async function marcarViu(vend,ano,mes){ try{ await db.collection('ls_retrospecto').doc(fk(vend,ano,mes)).set({popupVisto:true, em:new Date().toISOString()},{merge:true}); }catch(e){} }
+
+  // ícones simples
+  const ICO={ sapatos:'<svg viewBox="0 0 24 24"><path d="M2 17h18a2 2 0 0 0 2-2c0-1-1-2-3-2.5C16 12 14 9 13 8c-1 0-2 1-2 2v7"/><path d="M2 17v2h20"/></svg>',
+    meias:'<svg viewBox="0 0 24 24"><path d="M9 2v8l-4 5a3 3 0 0 0 4 4l5-4h2V2z"/></svg>',
+    cintos:'<svg viewBox="0 0 24 24"><rect x="2" y="9" width="20" height="6" rx="1"/><rect x="10" y="9" width="5" height="6"/></svg>',
+    carteiras:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 13h.01"/><path d="M2 10h20"/></svg>',
+    prendedor:'<svg viewBox="0 0 24 24"><path d="M12 2L8 6h8l-4-4z"/><path d="M8 6v12l4 4 4-4V6"/></svg>',
+    limpeza:'<svg viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-5 0v-15A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 8H17a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>',
+    geral:'<svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7l9-4 9 4-9 4-9-4z"/></svg>',
+    yoy:'<svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>' };
+  const NCURTO={meias:'Meias',cintos:'Cintos',carteiras:'Carteiras',limpeza:'Prod. de Limpeza',prendedor:'Prendedor',sapatos:'Sapatos'};
+
+  // ---------- render dos 4 blocos ----------
+  function render(vend,ano,mes){
+    const el=document.getElementById('rt-report'); if(!el) return;
+    const cfg=cacheCfg[keyMes(ano,mes)]||{metas:{...METAS_DEF},diasUteis:26};
+    const acc=accV(vend,ano,mes);
+    const h25=hist25(vend,mes);
+    const nomeMes=MESES_NOMES[mes-1];
+    const ORDEM=['sapatos','meias','cintos','carteiras','prendedor','limpeza'];
+
+    // BLOCO 1 — metas individuais (fechado)
+    const linhas=ORDEM.map(cid=>{
+      const c=CATS.find(x=>x.id===cid); if(!c) return '';
+      const meta=metaInd(cfg,cid), real=acc[cid]||0;
+      const pct=meta?Math.round(real/meta*100):0;
+      const cls=pct>=100?'ok':pct>=80?'mid':'low';
+      const lbl=pct>=100?'meta batida':pct>=80?'quase lá':'abaixo';
+      let dTxt='';
+      if(h25){ const map={sapatos:'sap',meias:'mei',cintos:'ace',limpeza:'lim'}; const f=map[cid]; if(f){ const ant=h25[f]||0; const dl=real-ant; dTxt=`<span class="rt-delta ${dl>0?'up':dl<0?'down':''}">${dl>=0?'+':''}${dl} vs 2025</span>`; } }
+      return `<div class="rt-row"><div class="rt-ico">${ICO[cid]||''}</div><div class="rt-body">
+        <div class="rt-head"><span class="rt-nm">${NCURTO[cid]}</span><span class="rt-val"><b>${real}</b> / ${meta}</span></div>
+        <div class="rt-trk"><div class="rt-fill ${cls}" style="width:${Math.min(pct,100)}%"></div></div>
+        <div class="rt-foot"><span class="rt-pill ${cls}">${pct}% · ${lbl}</span>${dTxt}</div></div></div>`;
+    }).join('');
+    const b1 = analiseMetas(acc,cfg,h25);
+
+    // BLOCO 2 — destaques da equipe (3): líder de mix, maior conversão, maior venda
+    const b2 = renderDestaques(vend,ano,mes,acc);
+
+    // BLOCO 3 — conversão + ranking GERAL
+    const b3 = renderConv(vend,ano,mes,acc);
+
+    // BLOCO 4 — leitura (reconhecimento + precisa evoluir)
+    const b4 = renderLeitura(vend,acc,cfg,h25,nomeMes,ano,mes);
+
+    el.innerHTML = `
+      <div class="rt-sec"><div class="rt-tit"><span class="rt-n">1</span><span class="rt-bar"></span><h2>Você × suas metas individuais</h2></div>
+        <div class="rt-card">${linhas}${b1}</div></div>
+      <div class="rt-sec"><div class="rt-tit"><span class="rt-n">2</span><span class="rt-bar"></span><h2>Destaques do mês</h2></div>
+        <div class="rt-card">${b2}</div></div>
+      <div class="rt-sec"><div class="rt-tit"><span class="rt-n">3</span><span class="rt-bar"></span><h2>Minha conversão · acessórios por sapato</h2></div>${b3}</div>
+      <div class="rt-sec"><div class="rt-tit"><span class="rt-n">4</span><span class="rt-bar"></span><h2>A leitura dos seus números</h2></div>
+        <div class="rt-card">${b4}</div></div>`;
+  }
+
+  function analiseMetas(acc,cfg,h25){
+    const dados=CATS.map(c=>{const meta=metaInd(cfg,c.id),real=acc[c.id]||0;return {c,meta,real,pct:meta?Math.round(real/meta*100):0,over:real-meta};});
+    const bateu=dados.filter(d=>d.pct>=100).sort((a,b)=>b.over-a.over);
+    const abaixo=dados.filter(d=>d.pct<100).sort((a,b)=>a.pct-b.pct);
+    let pBem, pEvo;
+    if(bateu.length){ const t=bateu[0]; const outras=bateu.slice(1).map(d=>NCURTO[d.c.id]).join(' e ');
+      pBem=`<span class="rt-lead">Foi muito bem em ${NCURTO[t.c.id]}.</span>Fechou <b>${t.pct}%</b> da meta (${t.real} de ${t.meta})`+(outras?`. Também passou a meta em ${outras}.`:`.`);
+    } else { pBem=`<span class="rt-lead">O mês exigiu fôlego.</span>Nenhuma categoria fechou 100% — o foco agora é recuperar volume.`; }
+    if(abaixo.length){ const p=abaixo[0]; const outras=abaixo.slice(1).map(d=>`${NCURTO[d.c.id]} (${d.pct}%)`).join(', ');
+      pEvo=`<span class="rt-lead evo">Pode evoluir em ${NCURTO[p.c.id]}.</span>Ficou em <b>${p.pct}%</b>, faltaram ${Math.max(p.meta-p.real,0)} un. `+(outras?`Mesma atenção para ${outras}. `:``)+`São itens de complemento — oferecer junto com o sapato resolve a maior parte.`;
+    } else { pEvo=`<span class="rt-lead evo">Próximo passo.</span>Com tudo batido, o desafio é manter a régua e subir o ticket médio.`; }
+    return `<div class="rt-analise"><div class="rt-at">Leitura das metas</div><p>${pBem}</p><p>${pEvo}</p></div>`;
+  }
+
+  function liderMix(ano,mes){ // vendedora que lidera mais categorias de acessório
+    const cont={}; VENDEDORAS.forEach(v=>cont[v.id]=0);
+    ACESS.forEach(c=>{ let best=null,bv=-1; VENDEDORAS.forEach(v=>{const a=accV(v.id,ano,mes); const val=a[c.id]||0; if(val>bv){bv=val;best=v.id;}}); if(bv>0) cont[best]++; });
+    let lider=VENDEDORAS[0].id,bc=-1; VENDEDORAS.forEach(v=>{ if(cont[v.id]>bc){bc=cont[v.id];lider=v.id;} }); return {id:lider,cats:bc};
+  }
+  function liderConv(ano,mes){ let lid=VENDEDORAS[0].id,bv=-1; VENDEDORAS.forEach(v=>{const a=accV(v.id,ano,mes); const cv=a.sapatos>0?acessTot(a)/a.sapatos:0; if(cv>bv){bv=cv;lid=v.id;}}); return {id:lid,pct:Math.round(bv*100)}; }
+  function liderVenda(ano,mes){ let lid=null,bv=0; VENDEDORAS.forEach(v=>{const mv=maiorVenda(v.id,ano,mes); if(mv>bv){bv=mv;lid=v.id;}}); return {id:lid,valor:bv}; }
+
+  function renderDestaques(vend,ano,mes,acc){
+    const lm=liderMix(ano,mes), lc=liderConv(ano,mes), lv=liderVenda(ano,mes);
+    const minhaVenda=maiorVenda(vend,ano,mes);
+    const itens=[
+      {label:'Líder de Mix de Acessórios', win:lm.id===vend, winId:lm.id,
+        titWin:`Você é a líder · <b>${lm.cats} categoria${lm.cats!==1?'s':''}</b>`, titMiss:`Líder: ${nomeDe(lm.id)} · <b>${lm.cats} cat.</b>`,
+        obs:lm.id===vend?`Você liderou em mais categorias de acessório que o time. Foi o que te deu o destaque.`:`Quem liderou foi <b>${nomeDe(lm.id)}</b>. Distribuir o mix em mais categorias te aproxima do topo.`},
+      {label:'Maior Conversão de Mix', win:lc.id===vend, winId:lc.id,
+        titWin:`Você é a líder · <b>${lc.pct}%</b>`, titMiss:`Líder: ${nomeDe(lc.id)} · <b>${lc.pct}%</b>`,
+        obs:lc.id===vend?`Sua conversão de acessórios por sapato foi a maior da equipe.`:`A líder foi <b>${nomeDe(lc.id)}</b> com ${lc.pct}%. Oferecer um acessório a mais por atendimento sobe sua conversão.`},
+      {label:'Maior Venda do Mês', win:lv.id===vend, winId:lv.id,
+        titWin:`Você é a líder · <b>${fmt(lv.valor)}</b>`, titMiss:`Líder: ${nomeDe(lv.id)} · <b>${fmt(lv.valor)}</b>`,
+        falta:lv.valor-minhaVenda,
+        obs:lv.id===vend?`Sua maior venda foi a maior do mês inteiro.`:`A maior venda foi da <b>${nomeDe(lv.id)}</b> (${fmt(lv.valor)}). Sua melhor foi ${fmt(minhaVenda)} — faltaram <b>${fmt(Math.max(lv.valor-minhaVenda,0))}</b>.`}
+    ];
+    return itens.map(d=>{ const av=fotoDe(d.winId)?`<img src="${fotoDe(d.winId)}" alt="">`:nomeDe(d.winId)[0];
+      const stat=d.win?`<span class="dstt win">★ VOCÊ É A LÍDER</span>`:(d.falta!=null?`<span class="dstt miss">▲ FALTOU ${fmt(Math.max(d.falta,0))}</span>`:`<span class="dstt miss">▲ ALCANÇAR</span>`);
+      return `<div class="dst ${d.win?'win':'miss'}"><div class="dav">${av}</div><div class="rt-body">
+        <div class="dtop"><span class="dlbl">${d.label}</span>${stat}</div>
+        <h4>${d.win?d.titWin:d.titMiss}</h4><p>${d.obs}</p></div></div>`;
+    }).join('');
+  }
+
+  function renderConv(vend,ano,mes,acc){
+    const geralPct=acc.sapatos>0?Math.round(acessTot(acc)/acc.sapatos*100):0;
+    const cards=ACESS.map(c=>{ const pct=convPct(acc,c.id); const ref=refConv(c.id,ano,mes);
+      let st='',refH='';
+      if(ref){ if(pct>ref[1]){st='above';refH=`<span class="tg">▲ ACIMA</span><br>ref. ${ref[0]}–${ref[1]}%`;} else if(pct<ref[0]){st='below';refH=`<span class="tg">▼ ABAIXO</span><br>ref. ${ref[0]}–${ref[1]}%`;} else {st='above';refH=`<span class="tg">● NA META</span><br>ref. ${ref[0]}–${ref[1]}%`;} }
+      else { refH='Sem referência ainda'; }
+      return `<div class="cvc ${st}"><div class="cvt"><span class="cvi">${ICO[c.id]||''}</span><span class="cvnm">${NCURTO[c.id]}</span><span class="cvd ${st}"></span></div>
+        <div class="cvp ${st}">${pct}%</div><div class="cvs">${acc[c.id]||0} vendidos · ${acc.sapatos} sapatos</div>
+        <div class="cvr ${ref?st:''}">${refH}</div></div>`;
+    }).join('');
+    // ranking GERAL
+    const rank=VENDEDORAS.map(v=>{const a=accV(v.id,ano,mes); return {id:v.id, conv:a.sapatos>0?acessTot(a)/a.sapatos:0};}).sort((a,b)=>b.conv-a.conv);
+    const maxP=Math.round((rank[0].conv||0)*100)||1;
+    const rows=rank.map((r,i)=>{ const eu=r.id===vend; const pct=Math.round(r.conv*100); const av=fotoDe(r.id)?`<img src="${fotoDe(r.id)}" alt="">`:nomeDe(r.id)[0];
+      return `<div class="grow ${eu?'eu':''}"><span class="grk">${i+1}</span><span class="gav">${av}</span>
+        <span class="gnm">${nomeDe(r.id).toUpperCase()}${i===0?'<span class="lider">LÍDER</span>':''}</span>
+        <span class="gbar"><i style="width:${Math.round(pct/maxP*100)}%"></i></span><span class="gpc">${pct}%</span></div>`;
+    }).join('');
+    const pos=rank.findIndex(r=>r.id===vend)+1;
+    // leitura escrita da conversão (cards)
+    const convs=ACESS.map(c=>({c,pct:convPct(acc,c.id)})).sort((a,b)=>b.pct-a.pct);
+    const forte=convs[0], fraca=convs[convs.length-1];
+    const lidera=rank[0].id===vend;
+    const pBem=`<span class="rt-lead">${NCURTO[forte.c.id]} é o seu ponto forte no mix.</span>Converteu <b>${forte.pct}%</b>`+(lidera?`, e é o que te coloca em <b>1º na conversão da equipe</b>.`:`.`);
+    const pEvo=`<span class="rt-lead evo">${NCURTO[fraca.c.id]} é onde sobra espaço.</span>Ficou em <b>${fraca.pct}%</b>. Lembrar dele em <b>toda venda</b> sobe a conversão e puxa o seu índice pra cima.`;
+    // leitura do ranking
+    let pRank;
+    if(pos===1){ const seg=rank[1]; pRank=`<span class="rt-lead">Você está em 1º na conversão da equipe.</span>Converteu <b>${geralPct}%</b>. Quem mais te pressiona é a <b>${nomeDe(seg.id)}</b> (${Math.round(seg.conv*100)}%) — manter o mix em toda venda segura a liderança.`; }
+    else { const lid=rank[0]; const gap=Math.round(lid.conv*100)-geralPct; pRank=`<span class="rt-lead evo">Você está em ${pos}º na conversão da equipe.</span>Converteu <b>${geralPct}%</b>, contra ${Math.round(lid.conv*100)}% da <b>${nomeDe(lid.id)}</b>. São <b>${gap} pts</b> — oferecer um acessório a mais por atendimento te aproxima do topo.`; }
+    return `<div class="rt-card">
+        <div style="font-size:13px;color:var(--rt-sub);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--rt-linha)">No total você converteu <b style="color:var(--rt-ouro2);font-family:'DM Mono',monospace">${geralPct}%</b> — ${acessTot(acc)} acessórios em ${acc.sapatos} sapatos.</div>
+        <div class="cvg">${cards}</div>
+        <div class="rt-analise"><div class="rt-at">Leitura da conversão</div><p>${pBem}</p><p>${pEvo}</p></div></div>
+      <div class="rt-card"><div class="geral-h">${ICO.geral} Sua conversão dentro da equipe</div>${rows}
+        <div class="rt-analise"><div class="rt-at">Leitura da conversão</div><p>${pRank}</p></div></div>`;
+  }
+
+  function renderLeitura(vend,acc,cfg,h25,nomeMes,ano,mes){
+    const rec=[],evo=[];
+    CATS.forEach(c=>{ const over=(acc[c.id]||0)-metaInd(cfg,c.id); if(over>0) rec.push(`Bateu a meta de <b>${NCURTO[c.id]}</b> (+${over} acima do alvo).`); });
+    const lc=liderConv(ano,mes); if(lc.id===vend) rec.push(`Maior <b>conversão de mix</b> da equipe: ${acc.sapatos>0?Math.round(acessTot(acc)/acc.sapatos*100):0}% de acessórios por sapato.`);
+    if(h25 && h25.sap>0){ const cr=Math.round((acc.sapatos-h25.sap)/h25.sap*100); if(cr>0) rec.push(`Crescimento de <b>+${cr}%</b> em sapatos vs o mesmo mês de 2025.`); }
+    if(!rec.length) rec.push(`Mês de aprendizado — vamos transformar os números do próximo em destaque.`);
+    const piores=ACESS.map(c=>({c,pct:metaInd(cfg,c.id)?Math.round((acc[c.id]||0)/metaInd(cfg,c.id)*100):0})).filter(x=>x.pct<100).sort((a,b)=>a.pct-b.pct).slice(0,2);
+    piores.forEach(x=>evo.push(`Puxar <b>${NCURTO[x.c.id]}</b> em toda venda — meta de chegar a 100%.`));
+    evo.push(`Distribuir o ritmo ao longo do mês, sem deixar a 2ª quinzena cair.`);
+    evo.push(`Registrar a <b>bandeira correta</b> (Visa/Master/Elo/Amex) em 100% das vendas no Kigi.`);
+    const li=a=>a.map(t=>`<li>${t}</li>`).join('');
+    return `<div class="aval rec"><span class="cap">Pontos de reconhecimento</span><h3>O que brilhou em ${nomeMes}</h3><ul>${li(rec)}</ul></div>
+      <div class="aval evo"><span class="cap">Precisa evoluir</span><h3>O foco para o próximo mês</h3><ul>${li(evo)}</ul></div>`;
+  }
+
+  // ---------- popup ----------
+  function abrirPopup(vend,ano,mes,acc,h25){
+    let ov=document.getElementById('rt-pop');
+    if(!ov){ ov=document.createElement('div'); ov.id='rt-pop'; document.body.appendChild(ov); }
+    const cr = (h25&&h25.sap>0)?Math.round((acc.sapatos-h25.sap)/h25.sap*100):null;
+    const fr = cr!==null && cr>0 ? `Você cresceu <b>+${cr}% vs ${MESES_NOMES[mes-1].toLowerCase()}/2025</b>. Tem um relatório completo te esperando.` : `Sua análise completa do mês está pronta. Veja seus destaques e onde evoluir.`;
+    ov.innerHTML=`<div class="pcard"><button class="pclose" onclick="document.getElementById('rt-pop').classList.remove('open')">×</button>
+      <div class="pselo">★ Retrospecto Mensal</div>
+      <div class="ptit">Veja como foi o<br>seu <b>${MESES_NOMES[mes-1].toLowerCase()}</b>, ${nomeDe(vend)}</div>
+      <div class="pmes">${MESES_NOMES[mes-1]} / ${ano} · fechado</div>
+      <div class="pfr">${fr}</div>
+      <button class="pcta" id="rt-pop-cta">Ver minha avaliação completa →</button>
+      <button class="pskip" onclick="document.getElementById('rt-pop').classList.remove('open')">Depois eu vejo</button></div>`;
+    ov.classList.add('open');
+    document.getElementById('rt-pop-cta').onclick=function(){ ov.classList.remove('open'); if(window.__retroAbrirAba) window.__retroAbrirAba(); };
+  }
+
+  // ---------- orquestração ----------
+  window.__retroRender = function(){
+    const vend=usuario; if(!vend||vend==='__gestor__') return;
+    const {ano,mes}=mesAnterior();
+    const sec=document.getElementById('hist-sec'); if(sec) sec.style.display='none';
+    let rep=document.getElementById('rt-report');
+    if(!rep){ rep=document.createElement('div'); rep.id='rt-report'; const tab=document.getElementById('tab-historico'); if(tab) tab.appendChild(rep); }
+    carregar(ano,mes).then(()=>render(vend,ano,mes));
+  };
+  window.__retroAbrirAba = function(){ if(typeof trocarTab==='function') trocarTab('historico'); };
+
+  window.__retroAtualizarAba = async function(){
+    const btn=document.getElementById('tab-btn-retro'); if(!btn) return;
+    const vend=usuario;
+    if(!vend || vend==='__gestor__'){ btn.style.display='none'; return; }
+    const {ano,mes}=mesAnterior();
+    try{ await carregar(ano,mes); }catch(e){ btn.style.display='none'; return; }
+    const fechado=mesFechado(vend,ano,mes);
+    btn.style.display = fechado ? '' : 'none';
+    if(fechado){
+      const viu=await jaViu(vend,ano,mes);
+      if(!viu){
+        const acc=accV(vend,ano,mes); const h25=hist25(vend,mes);
+        abrirPopup(vend,ano,mes,acc,h25);
+        marcarViu(vend,ano,mes);
+      }
+    }
+  };
+})();
+
 </script>
 </body>
 </html>
