@@ -5285,17 +5285,23 @@ function renderSel(){
 }
 renderSel();
 
-/* ================= RETROSPECTO DA VENDEDORA (módulo) =================
-   Recalcula ao vivo a partir do histórico do mês FECHADO (mês anterior).
-   Libera quando a vendedora lança o último dia ÚTIL do mês (sábado se o
-   fim cair no domingo). Popup dispara uma vez por mês (flag em Firestore
-   ls_retrospecto/{vend}_{ano}_{mm}). Visão individual apenas.            */
+/* ================= RETROSPECTO DA VENDEDORA (módulo v2) =================
+   Aba "Meu Retrospecto": navega por TODOS os meses fechados de 2026
+   (jan, fev, ..., último mês concluído), cada um com seu retrospecto
+   recalculado ao vivo do histórico. O popup dispara uma vez, só no mês
+   mais recente que fechou (lançou o último dia útil). Salvo por mês.    */
 (function(){
-  // ---------- estilos (escopados em #rt-report / #rt-pop) ----------
+  let selAtual=null;
+
+  // ---------- estilos (escopados em #rt-report / #rt-pop / #rt-selbar) ----------
   const css = `
+  #rt-selbar{font-family:'Barlow',sans-serif;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  #rt-selbar .rt-chip{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#a9ad97;background:rgba(0,0,0,.18);border:1px solid rgba(201,169,80,.14);border-radius:10px;padding:7px 13px;cursor:pointer}
+  #rt-selbar .rt-chip.on{color:#222a16;background:linear-gradient(90deg,#c9a950,#e0c878);border-color:transparent;font-weight:500}
   #rt-report{--rt-ouro:#c9a950;--rt-ouro2:#e0c878;--rt-verde:#4a5c2a;--rt-prof:#1b2110;
     --rt-linha:rgba(201,169,80,.14);--rt-txt:#ece8da;--rt-sub:#a9ad97;--rt-ok:#7fae4f;--rt-vrm:#c4663f;
     font-family:'Barlow',sans-serif;color:var(--rt-txt);font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+  #rt-report .rt-mhead{font-family:'Playfair Display',serif;font-size:21px;font-weight:600;margin:0 0 18px;color:var(--rt-ouro2)}
   #rt-report .rt-sec{margin-bottom:26px}
   #rt-report .rt-tit{display:flex;align-items:center;gap:11px;margin-bottom:14px}
   #rt-report .rt-n{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:34px;line-height:1;color:var(--rt-ouro)}
@@ -5377,7 +5383,6 @@ renderSel();
   #rt-report .aval h3{font-family:'Playfair Display',serif;font-size:15px;margin:2px 0 9px}
   #rt-report .aval ul{margin:0;padding-left:18px} #rt-report .aval li{font-size:13px;line-height:1.5;margin-bottom:5px}
   #rt-report .aval li b{color:var(--rt-ouro2)}
-  /* popup */
   #rt-pop{position:fixed;inset:0;background:rgba(10,14,6,.78);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
   #rt-pop.open{display:flex}
   #rt-pop .pcard{max-width:380px;width:100%;background:linear-gradient(160deg,#2c3618,#222a16);border:1px solid rgba(201,169,80,.3);border-radius:22px;padding:26px 24px;text-align:center;position:relative;font-family:'Barlow',sans-serif;color:#ece8da}
@@ -5394,6 +5399,7 @@ renderSel();
 
   // ---------- helpers de período ----------
   function mesAnterior(){ const h=new Date(); let mes=h.getMonth(), ano=h.getFullYear(); if(mes===0){mes=12;ano--;} return {ano,mes}; }
+  function candidatos(){ const h=new Date(); const curM=h.getMonth()+1, curA=h.getFullYear(); const arr=[]; for(let a=2026;a<=curA;a++){ const last=(a===curA)?curM-1:12; for(let m=1;m<=last;m++) arr.push({ano:a,mes:m}); } return arr; }
   function ultimoDiaUtil(ano,mes){ let d=new Date(ano,mes,0); while(d.getDay()===0){ d.setDate(d.getDate()-1); } return d.getDate(); }
   function diaReg(r){ const p=String(r.data||'').split('-'); return p.length===3?parseInt(p[2],10):0; }
   function nomeDe(id){ const v=VENDEDORAS.find(x=>x.id===id); return v?v.nome:id; }
@@ -5408,7 +5414,7 @@ renderSel();
   function maiorVenda(vend,ano,mes){ const mv=cacheHist[keyMV(vend,ano,mes)]; if(!mv||!mv.vendas||!mv.vendas.length) return 0; return Math.max.apply(null, mv.vendas.map(s=>+s.valor||0)); }
   function refConv(cid,ano,mes){ const t=VENDEDORAS.map(v=>{const a=accV(v.id,ano,mes); return a.sapatos>0?(a[cid]/a.sapatos*100):null;}).filter(x=>x!==null&&x>0).sort((a,b)=>b-a); if(t.length<2) return null; const hi=Math.round(t[0]),lo=Math.round(t[1]); return [Math.min(hi,lo),Math.max(hi,lo)]; }
   function hist25(vend,mes){ return (HIST_2025[vend]||{})[mes]||null; }
-
+  function temDados(vend,ano,mes){ const r=cacheHist[keyHist(vend,ano,mes)]; return !!(r && r.length && r.some(x=>!x.especial && CATS.some(c=>(x[c.id]||0)>0))); }
   function mesFechado(vend,ano,mes){ const regs=cacheHist[keyHist(vend,ano,mes)]||[]; const ult=ultimoDiaUtil(ano,mes); return regs.some(r=>diaReg(r)>=ult); }
 
   async function carregar(ano,mes){
@@ -5416,21 +5422,21 @@ renderSel();
     await Promise.all(VENDEDORAS.map(v=>getHistMes(v.id,ano,mes)));
     await Promise.all(VENDEDORAS.map(async v=>{ const k=keyMV(v.id,ano,mes); if(cacheHist[k]!==undefined) return; try{ const doc=await db.collection('ls_maior_venda').doc(k).get(); cacheHist[k]=doc.exists?normalizarRegistroMV(doc.data()):null; }catch(e){ cacheHist[k]=null; } }));
   }
+  async function carregarTodos(lista){ for(const p of lista){ try{ await carregar(p.ano,p.mes); }catch(e){} } }
+  function comDados(vend,lista){ return lista.filter(p=>temDados(vend,p.ano,p.mes)); }
 
   // ---------- flag de popup visto ----------
   function fk(vend,ano,mes){ return `${vend}_${ano}_${String(mes).padStart(2,'0')}`; }
   async function jaViu(vend,ano,mes){ try{ const d=await db.collection('ls_retrospecto').doc(fk(vend,ano,mes)).get(); return d.exists && d.data().popupVisto===true; }catch(e){ return false; } }
   async function marcarViu(vend,ano,mes){ try{ await db.collection('ls_retrospecto').doc(fk(vend,ano,mes)).set({popupVisto:true, em:new Date().toISOString()},{merge:true}); }catch(e){} }
 
-  // ícones simples
   const ICO={ sapatos:'<svg viewBox="0 0 24 24"><path d="M2 17h18a2 2 0 0 0 2-2c0-1-1-2-3-2.5C16 12 14 9 13 8c-1 0-2 1-2 2v7"/><path d="M2 17v2h20"/></svg>',
     meias:'<svg viewBox="0 0 24 24"><path d="M9 2v8l-4 5a3 3 0 0 0 4 4l5-4h2V2z"/></svg>',
     cintos:'<svg viewBox="0 0 24 24"><rect x="2" y="9" width="20" height="6" rx="1"/><rect x="10" y="9" width="5" height="6"/></svg>',
     carteiras:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 13h.01"/><path d="M2 10h20"/></svg>',
     prendedor:'<svg viewBox="0 0 24 24"><path d="M12 2L8 6h8l-4-4z"/><path d="M8 6v12l4 4 4-4V6"/></svg>',
     limpeza:'<svg viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-5 0v-15A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 8H17a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>',
-    geral:'<svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7l9-4 9 4-9 4-9-4z"/></svg>',
-    yoy:'<svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>' };
+    geral:'<svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7l9-4 9 4-9 4-9-4z"/></svg>' };
   const NCURTO={meias:'Meias',cintos:'Cintos',carteiras:'Carteiras',limpeza:'Prod. de Limpeza',prendedor:'Prendedor',sapatos:'Sapatos'};
 
   // ---------- render dos 4 blocos ----------
@@ -5442,7 +5448,6 @@ renderSel();
     const nomeMes=MESES_NOMES[mes-1];
     const ORDEM=['sapatos','meias','cintos','carteiras','prendedor','limpeza'];
 
-    // BLOCO 1 — metas individuais (fechado)
     const linhas=ORDEM.map(cid=>{
       const c=CATS.find(x=>x.id===cid); if(!c) return '';
       const meta=metaInd(cfg,cid), real=acc[cid]||0;
@@ -5457,17 +5462,12 @@ renderSel();
         <div class="rt-foot"><span class="rt-pill ${cls}">${pct}% · ${lbl}</span>${dTxt}</div></div></div>`;
     }).join('');
     const b1 = analiseMetas(acc,cfg,h25);
-
-    // BLOCO 2 — destaques da equipe (3): líder de mix, maior conversão, maior venda
     const b2 = renderDestaques(vend,ano,mes,acc);
-
-    // BLOCO 3 — conversão + ranking GERAL
     const b3 = renderConv(vend,ano,mes,acc);
-
-    // BLOCO 4 — leitura (reconhecimento + precisa evoluir)
     const b4 = renderLeitura(vend,acc,cfg,h25,nomeMes,ano,mes);
 
     el.innerHTML = `
+      <div class="rt-mhead">${nomeMes} · ${ano}</div>
       <div class="rt-sec"><div class="rt-tit"><span class="rt-n">1</span><span class="rt-bar"></span><h2>Você × suas metas individuais</h2></div>
         <div class="rt-card">${linhas}${b1}</div></div>
       <div class="rt-sec"><div class="rt-tit"><span class="rt-n">2</span><span class="rt-bar"></span><h2>Destaques do mês</h2></div>
@@ -5491,11 +5491,9 @@ renderSel();
     return `<div class="rt-analise"><div class="rt-at">Leitura das metas</div><p>${pBem}</p><p>${pEvo}</p></div>`;
   }
 
-  function liderMix(ano,mes){ // vendedora que lidera mais categorias de acessório
-    const cont={}; VENDEDORAS.forEach(v=>cont[v.id]=0);
+  function liderMix(ano,mes){ const cont={}; VENDEDORAS.forEach(v=>cont[v.id]=0);
     ACESS.forEach(c=>{ let best=null,bv=-1; VENDEDORAS.forEach(v=>{const a=accV(v.id,ano,mes); const val=a[c.id]||0; if(val>bv){bv=val;best=v.id;}}); if(bv>0) cont[best]++; });
-    let lider=VENDEDORAS[0].id,bc=-1; VENDEDORAS.forEach(v=>{ if(cont[v.id]>bc){bc=cont[v.id];lider=v.id;} }); return {id:lider,cats:bc};
-  }
+    let lider=VENDEDORAS[0].id,bc=-1; VENDEDORAS.forEach(v=>{ if(cont[v.id]>bc){bc=cont[v.id];lider=v.id;} }); return {id:lider,cats:bc}; }
   function liderConv(ano,mes){ let lid=VENDEDORAS[0].id,bv=-1; VENDEDORAS.forEach(v=>{const a=accV(v.id,ano,mes); const cv=a.sapatos>0?acessTot(a)/a.sapatos:0; if(cv>bv){bv=cv;lid=v.id;}}); return {id:lid,pct:Math.round(bv*100)}; }
   function liderVenda(ano,mes){ let lid=null,bv=0; VENDEDORAS.forEach(v=>{const mv=maiorVenda(v.id,ano,mes); if(mv>bv){bv=mv;lid=v.id;}}); return {id:lid,valor:bv}; }
 
@@ -5509,9 +5507,8 @@ renderSel();
       {label:'Maior Conversão de Mix', win:lc.id===vend, winId:lc.id,
         titWin:`Você é a líder · <b>${lc.pct}%</b>`, titMiss:`Líder: ${nomeDe(lc.id)} · <b>${lc.pct}%</b>`,
         obs:lc.id===vend?`Sua conversão de acessórios por sapato foi a maior da equipe.`:`A líder foi <b>${nomeDe(lc.id)}</b> com ${lc.pct}%. Oferecer um acessório a mais por atendimento sobe sua conversão.`},
-      {label:'Maior Venda do Mês', win:lv.id===vend, winId:lv.id,
+      {label:'Maior Venda do Mês', win:lv.id===vend, winId:lv.id, falta:lv.valor-minhaVenda,
         titWin:`Você é a líder · <b>${fmt(lv.valor)}</b>`, titMiss:`Líder: ${nomeDe(lv.id)} · <b>${fmt(lv.valor)}</b>`,
-        falta:lv.valor-minhaVenda,
         obs:lv.id===vend?`Sua maior venda foi a maior do mês inteiro.`:`A maior venda foi da <b>${nomeDe(lv.id)}</b> (${fmt(lv.valor)}). Sua melhor foi ${fmt(minhaVenda)} — faltaram <b>${fmt(Math.max(lv.valor-minhaVenda,0))}</b>.`}
     ];
     return itens.map(d=>{ const av=fotoDe(d.winId)?`<img src="${fotoDe(d.winId)}" alt="">`:nomeDe(d.winId)[0];
@@ -5525,14 +5522,13 @@ renderSel();
   function renderConv(vend,ano,mes,acc){
     const geralPct=acc.sapatos>0?Math.round(acessTot(acc)/acc.sapatos*100):0;
     const cards=ACESS.map(c=>{ const pct=convPct(acc,c.id); const ref=refConv(c.id,ano,mes);
-      let st='',refH='';
-      if(ref){ if(pct>ref[1]){st='above';refH=`<span class="tg">▲ ACIMA</span><br>ref. ${ref[0]}–${ref[1]}%`;} else if(pct<ref[0]){st='below';refH=`<span class="tg">▼ ABAIXO</span><br>ref. ${ref[0]}–${ref[1]}%`;} else {st='above';refH=`<span class="tg">● NA META</span><br>ref. ${ref[0]}–${ref[1]}%`;} }
+      let stt='',refH='';
+      if(ref){ if(pct>ref[1]){stt='above';refH=`<span class="tg">▲ ACIMA</span><br>ref. ${ref[0]}–${ref[1]}%`;} else if(pct<ref[0]){stt='below';refH=`<span class="tg">▼ ABAIXO</span><br>ref. ${ref[0]}–${ref[1]}%`;} else {stt='above';refH=`<span class="tg">● NA META</span><br>ref. ${ref[0]}–${ref[1]}%`;} }
       else { refH='Sem referência ainda'; }
-      return `<div class="cvc ${st}"><div class="cvt"><span class="cvi">${ICO[c.id]||''}</span><span class="cvnm">${NCURTO[c.id]}</span><span class="cvd ${st}"></span></div>
-        <div class="cvp ${st}">${pct}%</div><div class="cvs">${acc[c.id]||0} vendidos · ${acc.sapatos} sapatos</div>
-        <div class="cvr ${ref?st:''}">${refH}</div></div>`;
+      return `<div class="cvc ${stt}"><div class="cvt"><span class="cvi">${ICO[c.id]||''}</span><span class="cvnm">${NCURTO[c.id]}</span><span class="cvd ${stt}"></span></div>
+        <div class="cvp ${stt}">${pct}%</div><div class="cvs">${acc[c.id]||0} vendidos · ${acc.sapatos} sapatos</div>
+        <div class="cvr ${ref?stt:''}">${refH}</div></div>`;
     }).join('');
-    // ranking GERAL
     const rank=VENDEDORAS.map(v=>{const a=accV(v.id,ano,mes); return {id:v.id, conv:a.sapatos>0?acessTot(a)/a.sapatos:0};}).sort((a,b)=>b.conv-a.conv);
     const maxP=Math.round((rank[0].conv||0)*100)||1;
     const rows=rank.map((r,i)=>{ const eu=r.id===vend; const pct=Math.round(r.conv*100); const av=fotoDe(r.id)?`<img src="${fotoDe(r.id)}" alt="">`:nomeDe(r.id)[0];
@@ -5541,13 +5537,11 @@ renderSel();
         <span class="gbar"><i style="width:${Math.round(pct/maxP*100)}%"></i></span><span class="gpc">${pct}%</span></div>`;
     }).join('');
     const pos=rank.findIndex(r=>r.id===vend)+1;
-    // leitura escrita da conversão (cards)
     const convs=ACESS.map(c=>({c,pct:convPct(acc,c.id)})).sort((a,b)=>b.pct-a.pct);
     const forte=convs[0], fraca=convs[convs.length-1];
     const lidera=rank[0].id===vend;
     const pBem=`<span class="rt-lead">${NCURTO[forte.c.id]} é o seu ponto forte no mix.</span>Converteu <b>${forte.pct}%</b>`+(lidera?`, e é o que te coloca em <b>1º na conversão da equipe</b>.`:`.`);
     const pEvo=`<span class="rt-lead evo">${NCURTO[fraca.c.id]} é onde sobra espaço.</span>Ficou em <b>${fraca.pct}%</b>. Lembrar dele em <b>toda venda</b> sobe a conversão e puxa o seu índice pra cima.`;
-    // leitura do ranking
     let pRank;
     if(pos===1){ const seg=rank[1]; pRank=`<span class="rt-lead">Você está em 1º na conversão da equipe.</span>Converteu <b>${geralPct}%</b>. Quem mais te pressiona é a <b>${nomeDe(seg.id)}</b> (${Math.round(seg.conv*100)}%) — manter o mix em toda venda segura a liderança.`; }
     else { const lid=rank[0]; const gap=Math.round(lid.conv*100)-geralPct; pRank=`<span class="rt-lead evo">Você está em ${pos}º na conversão da equipe.</span>Converteu <b>${geralPct}%</b>, contra ${Math.round(lid.conv*100)}% da <b>${nomeDe(lid.id)}</b>. São <b>${gap} pts</b> — oferecer um acessório a mais por atendimento te aproxima do topo.`; }
@@ -5574,6 +5568,15 @@ renderSel();
       <div class="aval evo"><span class="cap">Precisa evoluir</span><h3>O foco para o próximo mês</h3><ul>${li(evo)}</ul></div>`;
   }
 
+  // ---------- seletor de meses ----------
+  function renderSelector(vend, lista, sel){
+    let bar=document.getElementById('rt-selbar');
+    if(!bar){ bar=document.createElement('div'); bar.id='rt-selbar'; const rep=document.getElementById('rt-report'); rep.parentNode.insertBefore(bar, rep); }
+    const ord=lista.slice().reverse(); // mais recente primeiro
+    bar.innerHTML=ord.map(p=>`<button class="rt-chip ${(p.ano===sel.ano&&p.mes===sel.mes)?'on':''}" data-a="${p.ano}" data-m="${p.mes}">${MESES_NOMES[p.mes-1]}${p.ano!==2026?'/'+p.ano:''}</button>`).join('');
+    bar.querySelectorAll('.rt-chip').forEach(b=>b.onclick=function(){ const a=+b.dataset.a,m=+b.dataset.m; selAtual={ano:a,mes:m}; renderSelector(vend,lista,selAtual); render(vend,a,m); window.scrollTo({top:0,behavior:'smooth'}); });
+  }
+
   // ---------- popup ----------
   function abrirPopup(vend,ano,mes,acc,h25){
     let ov=document.getElementById('rt-pop');
@@ -5588,17 +5591,25 @@ renderSel();
       <button class="pcta" id="rt-pop-cta">Ver minha avaliação completa →</button>
       <button class="pskip" onclick="document.getElementById('rt-pop').classList.remove('open')">Depois eu vejo</button></div>`;
     ov.classList.add('open');
-    document.getElementById('rt-pop-cta').onclick=function(){ ov.classList.remove('open'); if(window.__retroAbrirAba) window.__retroAbrirAba(); };
+    document.getElementById('rt-pop-cta').onclick=function(){ ov.classList.remove('open'); selAtual={ano,mes}; if(window.__retroAbrirAba) window.__retroAbrirAba(); };
   }
 
   // ---------- orquestração ----------
   window.__retroRender = function(){
     const vend=usuario; if(!vend||vend==='__gestor__') return;
-    const {ano,mes}=mesAnterior();
     const sec=document.getElementById('hist-sec'); if(sec) sec.style.display='none';
     let rep=document.getElementById('rt-report');
     if(!rep){ rep=document.createElement('div'); rep.id='rt-report'; const tab=document.getElementById('tab-historico'); if(tab) tab.appendChild(rep); }
-    carregar(ano,mes).then(()=>render(vend,ano,mes));
+    rep.innerHTML='<div style="padding:34px;text-align:center;color:#a9ad97;font-family:monospace;font-size:12px">Carregando seus retrospectos…</div>';
+    const lista=candidatos();
+    carregarTodos(lista).then(()=>{
+      const com=comDados(vend,lista);
+      const bar=document.getElementById('rt-selbar');
+      if(!com.length){ if(bar) bar.innerHTML=''; rep.innerHTML='<div style="padding:34px;text-align:center;color:#a9ad97">Ainda não há um mês fechado para mostrar.</div>'; return; }
+      if(!selAtual || !com.some(p=>p.ano===selAtual.ano&&p.mes===selAtual.mes)){ selAtual=com[com.length-1]; }
+      renderSelector(vend, com, selAtual);
+      render(vend, selAtual.ano, selAtual.mes);
+    });
   };
   window.__retroAbrirAba = function(){ if(typeof trocarTab==='function') trocarTab('historico'); };
 
@@ -5606,17 +5617,15 @@ renderSel();
     const btn=document.getElementById('tab-btn-retro'); if(!btn) return;
     const vend=usuario;
     if(!vend || vend==='__gestor__'){ btn.style.display='none'; return; }
-    const {ano,mes}=mesAnterior();
-    try{ await carregar(ano,mes); }catch(e){ btn.style.display='none'; return; }
-    const fechado=mesFechado(vend,ano,mes);
-    btn.style.display = fechado ? '' : 'none';
-    if(fechado){
-      const viu=await jaViu(vend,ano,mes);
-      if(!viu){
-        const acc=accV(vend,ano,mes); const h25=hist25(vend,mes);
-        abrirPopup(vend,ano,mes,acc,h25);
-        marcarViu(vend,ano,mes);
-      }
+    const lista=candidatos();
+    try{ await carregarTodos(lista); }catch(e){ btn.style.display='none'; return; }
+    const com=comDados(vend,lista);
+    btn.style.display = com.length ? '' : 'none';
+    if(!com.length) return;
+    const prev=mesAnterior();
+    if(mesFechado(vend,prev.ano,prev.mes) && temDados(vend,prev.ano,prev.mes)){
+      const viu=await jaViu(vend,prev.ano,prev.mes);
+      if(!viu){ const acc=accV(vend,prev.ano,prev.mes); const h25=hist25(vend,prev.mes); abrirPopup(vend,prev.ano,prev.mes,acc,h25); marcarViu(vend,prev.ano,prev.mes); }
     }
   };
 })();
