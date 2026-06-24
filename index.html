@@ -5407,7 +5407,7 @@ renderSel();
   function mesAnterior(){ const h=new Date(); let mes=h.getMonth(), ano=h.getFullYear(); if(mes===0){mes=12;ano--;} return {ano,mes}; }
   function candidatos(){ const h=new Date(); const curM=h.getMonth()+1, curA=h.getFullYear(); const arr=[]; for(let a=2026;a<=curA;a++){ const last=(a===curA)?curM-1:12; for(let m=1;m<=last;m++) arr.push({ano:a,mes:m}); } return arr; }
   function ultimoDiaUtil(ano,mes){ let d=new Date(ano,mes,0); while(d.getDay()===0){ d.setDate(d.getDate()-1); } return d.getDate(); }
-  function diaReg(r){ const p=String(r.data||'').split('-'); return p.length===3?parseInt(p[2],10):0; }
+  function diaReg(r){ const s=String(r.data||''); if(s.indexOf('/')>=0){ return parseInt(s.split('/')[0],10)||0; } if(s.indexOf('-')>=0){ const p=s.split('-'); return parseInt(p[p.length-1],10)||0; } return parseInt(s,10)||0; }
   function nomeDe(id){ const v=VENDEDORAS.find(x=>x.id===id); return v?v.nome:id; }
   function fotoDe(id){ const v=VENDEDORAS.find(x=>x.id===id); return v?v.foto:null; }
   const fmt=v=>'R$ '+(Math.round(v).toLocaleString('pt-BR'));
