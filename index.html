@@ -5450,29 +5450,39 @@ renderSel();
   // ---------- render dos 4 blocos ----------
   function render(vend,ano,mes){
     const el=document.getElementById('rt-report'); if(!el) return;
-    const cfg=cacheCfg[keyMes(ano,mes)]||{metas:{...METAS_DEF},diasUteis:26};
     const acc=accV(vend,ano,mes);
     const h25=hist25(vend,mes);
     const nomeMes=MESES_NOMES[mes-1];
-    const ORDEM=['sapatos','meias','cintos','carteiras','prendedor','limpeza'];
 
-    const linhas=ORDEM.map(cid=>{
-      const c=CATS.find(x=>x.id===cid); if(!c) return '';
-      const meta=metaInd(cfg,cid), real=acc[cid]||0;
-      const pct=meta?Math.round(real/meta*100):0;
-      const cls=pct>=100?'ok':pct>=80?'mid':'low';
-      const lbl=pct>=100?'meta batida':pct>=80?'quase lá':'abaixo';
-      let dTxt='';
-      if(h25){ const map={sapatos:'sap',meias:'mei',cintos:'ace',limpeza:'lim'}; const f=map[cid]; if(f){ const ant=h25[f]||0; const dl=real-ant; dTxt=`<span class="rt-delta ${dl>0?'up':dl<0?'down':''}">${dl>=0?'+':''}${dl} vs 2025</span>`; } }
-      return `<div class="rt-row"><div class="rt-ico">${ICO[cid]||''}</div><div class="rt-body">
-        <div class="rt-head"><span class="rt-nm">${NCURTO[cid]}</span><span class="rt-val"><b>${real}</b> / ${meta}</span></div>
-        <div class="rt-trk"><div class="rt-fill ${cls}" style="width:${Math.min(pct,100)}%"></div></div>
-        <div class="rt-foot"><span class="rt-pill ${cls}">${pct}% · ${lbl}</span>${dTxt}</div></div></div>`;
+    // Mesma lógica do painel: meta = superar 2025 (HIST_2025); acessórios agregados em "Cintos"
+    const cells=[
+      {nome:'Sapatos',id:'sapatos',atu:acc.sapatos||0,ant:h25?(h25.sap||0):0},
+      {nome:'Meias',id:'meias',atu:acc.meias||0,ant:h25?(h25.mei||0):0},
+      {nome:'Cintos',id:'cintos',atu:(acc.cintos||0)+(acc.carteiras||0)+(acc.prendedor||0),ant:h25?(h25.ace||0):0},
+      {nome:'Limpeza',id:'limpeza',atu:acc.limpeza||0,ant:h25?(h25.lim||0):0}
+    ];
+    const linhas=cells.map(x=>{
+      const ico=ICO[x.id]||'';
+      if(x.ant===0){
+        return `<div class="rt-row"><div class="rt-ico">${ico}</div><div class="rt-body">
+          <div class="rt-head"><span class="rt-nm">${x.nome}</span><span class="rt-val"><b>${x.atu}</b></span></div>
+          <div class="rt-foot"><span class="rt-pill mid">sem base ${ano-1}</span></div></div></div>`;
+      }
+      const superada=x.atu>x.ant;
+      const pct=Math.round(x.atu/x.ant*100);
+      const cls=(superada||pct>=100)?'ok':pct>=80?'mid':'low';
+      const foot=superada
+        ? `<span class="rt-pill ok">✓ superou ${ano-1} · +${x.atu-x.ant}</span>`
+        : `<span class="rt-pill ${cls}">${pct}%</span><span class="rt-delta">faltaram +${x.ant-x.atu+1}</span>`;
+      return `<div class="rt-row"><div class="rt-ico">${ico}</div><div class="rt-body">
+        <div class="rt-head"><span class="rt-nm">${x.nome}</span><span class="rt-val"><b>${x.atu}</b> / ${x.ant}</span></div>
+        <div class="rt-trk"><div class="rt-fill ${cls}" style="width:${Math.min(superada?100:pct,100)}%"></div></div>
+        <div class="rt-foot">${foot}</div></div></div>`;
     }).join('');
-    const b1 = analiseMetas(acc,cfg,h25);
+    const b1 = analiseMetas(cells,ano);
     const b2 = renderDestaques(vend,ano,mes,acc);
     const b3 = renderConv(vend,ano,mes,acc);
-    const b4 = renderLeitura(vend,acc,cfg,h25,nomeMes,ano,mes);
+    const b4 = renderLeitura(vend,acc,cells,h25,nomeMes,ano,mes);
 
     el.innerHTML = `
       <div class="rt-mhead">${nomeMes} · ${ano}</div>
@@ -5485,17 +5495,17 @@ renderSel();
         <div class="rt-card">${b4}</div></div>`;
   }
 
-  function analiseMetas(acc,cfg,h25){
-    const dados=CATS.map(c=>{const meta=metaInd(cfg,c.id),real=acc[c.id]||0;return {c,meta,real,pct:meta?Math.round(real/meta*100):0,over:real-meta};});
-    const bateu=dados.filter(d=>d.pct>=100).sort((a,b)=>b.over-a.over);
-    const abaixo=dados.filter(d=>d.pct<100).sort((a,b)=>a.pct-b.pct);
-    let pBem, pEvo;
-    if(bateu.length){ const t=bateu[0]; const outras=bateu.slice(1).map(d=>NCURTO[d.c.id]).join(' e ');
-      pBem=`<span class="rt-lead">Foi muito bem em ${NCURTO[t.c.id]}.</span>Fechou <b>${t.pct}%</b> da meta (${t.real} de ${t.meta})`+(outras?`. Também passou a meta em ${outras}.`:`.`);
-    } else { pBem=`<span class="rt-lead">O mês exigiu fôlego.</span>Nenhuma categoria fechou 100% — o foco agora é recuperar volume.`; }
-    if(abaixo.length){ const p=abaixo[0]; const outras=abaixo.slice(1).map(d=>`${NCURTO[d.c.id]} (${d.pct}%)`).join(', ');
-      pEvo=`<span class="rt-lead evo">Pode evoluir em ${NCURTO[p.c.id]}.</span>Ficou em <b>${p.pct}%</b>, faltaram ${Math.max(p.meta-p.real,0)} un. `+(outras?`Mesma atenção para ${outras}. `:``)+`São itens de complemento — oferecer junto com o sapato resolve a maior parte.`;
-    } else { pEvo=`<span class="rt-lead evo">Próximo passo.</span>Com tudo batido, o desafio é manter a régua e subir o ticket médio.`; }
+  function analiseMetas(cells,ano){
+    const comBase=cells.filter(c=>c.ant>0);
+    const superou=comBase.filter(c=>c.atu>c.ant).sort((a,b)=>(b.atu-b.ant)-(a.atu-a.ant));
+    const faltou=comBase.filter(c=>c.atu<=c.ant).sort((a,b)=>(a.atu/a.ant)-(b.atu/b.ant));
+    let pBem,pEvo;
+    if(superou.length){ const t=superou[0]; const outras=superou.slice(1).map(c=>c.nome).join(' e ');
+      pBem=`<span class="rt-lead">Você superou ${ano-1} em ${t.nome}.</span>Fez <b>${t.atu}</b> contra ${t.ant} do ano passado (+${t.atu-t.ant})`+(outras?`. Também passou em ${outras}.`:`.`);
+    } else { pBem=`<span class="rt-lead">Mês de retomada.</span>Nenhuma categoria superou ${ano-1} dessa vez — dá pra virar isso no próximo.`; }
+    if(faltou.length){ const p=faltou[0];
+      pEvo=`<span class="rt-lead evo">Pode evoluir em ${p.nome}.</span>Ficou em <b>${Math.round(p.atu/p.ant*100)}%</b> de ${p.ant}, faltaram ${p.ant-p.atu+1} pra superar ${ano-1}.`;
+    } else { pEvo=`<span class="rt-lead evo">Próximo passo.</span>Com tudo acima de ${ano-1}, o desafio é manter o ritmo e subir o ticket médio.`; }
     return `<div class="rt-analise"><div class="rt-at">Leitura das metas</div><p>${pBem}</p><p>${pEvo}</p></div>`;
   }
 
@@ -5561,9 +5571,9 @@ renderSel();
         <div class="rt-analise"><div class="rt-at">Leitura da conversão</div><p>${pRank}</p></div></div>`;
   }
 
-  function renderLeitura(vend,acc,cfg,h25,nomeMes,ano,mes){
+  function renderLeitura(vend,acc,cells,h25,nomeMes,ano,mes){
     const rec=[],evo=[];
-    CATS.forEach(c=>{ const over=(acc[c.id]||0)-metaInd(cfg,c.id); if(over>0) rec.push(`Bateu a meta de <b>${NCURTO[c.id]}</b> (+${over} acima do alvo).`); });
+    cells.filter(c=>c.ant>0 && c.atu>c.ant).sort((a,b)=>(b.atu-b.ant)-(a.atu-a.ant)).forEach(c=>rec.push(`Superou ${ano-1} em <b>${c.nome}</b> — +${c.atu-c.ant} acima do ano passado.`));
     const lc=liderConv(ano,mes); if(lc.id===vend) rec.push(`Maior <b>conversão de mix</b> da equipe: ${acc.sapatos>0?Math.round(acessTot(acc)/acc.sapatos*100):0}% de acessórios por sapato.`);
     if(h25 && h25.sap>0){ const cr=Math.round((acc.sapatos-h25.sap)/h25.sap*100); if(cr>0) rec.push(`Crescimento de <b>+${cr}%</b> em sapatos vs o mesmo mês de 2025.`); }
     if(!rec.length) rec.push(`Mês de aprendizado — vamos transformar os números do próximo em destaque.`);
