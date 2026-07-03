@@ -1636,6 +1636,25 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
 .tabnav-btn:hover:not(.active){color:var(--cr);}
 
 /* ── Histórico Anual ── */
+/* Aba anual (YTD): total cheio + comparável YoY + tabela mês a mês */
+.an-sec{margin-bottom:26px;}
+.an-sec-h{font-family:'Playfair Display',serif;font-size:16px;color:var(--ou2);margin-bottom:4px;letter-spacing:.5px;}
+.an-sec-sub{font-size:10px;letter-spacing:1.5px;color:var(--cr3);text-transform:uppercase;margin-bottom:14px;}
+.an-tot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+.an-tot-card{background:var(--bg2);border:1px solid var(--oud2);padding:16px 14px;text-align:center;position:relative;}
+.an-tot-card::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:var(--ou);opacity:.5;}
+.an-tot-nome{font-size:10px;letter-spacing:2px;color:var(--cr3);text-transform:uppercase;margin-bottom:8px;}
+.an-tot-val{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;color:var(--ou2);line-height:1;}
+.an-tot-sub{font-size:9px;letter-spacing:1px;color:var(--cr3);margin-top:6px;text-transform:uppercase;}
+.an-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;}
+.an-tbl th{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cr3);text-align:right;padding:8px 10px;border-bottom:1px solid var(--oud2);}
+.an-tbl th:first-child{text-align:left;}
+.an-tbl td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--oud2);color:var(--cr);font-family:'DM Mono',monospace;}
+.an-tbl td:first-child{text-align:left;color:var(--cr2);letter-spacing:1px;text-transform:uppercase;font-size:11px;}
+.an-tbl tr:last-child td{border-bottom:none;}
+.an-up{color:#7fae4f;} .an-down{color:#c4663f;} .an-sembase{color:var(--cr3);font-size:10px;}
+.an-foot{font-size:10px;color:var(--cr3);letter-spacing:.5px;line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid var(--oud2);}
+.an-foot b{color:var(--cr2);}
 #hist-sec select{background:var(--bg2);color:var(--cr);border:1px solid var(--oud);padding:6px 10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-family:inherit;cursor:pointer;}
 .hist-loading{text-align:center;padding:24px;font-size:10px;letter-spacing:2px;color:var(--cr3);text-transform:uppercase;}
 .hist-empty{text-align:center;padding:40px 20px;font-size:12px;color:var(--cr3);letter-spacing:1px;background:var(--bg2);border:1px solid var(--oud2);}
@@ -1757,6 +1776,7 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
     <div id="conteudo-principal">
       <div class="tabnav">
         <button class="tabnav-btn active" data-tab="painel" onclick="trocarTab('painel')">Painel</button>
+        <button class="tabnav-btn" id="tab-btn-anual" data-tab="anual" onclick="trocarTab('anual')" style="display:none;">Histórico Anual</button>
         <button class="tabnav-btn" id="tab-btn-retro" data-tab="historico" onclick="trocarTab('historico')" style="display:none;">Meu Retrospecto</button>
       </div>
 
@@ -1887,6 +1907,14 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
         <div id="hist-body"></div>
       </div>
       </div><!-- /tab-historico -->
+
+      <div class="tab-content" id="tab-anual" style="display:none;">
+        <div class="slbl">
+          <span>Histórico Anual</span>
+          <select id="anual-vend-sel" style="display:none;" onchange="onTrocarAnualVend()"></select>
+        </div>
+        <div id="anual-body"></div>
+      </div><!-- /tab-anual -->
     </div>
   </main>
 </div>
@@ -2359,7 +2387,8 @@ async function entrarComUsuario(u){
   setTimeout(inicializarDataLancamento,50);
   render();
   atualizarAbaRetro();
-  if(window.__retroPopup) window.__retroPopup();
+  atualizarAbaAnual();
+  // (popup do retrospecto agora dispara ao registrar as 1as vendas do mês novo — ver dispararRetroPosRegistro)
   if(usuario!=='__gestor__') verificarPrimeiroAcesso();
   // Pré-carrega meses vizinhos em background pra primeira navegação ser instantânea
   prefetchVizinhos();
@@ -2751,6 +2780,7 @@ async function conflito_substituir(){
   inicializarDataLancamento();
   toast('✓ Registro substituído!');
   verificarCelebracoes();renderMesSelector();
+  dispararRetroPosRegistro();
 }
 async function conflito_somar(){
   const h=[...histAtualCache(usuario)];
@@ -2765,6 +2795,7 @@ async function conflito_somar(){
   await saveHistMes(usuario,anoAtivo,mesAtivo,h);
   loading(false);
   inicializarDataLancamento();toast('✓ Vendas somadas!');verificarCelebracoes();
+  dispararRetroPosRegistro();
 }
 function fecharConflito(){document.getElementById('modal-conflito').classList.remove('open');}
 
@@ -2774,6 +2805,13 @@ function anoMesDaData(dataDDMM){
   // Usar o ano ativo como base; se mês da data ≠ mês ativo, ajustar
   const ano = anoAtivo;
   return { ano, mes: mm };
+}
+
+// Dispara o popup do retrospecto do mês ANTERIOR (fechado) logo após a vendedora
+// registrar vendas do mês novo. A flag "visto" no Firestore garante que aparece
+// só uma vez por mês, então pode ser chamado em todo registro sem incomodar.
+function dispararRetroPosRegistro(){
+  setTimeout(()=>{ try{ if(window.__retroPopup) window.__retroPopup(); }catch(e){} }, 900);
 }
 
 async function finalizarRegistro(reg){
@@ -2796,6 +2834,7 @@ async function finalizarRegistro(reg){
     toast(`✓ Venda salva em ${nomeMes} (data do lançamento)`);
   }
   verificarCelebracoes(); renderMesSelector();
+  dispararRetroPosRegistro();
 }
 async function finalizarRegistroComHistorico(h, novoReg){
   const reg = novoReg || h[h.length-1];
@@ -2810,6 +2849,7 @@ async function finalizarRegistroComHistorico(h, novoReg){
   inicializarDataLancamento();
   toast(reg&&reg.especial?`"${reg.especial}" registrado.`:'✓ Vendas registradas!');
   verificarCelebracoes(); renderMesSelector();
+  dispararRetroPosRegistro();
 }
 
 // ══ SISTEMA DE CELEBRAÇÕES ══
@@ -4006,6 +4046,8 @@ const HIST_2025 = {
 let histVendSelecionada = null;  // ID da vendedora sendo exibida (ou '__equipe__')
 let histDadosCache = {};         // {vid: {ano_mes: hist}} cache pra evitar refetch
 let histLoading = false;
+let anualVendSel = null;   // seletor da aba anual ('__equipe__' ou id da vendedora)
+let anualLoading = false;
 
 async function carregarHistMes(vid, ano, mes){
   // Carrega apenas um mês específico (usado pelo comparativo do histórico)
@@ -4205,6 +4247,129 @@ async function renderHistorico(){
   }
 }
 
+// Mostra a aba "Histórico Anual" apenas para o gestor
+function atualizarAbaAnual(){
+  const btn = document.getElementById('tab-btn-anual');
+  if(!btn) return;
+  btn.style.display = (usuario === '__gestor__') ? '' : 'none';
+  if(usuario !== '__gestor__' && abaAtiva === 'anual') trocarTab('painel');
+}
+
+// Aba do gestor: acumulado do ano (YTD) — total cheio + comparável vs ano anterior
+async function renderHistoricoAnual(){
+  const body = document.getElementById('anual-body');
+  if(!body) return;
+  const anoA = anoAtivo, anoP = anoAtivo - 1;
+  const realA = new Date().getFullYear(), realM = new Date().getMonth()+1;
+  const ultimoFechado = (anoA < realA) ? 12 : (realM - 1);  // meses já fechados do ano atual
+  const fechados = [];
+  for(let m=1; m<=ultimoFechado; m++) fechados.push(m);
+
+  // seletor Equipe / vendedora
+  const sel = document.getElementById('anual-vend-sel');
+  if(sel){
+    sel.style.display = 'inline-block';
+    if(!sel.dataset.popul){
+      sel.innerHTML = ['<option value="__equipe__">Equipe (total)</option>',
+        ...VENDEDORAS.map(v=>`<option value="${v.id}">${v.nome}</option>`)].join('');
+      sel.dataset.popul = '1';
+    }
+    if(!anualVendSel) anualVendSel = '__equipe__';
+    sel.value = anualVendSel;
+  }
+  const alvo = anualVendSel === '__equipe__' ? [...VENDEDORAS.map(v=>v.id), ...ARQUIVADAS] : [anualVendSel];
+
+  if(fechados.length === 0){ body.innerHTML = `<div class="hist-empty">Nenhum mês fechado ainda em ${anoA}.</div>`; return; }
+  if(anualLoading) return;
+  body.innerHTML = '<div class="hist-loading">Carregando histórico anual…</div>';
+  anualLoading = true;
+  try{
+    for(const vid of alvo){
+      for(const m of fechados){
+        await carregarHistMes(vid, anoA, m);
+        await carregarHistMes(vid, anoP, m);
+      }
+    }
+    const somaAno = (ano, meses)=>{
+      const t = {sap:0,meias:0,acess_grupo:0,limpeza:0,acess_total:0};
+      meses.forEach(m=>{ const a=histAggMes(alvo,ano,m); t.sap+=a.sap; t.meias+=a.meias; t.acess_grupo+=a.acess_grupo; t.limpeza+=a.limpeza; t.acess_total+=a.acess_total; });
+      t.conv = t.sap>0 ? t.acess_total/t.sap : 0;
+      return t;
+    };
+    // período comparável: meses fechados que o ano anterior também tem
+    const compar = fechados.filter(m => histAggMes(alvo, anoP, m).sap > 0);
+    const totalCheio = somaAno(anoA, fechados);
+    const cmp26 = somaAno(anoA, compar);
+    const cmp25 = somaAno(anoP, compar);
+
+    const ICONS = Object.fromEntries(CATS.map(c=>[c.id, c.svg]));
+    const iconConv = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 17l6-6 4 4 8-8"/><polyline points="15 7 21 7 21 13"/></svg>';
+    const nome = m=>MESES_NOMES[m-1];
+    const rotFech = `${nome(fechados[0])}–${nome(fechados[fechados.length-1])} ${anoA}`;
+    const rotCmp  = compar.length ? `${nome(compar[0])}–${nome(compar[compar.length-1])}` : '—';
+    const nfmt = v => (v||0).toLocaleString('pt-BR');
+
+    // ── Seção 1: total cheio do ano ──
+    const totCard = (nm, svg, val, sub)=>`<div class="an-tot-card"><div class="hist-cat-icon" style="margin:0 auto 8px">${svg}</div><div class="an-tot-nome">${nm}</div><div class="an-tot-val">${val}</div>${sub?`<div class="an-tot-sub">${sub}</div>`:''}</div>`;
+    const sec1 = `<div class="an-sec">
+      <div class="an-sec-h">Total do ano · ${anoA}</div>
+      <div class="an-sec-sub">Meses fechados: ${rotFech}</div>
+      <div class="an-tot-grid">
+        ${totCard('Sapatos', ICONS.sapatos, nfmt(totalCheio.sap))}
+        ${totCard('Meias', ICONS.meias, nfmt(totalCheio.meias))}
+        ${totCard('Cintos', ICONS.cintos, nfmt(totalCheio.acess_grupo))}
+        ${totCard('Limpeza', ICONS.limpeza, nfmt(totalCheio.limpeza))}
+        ${totCard('Acessórios', iconConv, nfmt(totalCheio.acess_total), 'total')}
+        ${totCard('Conversão', iconConv, totalCheio.conv ? (totalCheio.conv*100).toFixed(0)+'%' : '—', 'acess./sapato')}
+      </div></div>`;
+
+    // ── Seção 2: comparável vs ano anterior ──
+    let sec2;
+    if(compar.length){
+      const cardsCmp = [
+        makeCatCard('Sapatos', ICONS.sapatos, cmp25.sap, cmp26.sap, rotCmp, v=>v),
+        makeCatCard('Meias', ICONS.meias, cmp25.meias, cmp26.meias, rotCmp, v=>v),
+        makeCatCard('Cintos', ICONS.cintos, cmp25.acess_grupo, cmp26.acess_grupo, rotCmp, v=>v),
+        makeCatCard('Limpeza', ICONS.limpeza, cmp25.limpeza, cmp26.limpeza, rotCmp, v=>v),
+        makeCatCard('Conversão', iconConv, cmp25.conv, cmp26.conv, rotCmp, v=>v.toFixed(2))
+      ].join('');
+      sec2 = `<div class="an-sec">
+        <div class="an-sec-h">Crescimento vs ${anoP}</div>
+        <div class="an-sec-sub">Período comparável: ${rotCmp} · ${anoP} vs ${anoA}</div>
+        <div class="hist-cards-grid">${cardsCmp}</div></div>`;
+    } else {
+      sec2 = `<div class="an-sec"><div class="an-sec-h">Crescimento vs ${anoP}</div>
+        <div class="hist-empty">Ainda não há meses com base de ${anoP} pra comparar.</div></div>`;
+    }
+
+    // ── Seção 3: sapatos mês a mês ──
+    const linhas = fechados.map(m=>{
+      const a26 = histAggMes(alvo, anoA, m).sap;
+      const a25 = histAggMes(alvo, anoP, m).sap;
+      const base = a25 > 0;
+      const d = base ? Math.round((a26-a25)/a25*100) : null;
+      const dcell = d===null ? `<span class="an-sembase">sem base ${String(anoP).slice(2)}</span>`
+        : (d>=0 ? `<span class="an-up">▲ ${d}%</span>` : `<span class="an-down">▼ ${Math.abs(d)}%</span>`);
+      return `<tr><td>${nome(m)}</td><td>${nfmt(a26)}</td><td>${base?nfmt(a25):'—'}</td><td>${dcell}</td></tr>`;
+    }).join('');
+    const sec3 = `<div class="an-sec">
+      <div class="an-sec-h">Sapatos mês a mês</div>
+      <div class="an-sec-sub">${anoA} vs ${anoP}</div>
+      <table class="an-tbl"><thead><tr><th>Mês</th><th>${anoA}</th><th>${anoP}</th><th>Δ</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+
+    const foot = `<div class="an-foot">A base de <b>${anoP}</b> começa em fevereiro e não inclui <b>carteiras</b> nem <b>prendedor</b> — por isso a comparação usa Sapatos, Meias, Cintos, Limpeza e Conversão, no período <b>${rotCmp}</b>. O "Total do ano" mostra ${anoA} cheio (${rotFech}).</div>`;
+
+    body.innerHTML = sec1 + sec2 + sec3 + foot;
+  } finally {
+    anualLoading = false;
+  }
+}
+function onTrocarAnualVend(){
+  const sel = document.getElementById('anual-vend-sel');
+  anualVendSel = sel.value;
+  renderHistoricoAnual();
+}
+
 function onTrocarHistVend(){
   const sel = document.getElementById('hist-vend-sel');
   histVendSelecionada = sel.value;
@@ -4224,6 +4389,7 @@ function trocarTab(t){
     if(usuario && usuario !== '__gestor__' && window.__retroRender){ window.__retroRender(); }
     else { renderHistorico(); }
   }
+  if(t === 'anual'){ renderHistoricoAnual(); }
 }
 
 // Mostra a aba "Meu Retrospecto" apenas para a vendedora logada (não o gestor)
@@ -4645,39 +4811,56 @@ async function gerarApresentacaoMes() {
 
     // Top vendas (Maior Venda do Mês por vendedora → ranking)
     // Lê o novo formato {vendas:[...]} e pega a maior venda de cada vendedora
-    const mvRaw = VENDEDORAS.map(v => {
+    const mvRaw = VENDEDORAS.flatMap(v => {
       const k = keyMV(v.id, anoAtivo, mesAtivo);
       const reg = cacheHist[k];
       if(reg?.vendas?.length > 0){
-        const maior = [...reg.vendas].sort((a,b) => b.valor - a.valor)[0];
-        return {nome:v.id, valor:maior.valor, destaque:''};
+        return reg.vendas.map(vd => ({nome:v.id, valor:vd.valor, destaque:''}));
       }
-      return {nome:v.id, valor:0, destaque:''};
+      return [];
     }).filter(x=>x.valor>0).sort((a,b)=>b.valor-a.valor);
     if(mvRaw.length>0) mvRaw[0].destaque = '⭐ RECORDE DO MÊS';
     const TOP_VENDAS = mvRaw.length>0 ? mvRaw : [{nome:'—',valor:0,destaque:''}];
 
     // Insights automáticos baseados nos dados (sem chamada externa)
-    const INSIGHTS = VENDS.map(v=>{
-      const sap=Math.max(v.sapatos,1);
-      const convs=ACESS.map(c=>({c,p:v[c]/sap*100,v:v[c]}));
-      const best=convs.sort((a,b)=>b.p-a.p)[0];
-      const worst=convs.sort((a,b)=>a.p-b.p)[0];
-      // Ponto forte: melhor categoria ou volume de sapatos
+    const INSIGHTS = (()=>{
+      const sap=v=>Math.max(v.sapatos,1);
+      const teamRank={}, teamAvg={};
+      ACESS.forEach(c=>{
+        const arr=VENDS.map(v=>({nome:v.nome,p:v[c]/sap(v)*100})).sort((a,b)=>b.p-a.p);
+        teamRank[c]=arr; teamAvg[c]=arr.reduce((s,x)=>s+x.p,0)/Math.max(arr.length,1);
+      });
       const rankSap=[...VENDS].sort((a,b)=>b.sapatos-a.sapatos);
-      const posSap=rankSap.findIndex(r=>r.nome===v.nome);
-      let pontoForte=posSap===0
-        ?`Líder em volume com ${v.sapatos} sapatos. ${NOMES_CAT[best.c]} em destaque (${best.p.toFixed(1)}%).`
-        :`${NOMES_CAT[best.c]} com ${best.p.toFixed(1)}% — melhor conversão da categoria.`;
-      // Onde crescer: categoria mais abaixo dos benchmarks
+      const volLeader=rankSap[0]?.nome;
       const bench={meias:31,cintos:22,carteiras:3,limpeza:12,prendedor:3};
-      const gaps=ACESS.map(c=>({c,gap:(bench[c]||10)-(v[c]/sap*100)})).sort((a,b)=>b.gap-a.gap);
-      const piorGap=gaps[0];
-      let ondeCrescer=piorGap.gap>0
-        ?`${NOMES_CAT[piorGap.c]} ${(v[piorGap.c]/sap*100).toFixed(1)}% → meta ${bench[piorGap.c]}%.`
-        :`Manter o ritmo e crescer volume base de sapatos.`;
-      return {nome:v.nome,pontoForte,ondeCrescer};
-    });
+      // PONTO FORTE — cada vendedora reivindica uma categoria distinta (onde mais se destaca no time)
+      const claimForte=new Set(), forteMap={};
+      const withBest=VENDS.map(v=>({v,cands:ACESS.map(c=>({c,p:v[c]/sap(v)*100,pos:teamRank[c].findIndex(x=>x.nome===v.nome),margin:(v[c]/sap(v)*100)-teamAvg[c]}))}));
+      const ordem=[...withBest].sort((a,b)=>Math.max(...b.cands.map(c=>c.margin))-Math.max(...a.cands.map(c=>c.margin)));
+      ordem.forEach(({v,cands})=>{
+        if(v.nome===volLeader){forteMap[v.nome]=`Líder em volume: ${v.sapatos} sapatos vendidos no mês.`;return;}
+        const livres=cands.filter(c=>!claimForte.has(c.c)).sort((a,b)=>a.pos-b.pos||b.p-a.p);
+        const pick=livres[0]||[...cands].sort((a,b)=>a.pos-b.pos)[0];
+        claimForte.add(pick.c);
+        forteMap[v.nome]= pick.pos===0
+          ? `Melhor do time em ${NOMES_CAT[pick.c]}: ${pick.p.toFixed(1)}%.`
+          : `Destaque em ${NOMES_CAT[pick.c]}: ${pick.p.toFixed(1)}% (média do time ${teamAvg[pick.c].toFixed(1)}%).`;
+      });
+      // ONDE CRESCER — maior gap vs benchmark, evitando repetir categoria entre as vendedoras
+      const claimGap=new Set(), cresceMap={};
+      const ordemGap=[...VENDS].sort((a,b)=>{
+        const ga=Math.max(...ACESS.map(c=>(bench[c]||10)-(a[c]/sap(a)*100)));
+        const gb=Math.max(...ACESS.map(c=>(bench[c]||10)-(b[c]/sap(b)*100)));
+        return gb-ga;
+      });
+      ordemGap.forEach(v=>{
+        const gaps=ACESS.map(c=>({c,gap:(bench[c]||10)-(v[c]/sap(v)*100),val:v[c]/sap(v)*100})).filter(g=>g.gap>0).sort((a,b)=>b.gap-a.gap);
+        const livre=gaps.find(g=>!claimGap.has(g.c));
+        if(livre){claimGap.add(livre.c);cresceMap[v.nome]=`${NOMES_CAT[livre.c]} ${livre.val.toFixed(1)}% → meta ${bench[livre.c]}%.`;}
+        else cresceMap[v.nome]='Manter o ritmo — já acima do benchmark na maioria das categorias.';
+      });
+      return VENDS.map(v=>({nome:v.nome,pontoForte:forteMap[v.nome]||'—',ondeCrescer:cresceMap[v.nome]||'—'}));
+    })();
 
     // ── PALETA ──
     const C={verde:'1A3A2A',verde2:'2D6A4F',verde3:'3D7A5E',ouro:'C9A84C',ouro2:'E8C96A',ouro3:'B89020',branco:'FFFFFF',creme:'F7F4EC',bege:'E0D8C0',preto:'000000',escuro:'162810'};
@@ -4727,29 +4910,33 @@ async function gerarApresentacaoMes() {
       s.addText(U>0?String(U):'—',{x,y:3.24,w:cW-0.04,h:0.58,fontSize:30,bold:true,color:C.ouro,align:'center',fontFace:'Calibri'});
       s.addShape('rect',{x:x+0.05,y:4.05,w:cW-0.14,h:0.42,fill:{color:C.ouro},line:{color:C.ouro,width:0}});
       s.addText(nova?'NOVA CAT.':diff>=0?`+${diff} ACIMA`:`${diff} ABAIXO`,{x:x+0.05,y:4.05,w:cW-0.14,h:0.42,fontSize:10,bold:true,color:C.preto,align:'center',fontFace:'Calibri'});
-      s.addText('✔ ULTRA BATIDA',{x,y:4.55,w:cW-0.04,h:0.3,fontSize:8,bold:true,color:C.verde2,align:'center',fontFace:'Calibri'});});}
+      const _sel=nova?null:(U>0&&V>=U)?{t:'✔ ULTRA BATIDA',c:C.verde2}:(V>=M)?{t:'✔ META BATIDA',c:C.verde2}:{t:'✕ META NÃO BATIDA',c:'A63D2E'};if(_sel)s.addText(_sel.t,{x,y:4.55,w:cW-0.04,h:0.3,fontSize:8,bold:true,color:_sel.c,align:'center',fontFace:'Calibri'});});}
 
     // ════ S3 GRÁFICO ════
     {const s=pptx.addSlide();
     s.background={color:C.verde};
     strips(s);
-    s.addText('VENDIDO vs META vs ULTRAMETA',{x:0.4,y:0.18,w:12.5,h:0.8,fontSize:40,bold:true,color:C.branco,fontFace:'Calibri'});
-    s.addText(`${MES} ${ANO} — DIFERENÇA POR CATEGORIA`,{x:0.4,y:0.98,w:12,h:0.32,fontSize:12,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
-    [[C.ouro,'Vendido'],[C.verde2,'Ultrameta'],['B8A070','Meta']].forEach(([c,lbl],i)=>{
-      s.addShape('rect',{x:4.5+i*2.2,y:1.35,w:0.18,h:0.18,fill:{color:c},line:{color:c,width:0}});
-      s.addText(lbl,{x:4.72+i*2.2,y:1.35,w:1.8,h:0.18,fontSize:10,color:C.branco,fontFace:'Calibri'});});
-    const chartX=0.9,chartY=1.65,chartW=12.0,chartH=3.55,chartBotY=chartY+chartH;
     const catsG=CATS.filter(c=>c!=='prendedor'&&(METAS[c]||0)>0);
+    const temUltra=catsG.some(c=>(ULTRAS[c]||0)>0);
+    s.addText(temUltra?'VENDIDO vs META vs ULTRAMETA':'VENDIDO vs META',{x:0.4,y:0.18,w:12.5,h:0.8,fontSize:40,bold:true,color:C.branco,fontFace:'Calibri'});
+    s.addText(`${MES} ${ANO} — DIFERENÇA POR CATEGORIA`,{x:0.4,y:0.98,w:12,h:0.32,fontSize:12,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
+    const legend=temUltra?[[C.ouro,'Vendido'],[C.verde2,'Ultrameta'],['B8A070','Meta']]:[[C.ouro,'Vendido'],['B8A070','Meta']];
+    const legX=temUltra?4.5:5.3;
+    legend.forEach(([c,lbl],i)=>{
+      s.addShape('rect',{x:legX+i*2.2,y:1.35,w:0.18,h:0.18,fill:{color:c},line:{color:c,width:0}});
+      s.addText(lbl,{x:legX+0.22+i*2.2,y:1.35,w:1.8,h:0.18,fontSize:10,color:C.branco,fontFace:'Calibri'});});
+    const chartX=0.9,chartY=1.65,chartW=12.0,chartH=3.55,chartBotY=chartY+chartH;
     const maxVal=Math.max(...catsG.map(c=>TOTAIS[c]))*1.2||1200;
     const catW=chartW/catsG.length;
-    const barW=0.72,barGap=0.06,totalBB=(barW*3+barGap*2),catPad=(catW-totalBB)/2;
+    const nBars=temUltra?3:2,barW=0.72,barGap=0.06,totalBB=(barW*nBars+barGap*(nBars-1)),catPad=(catW-totalBB)/2;
     [0,0.2,0.4,0.6,0.8,1.0].forEach(frac=>{
       const y=chartBotY-frac*chartH;
       s.addShape('line',{x:chartX,y,w:chartW,h:0,line:{color:'2A5A3A',width:0.5}});
       s.addText(String(Math.round(frac*maxVal)),{x:chartX-0.75,y:y-0.12,w:0.7,h:0.24,fontSize:8,color:'AAAAAA',align:'right',fontFace:'Calibri'});});
     catsG.forEach((cat,ci)=>{
-      const V=TOTAIS[cat],M=METAS[cat],U=ULTRAS[cat]||M,x0=chartX+ci*catW+catPad;
-      [[V,C.ouro],[U,C.verde2],[M,'B8A070']].forEach(([val,col],bi)=>{
+      const V=TOTAIS[cat],M=METAS[cat],U=ULTRAS[cat]||0,x0=chartX+ci*catW+catPad;
+      const bars=temUltra?[[V,C.ouro],[U,C.verde2],[M,'B8A070']]:[[V,C.ouro],[M,'B8A070']];
+      bars.forEach(([val,col],bi)=>{
         if(!val)return;
         const bh=(val/maxVal)*chartH,bx=x0+bi*(barW+barGap),by=chartBotY-bh;
         s.addShape('rect',{x:bx,y:by,w:barW,h:bh,fill:{color:col},line:{color:col,width:0}});
