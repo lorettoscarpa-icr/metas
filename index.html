@@ -4506,6 +4506,7 @@ async function abrirCfg(){
   const cfg=cfgAtualCache();
   const B=Object.assign({sapMeta:100,sapSuper:150,sapHiper:200,acessorio:50,maiorMix:100,melhorConv:100,maiorVenda:100,maiorVendaMin:2000},cfg.bonus||{});
   const hipSap = (cfg.hipermetas && cfg.hipermetas.sapatos) || 0;
+  const supSap = (cfg.supermetas && cfg.supermetas.sapatos) || 0;
   document.getElementById('modal-mes-label').textContent=`metas para ${MESES_NOMES[mesAtivo-1]} ${anoAtivo} · dias úteis para cálculo de ritmo`;
   document.getElementById('cfg-dias').value=cfg.diasUteis||26;
   const ultraAtiva = cfg.ultraAtiva || false;
@@ -4534,8 +4535,11 @@ async function abrirCfg(){
     <div class="mrow"><label>Bônus Meta</label>
       <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-sapMeta" value="${B.sapMeta}" style="width:72px;"></div>
     </div>
-    <div class="mrow"><label>Bônus Super Meta</label>
-      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-sapSuper" value="${B.sapSuper}" style="width:72px;"></div>
+    <div class="mrow"><label>Super Meta (qtd · bônus)</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">
+        <input class="minp-n" type="number" min="0" id="cfg-super-sapatos" value="${supSap}" style="width:72px;" title="Quantidade (pares) do 2º nível da escada. A ultrameta (⚡ acima) fica reservada pro modo ultra.">
+        R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-sapSuper" value="${B.sapSuper}" style="width:72px;">
+      </div>
     </div>
     <div class="mrow"><label>Hiper Meta (qtd · bônus)</label>
       <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">
@@ -4556,6 +4560,9 @@ async function abrirCfg(){
     </div>
     <div class="mrow"><label>👝 Carteiras</label>
       <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-cat-carteiras" value="${(B.cat&&B.cat.carteiras!==undefined)?B.cat.carteiras:B.acessorio}" style="width:72px;"></div>
+    </div>
+    <div class="mrow"><label>📎 Prendedores</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-cat-prendedor" value="${(B.cat&&B.cat.prendedor!==undefined)?B.cat.prendedor:0}" style="width:72px;" title="0 = bônus junto com cintos (padrão)"></div>
     </div>
 
     <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Bônus Individuais</div>
@@ -4589,6 +4596,9 @@ async function salvarCfg(){
   });
   // Hipermeta de sapatos (qtd) — opcional
   cfg.hipermetas.sapatos=parseInt(document.getElementById('cfg-hiper-sapatos')?.value)||0;
+  // Super Meta de sapatos (qtd) — 2º nível da escada; a ultrameta fica pro modo ultra
+  if(!cfg.supermetas)cfg.supermetas={};
+  cfg.supermetas.sapatos=parseInt(document.getElementById('cfg-super-sapatos')?.value)||0;
   // Bônus
   cfg.bonus.sapMeta       = parseInt(document.getElementById('cfg-bonus-sapMeta')?.value)||0;
   cfg.bonus.sapSuper      = parseInt(document.getElementById('cfg-bonus-sapSuper')?.value)||0;
@@ -4598,7 +4608,8 @@ async function salvarCfg(){
     meias:     parseInt(document.getElementById('cfg-bonus-cat-meias')?.value)||0,
     cintos:    parseInt(document.getElementById('cfg-bonus-cat-cintos')?.value)||0,
     limpeza:   parseInt(document.getElementById('cfg-bonus-cat-limpeza')?.value)||0,
-    carteiras: parseInt(document.getElementById('cfg-bonus-cat-carteiras')?.value)||0
+    carteiras: parseInt(document.getElementById('cfg-bonus-cat-carteiras')?.value)||0,
+    prendedor: parseInt(document.getElementById('cfg-bonus-cat-prendedor')?.value)||0
   };
   cfg.bonus.maiorMix      = parseInt(document.getElementById('cfg-bonus-maiorMix')?.value)||0;
   cfg.bonus.melhorConv    = parseInt(document.getElementById('cfg-bonus-melhorConv')?.value)||0;
@@ -5254,7 +5265,7 @@ async function gerarApresentacaoMes() {
 function gerarFolhaBonus(){
   const cfg = cfgAtualCache();
   const MES = MESES_NOMES[mesAtivo-1].toUpperCase(), ANO = anoAtivo;
-  const M = cfg.metas||{}, U = cfg.ultrametas||{}, HIP = cfg.hipermetas||{};
+  const M = cfg.metas||{}, U = cfg.ultrametas||{}, HIP = cfg.hipermetas||{}, SUP = cfg.supermetas||{};
   const cfgB = cfg.bonus||{};
   const B = {
     sapMeta: cfgB.sapMeta||100, sapSuper: cfgB.sapSuper||150, sapHiper: cfgB.sapHiper||200,
@@ -5262,7 +5273,7 @@ function gerarFolhaBonus(){
     maiorVenda: cfgB.maiorVenda||100, maiorVendaMin: cfgB.maiorVendaMin||2000
   };
   const nf = v=>(v||0).toLocaleString('pt-BR');
-  const sapMeta=M.sapatos||0, sapSuper=U.sapatos||0, sapHiper=HIP.sapatos||0;
+  const sapMeta=M.sapatos||0, sapSuper=(SUP.sapatos||U.sapatos||0), sapHiper=HIP.sapatos||0;
 
   const li = (t,b,destaque)=>`<div class="row${destaque?' hi':''}"><span>${t}</span><b>${b}</b></div>`;
   let rows='';
@@ -5272,24 +5283,26 @@ function gerarFolhaBonus(){
   if(sapHiper>0) rows+=li(`HIPER Meta — ${nf(sapHiper)} pares`,`R$ ${B.sapHiper} DE BÔNUS`,true);
 
   rows+=`<div class="sec">ACESSÓRIOS · METAS COLETIVAS</div>`;
-  const bCat = id => (cfgB.cat && cfgB.cat[id]!==undefined) ? cfgB.cat[id] : B.acessorio;
+  const bCat = id => (cfgB.cat && cfgB.cat[id]!==undefined) ? cfgB.cat[id] : (id==='prendedor' ? 0 : B.acessorio);
   const acess=[['meias','Meias','meias'],['cintos','Cintos','acessórios'],['limpeza','Produtos de Limpeza','und'],['carteiras','Carteiras','unidades']];
   acess.forEach(([id,nome,und])=>{
     if((M[id]||0)>0){
-      // Prendedor não tem bônus próprio: compõe a meta de cintos.
-      const extra=(id==='cintos'&&(M.prendedor||0)>0)?` + ${nf(M.prendedor)} prendedores`:'';
+      // Prendedor entra junto de cintos apenas quando NÃO tem bônus próprio
+      const extra=(id==='cintos'&&(M.prendedor||0)>0&&bCat('prendedor')<=0)?` + ${nf(M.prendedor)} prendedores`:'';
       const bv=bCat(id);
       rows+=li(`Meta de ${nome} — ${nf(M[id])} ${und}${extra}`, bv>0?`R$ ${bv} DE BÔNUS`:'SEM BÔNUS NESTE MÊS');
       if((U[id]||0)>0) rows+=li(`SUPER Meta — ${nf(U[id])} ${und}`,'DESAFIO ⚡',true);
     }
   });
+  if((M.prendedor||0)>0 && bCat('prendedor')>0)
+    rows+=li(`Meta de Prendedores — ${nf(M.prendedor)} und`,`R$ ${bCat('prendedor')} DE BÔNUS`);
 
   rows+=`<div class="sec">BÔNUS INDIVIDUAIS · VOCÊ CONQUISTA, VOCÊ RECEBE</div>`;
   rows+=li('Maior VENDEDORA DE MIX',`R$ ${B.maiorMix} DE BÔNUS`);
   rows+=li('Melhor CONVERSÃO DE MIX',`R$ ${B.melhorConv} DE BÔNUS`);
   rows+=li(`Maior VENDA DO MÊS (acima de R$ ${nf(B.maiorVendaMin)},00)`,`R$ ${B.maiorVenda} DE BÔNUS`);
 
-  const totAcess=acess.reduce((s,[id])=>s+(((M[id]||0)>0)?bCat(id):0),0);
+  const totAcess=acess.reduce((s,[id])=>s+(((M[id]||0)>0)?bCat(id):0),0) + (((M.prendedor||0)>0)?bCat('prendedor'):0);
   const total=B.sapHiper + totAcess + B.maiorMix + B.melhorConv + B.maiorVenda;
 
   const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Folha de Bônus · ${MES} ${ANO}</title>
@@ -5370,8 +5383,10 @@ async function gerarApresentacaoMetas() {
     }
 
     // 3 níveis para sapatos (META / SUPER META / HIPER META)
+    // Super tem campo próprio (cfg.supermetas); a ULTRAMETA fica reservada pro modo ultra.
     const sapMeta  = METAS.sapatos;
-    const sapSuper = ULTRAS.sapatos > 0 ? ULTRAS.sapatos : Math.round(sapMeta * 1.05);
+    const supSapCfg = (cfg.supermetas && cfg.supermetas.sapatos) || 0;
+    const sapSuper = supSapCfg > 0 ? supSapCfg : (ULTRAS.sapatos > 0 ? ULTRAS.sapatos : Math.round(sapMeta * 1.05));
     const hipSapCfg = (cfg.hipermetas && cfg.hipermetas.sapatos) || 0;
     const sapHiper = hipSapCfg > 0 ? hipSapCfg : sapSuper + Math.max(sapSuper - sapMeta, 25);
 
@@ -5388,14 +5403,15 @@ async function gerarApresentacaoMetas() {
       maiorVendaMin: cfgB.maiorVendaMin || 2000
     };
 
-    // Bônus por categoria (0 = sem bônus no mês); fallback: valor geral antigo
-    const bCat = id => (cfgB.cat && cfgB.cat[id]!==undefined) ? cfgB.cat[id] : BONUS.acessorio;
+    // Bônus por categoria (0 = sem bônus no mês); prendedor por padrão é junto com cintos (0)
+    const bCat = id => (cfgB.cat && cfgB.cat[id]!==undefined) ? cfgB.cat[id] : (id==='prendedor' ? 0 : BONUS.acessorio);
 
     const totalColetivo = BONUS.sapHiper  // Sapatos: vale o nível mais alto atingido (não soma os 3)
                         + (METAS.meias>0    ? bCat('meias')     : 0)
                         + (METAS.cintos>0   ? bCat('cintos')    : 0)
                         + (METAS.limpeza>0  ? bCat('limpeza')   : 0)
-                        + (METAS.carteiras>0? bCat('carteiras') : 0);
+                        + (METAS.carteiras>0? bCat('carteiras') : 0)
+                        + (METAS.prendedor>0? bCat('prendedor') : 0);
     const totalIndividual = BONUS.maiorMix + BONUS.melhorConv + BONUS.maiorVenda;
     const TOTAL_MAX = totalColetivo + totalIndividual;
 
@@ -5470,7 +5486,7 @@ async function gerarApresentacaoMetas() {
     strips(s);
     s.addText('METAS DE ACESSÓRIOS',{x:0.4,y:0.4,w:12.5,h:0.8,fontSize:40,bold:true,color:C.branco,fontFace:'Calibri'});
     // Subtítulo dinâmico: valor único quando todas as categorias têm o mesmo bônus
-    const _bvals=[...new Set(['meias','cintos','limpeza','carteiras'].filter(id=>METAS[id]>0).map(id=>bCat(id)).filter(v=>v>0))];
+    const _bvals=[...new Set(['meias','cintos','limpeza','carteiras','prendedor'].filter(id=>METAS[id]>0).map(id=>bCat(id)).filter(v=>v>0))];
     const _sub=_bvals.length===1?`BÔNUS R$ ${_bvals[0]},00 POR CATEGORIA BATIDA`:'BÔNUS POR CATEGORIA BATIDA';
     s.addText(`${MES} ${ANO}  •  ${_sub}`,{x:0.4,y:1.25,w:12,h:0.32,fontSize:12,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
 
@@ -5479,7 +5495,7 @@ async function gerarApresentacaoMetas() {
       {id:'cintos',   nome:'CINTOS',   icon:'👔', val:METAS.cintos,   unidade:'acessórios',  extra:null,        bonus:true, bval:bCat('cintos')},
       {id:'limpeza',  nome:'PRODUTOS', icon:'🧴', val:METAS.limpeza,  unidade:'produtos',    extra:'de limpeza',bonus:true, bval:bCat('limpeza')},
       {id:'carteiras',nome:'CARTEIRAS',icon:'👝', val:METAS.carteiras,unidade:'unidades',    extra:null,        bonus:true, bval:bCat('carteiras')},
-      {id:'prendedor',nome:'PRENDEDOR',icon:'📎', val:METAS.prendedor,unidade:'prendedores', extra:'item novo', bonus:false}
+      {id:'prendedor',nome:'PRENDEDOR',icon:'📎', val:METAS.prendedor,unidade:'prendedores', extra:'item novo', bonus:bCat('prendedor')>0, bval:bCat('prendedor')}
     ].filter(a => a.val > 0);
 
     if(acessCfg.length > 0){
@@ -5569,6 +5585,7 @@ async function gerarApresentacaoMetas() {
     if(METAS.cintos>0   && bCat('cintos')>0)   coletivo.push(['Meta de Cintos', bCat('cintos')]);
     if(METAS.limpeza>0  && bCat('limpeza')>0)  coletivo.push(['Meta de Produtos', bCat('limpeza')]);
     if(METAS.carteiras>0&& bCat('carteiras')>0)coletivo.push(['Meta de Carteiras', bCat('carteiras')]);
+    if(METAS.prendedor>0&& bCat('prendedor')>0)coletivo.push(['Meta de Prendedores', bCat('prendedor')]);
 
     const rowHC = (colLeft_h-1.0) / coletivo.length;
     coletivo.forEach((row,i) => {
