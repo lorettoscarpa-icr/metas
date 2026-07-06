@@ -1788,9 +1788,13 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
             <div style="font-weight:600;">📊 Fechamento do mês</div>
             <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Resultados, ranking e insights</div>
           </button>
-          <button onclick="fecharMenuPptx();gerarApresentacaoMetas()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+          <button onclick="fecharMenuPptx();gerarApresentacaoMetas()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
             <div style="font-weight:600;">🎯 Metas do mês</div>
             <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Bônus, desafios e regras</div>
+          </button>
+          <button onclick="fecharMenuPptx();gerarFolhaBonus()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight:600;">🧾 Folha de Bônus</div>
+            <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Lista impressa pra entregar às vendedoras</div>
           </button>
         </div>
       </div>
@@ -4500,7 +4504,7 @@ function atualizarAbaRetro(){
 async function abrirCfg(){
   if(usuario !== '__gestor__'){ toast('Apenas o gestor pode editar metas.'); return; }
   const cfg=cfgAtualCache();
-  const B=cfg.bonus||{sapMeta:100,sapSuper:150,sapHiper:200,acessorio:50,maiorMix:100,melhorConv:100,maiorVenda:100,maiorVendaMin:2000};
+  const B=Object.assign({sapMeta:100,sapSuper:150,sapHiper:200,acessorio:50,maiorMix:100,melhorConv:100,maiorVenda:100,maiorVendaMin:2000},cfg.bonus||{});
   const hipSap = (cfg.hipermetas && cfg.hipermetas.sapatos) || 0;
   document.getElementById('modal-mes-label').textContent=`metas para ${MESES_NOMES[mesAtivo-1]} ${anoAtivo} · dias úteis para cálculo de ritmo`;
   document.getElementById('cfg-dias').value=cfg.diasUteis||26;
@@ -4540,9 +4544,18 @@ async function abrirCfg(){
       </div>
     </div>
 
-    <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Acessórios</div>
-    <div class="mrow"><label>Bônus por categoria batida</label>
-      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-acessorio" value="${B.acessorio}" style="width:72px;"></div>
+    <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Acessórios · bônus por categoria <span style="color:var(--ou);">(0 = sem bônus no mês)</span></div>
+    <div class="mrow"><label>🧦 Meias</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-cat-meias" value="${(B.cat&&B.cat.meias!==undefined)?B.cat.meias:B.acessorio}" style="width:72px;"></div>
+    </div>
+    <div class="mrow"><label>👔 Cintos (+ prendedores)</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-cat-cintos" value="${(B.cat&&B.cat.cintos!==undefined)?B.cat.cintos:B.acessorio}" style="width:72px;"></div>
+    </div>
+    <div class="mrow"><label>🧴 Produtos de Limpeza</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-cat-limpeza" value="${(B.cat&&B.cat.limpeza!==undefined)?B.cat.limpeza:B.acessorio}" style="width:72px;"></div>
+    </div>
+    <div class="mrow"><label>👝 Carteiras</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-cat-carteiras" value="${(B.cat&&B.cat.carteiras!==undefined)?B.cat.carteiras:B.acessorio}" style="width:72px;"></div>
     </div>
 
     <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Bônus Individuais</div>
@@ -4580,7 +4593,13 @@ async function salvarCfg(){
   cfg.bonus.sapMeta       = parseInt(document.getElementById('cfg-bonus-sapMeta')?.value)||0;
   cfg.bonus.sapSuper      = parseInt(document.getElementById('cfg-bonus-sapSuper')?.value)||0;
   cfg.bonus.sapHiper      = parseInt(document.getElementById('cfg-bonus-sapHiper')?.value)||0;
-  cfg.bonus.acessorio     = parseInt(document.getElementById('cfg-bonus-acessorio')?.value)||0;
+  // Bônus por categoria de acessório (0 = sem bônus no mês)
+  cfg.bonus.cat = {
+    meias:     parseInt(document.getElementById('cfg-bonus-cat-meias')?.value)||0,
+    cintos:    parseInt(document.getElementById('cfg-bonus-cat-cintos')?.value)||0,
+    limpeza:   parseInt(document.getElementById('cfg-bonus-cat-limpeza')?.value)||0,
+    carteiras: parseInt(document.getElementById('cfg-bonus-cat-carteiras')?.value)||0
+  };
   cfg.bonus.maiorMix      = parseInt(document.getElementById('cfg-bonus-maiorMix')?.value)||0;
   cfg.bonus.melhorConv    = parseInt(document.getElementById('cfg-bonus-melhorConv')?.value)||0;
   cfg.bonus.maiorVenda    = parseInt(document.getElementById('cfg-bonus-maiorVenda')?.value)||0;
@@ -5229,6 +5248,89 @@ async function gerarApresentacaoMes() {
   }
 }
 
+// ══ FOLHA DE BÔNUS (impressa) ══
+// Gera a folha mensal de bônus no padrão da marca, lendo a config do mês ativo.
+// Abre a janela de impressão: dá pra imprimir direto ou salvar em PDF.
+function gerarFolhaBonus(){
+  const cfg = cfgAtualCache();
+  const MES = MESES_NOMES[mesAtivo-1].toUpperCase(), ANO = anoAtivo;
+  const M = cfg.metas||{}, U = cfg.ultrametas||{}, HIP = cfg.hipermetas||{};
+  const cfgB = cfg.bonus||{};
+  const B = {
+    sapMeta: cfgB.sapMeta||100, sapSuper: cfgB.sapSuper||150, sapHiper: cfgB.sapHiper||200,
+    acessorio: cfgB.acessorio||50, maiorMix: cfgB.maiorMix||100, melhorConv: cfgB.melhorConv||100,
+    maiorVenda: cfgB.maiorVenda||100, maiorVendaMin: cfgB.maiorVendaMin||2000
+  };
+  const nf = v=>(v||0).toLocaleString('pt-BR');
+  const sapMeta=M.sapatos||0, sapSuper=U.sapatos||0, sapHiper=HIP.sapatos||0;
+
+  const li = (t,b,destaque)=>`<div class="row${destaque?' hi':''}"><span>${t}</span><b>${b}</b></div>`;
+  let rows='';
+  rows+=`<div class="sec">SAPATOS · META COLETIVA</div>`;
+  rows+=li(`Meta do Mês — ${nf(sapMeta)} pares`,`R$ ${B.sapMeta} DE BÔNUS`);
+  if(sapSuper>0) rows+=li(`SUPER Meta — ${nf(sapSuper)} pares`,`R$ ${B.sapSuper} DE BÔNUS`);
+  if(sapHiper>0) rows+=li(`HIPER Meta — ${nf(sapHiper)} pares`,`R$ ${B.sapHiper} DE BÔNUS`,true);
+
+  rows+=`<div class="sec">ACESSÓRIOS · METAS COLETIVAS</div>`;
+  const bCat = id => (cfgB.cat && cfgB.cat[id]!==undefined) ? cfgB.cat[id] : B.acessorio;
+  const acess=[['meias','Meias','meias'],['cintos','Cintos','acessórios'],['limpeza','Produtos de Limpeza','und'],['carteiras','Carteiras','unidades']];
+  acess.forEach(([id,nome,und])=>{
+    if((M[id]||0)>0){
+      // Prendedor não tem bônus próprio: compõe a meta de cintos.
+      const extra=(id==='cintos'&&(M.prendedor||0)>0)?` + ${nf(M.prendedor)} prendedores`:'';
+      const bv=bCat(id);
+      rows+=li(`Meta de ${nome} — ${nf(M[id])} ${und}${extra}`, bv>0?`R$ ${bv} DE BÔNUS`:'SEM BÔNUS NESTE MÊS');
+      if((U[id]||0)>0) rows+=li(`SUPER Meta — ${nf(U[id])} ${und}`,'DESAFIO ⚡',true);
+    }
+  });
+
+  rows+=`<div class="sec">BÔNUS INDIVIDUAIS · VOCÊ CONQUISTA, VOCÊ RECEBE</div>`;
+  rows+=li('Maior VENDEDORA DE MIX',`R$ ${B.maiorMix} DE BÔNUS`);
+  rows+=li('Melhor CONVERSÃO DE MIX',`R$ ${B.melhorConv} DE BÔNUS`);
+  rows+=li(`Maior VENDA DO MÊS (acima de R$ ${nf(B.maiorVendaMin)},00)`,`R$ ${B.maiorVenda} DE BÔNUS`);
+
+  const totAcess=acess.reduce((s,[id])=>s+(((M[id]||0)>0)?bCat(id):0),0);
+  const total=B.sapHiper + totAcess + B.maiorMix + B.melhorConv + B.maiorVenda;
+
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Folha de Bônus · ${MES} ${ANO}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Barlow:wght@400;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    @page{size:A4;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    body{font-family:'Barlow',sans-serif;background:#1f3520;color:#f7f4ec;}
+    .page{width:210mm;min-height:297mm;padding:14mm 12mm;position:relative;border-top:4mm solid #c9a950;border-bottom:2mm solid #c9a950;}
+    .frame{border:1px solid #c9a950;padding:9mm 8mm 22mm;min-height:262mm;position:relative;}
+    .head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.2px solid #c9a950;padding-bottom:5mm;margin-bottom:6mm;}
+    h1{font-family:'Playfair Display',serif;font-size:27pt;font-weight:600;}
+    .mes{text-align:right;}
+    .mes b{display:block;color:#c9a950;font-size:13pt;letter-spacing:1px;}
+    .mes span{font-family:'DM Mono',monospace;font-size:8pt;color:#d9d4c4;letter-spacing:2px;}
+    .sec{color:#c9a950;font-weight:700;font-size:9.5pt;letter-spacing:1.5px;margin:6mm 0 2.5mm;}
+    .row{display:flex;justify-content:space-between;align-items:center;background:#2e4a30;padding:3.2mm 4mm;margin-bottom:1.8mm;font-size:10.5pt;}
+    .row b{color:#e8d48a;font-size:10pt;white-space:nowrap;margin-left:6mm;}
+    .row.hi{background:#c9a950;color:#1f3520;font-weight:700;}
+    .row.hi b{color:#1f3520;}
+    .total{background:#c9a950;color:#1f3520;text-align:center;padding:5mm;margin-top:7mm;}
+    .total small{display:block;font-weight:700;font-size:9.5pt;letter-spacing:2px;}
+    .total .v{font-family:'Playfair Display',serif;font-size:23pt;font-weight:700;margin-top:1.5mm;}
+    .ass{position:absolute;bottom:6mm;left:0;right:0;text-align:center;}
+    .ass .l{font-family:'Playfair Display',serif;color:#c9a950;font-size:12pt;}
+    .ass .s{font-family:'DM Mono',monospace;font-size:6.5pt;color:#d9d4c4;letter-spacing:2px;margin-top:1mm;}
+  </style></head><body>
+  <div class="page"><div class="frame">
+    <div class="head"><h1>Metas Mensais</h1><div class="mes"><b>${MES} ${ANO}</b><span>${cfg.diasUteis||26} DIAS ÚTEIS</span></div></div>
+    ${rows}
+    <div class="total"><small>TOTAL DE BÔNUS · COLETIVO + INDIVIDUAL</small><div class="v">R$ ${nf(total)},00</div></div>
+    <div class="ass"><div class="l">Loretto Scarpa</div><div class="s">EQUIPE DE VENDAS · ${ANO}</div></div>
+  </div></div>
+  <script>window.onload=()=>setTimeout(()=>window.print(),600);<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  if(!w){ toast('⚠ Libere pop-ups para gerar a folha.'); return; }
+  w.document.write(html); w.document.close();
+}
+
 // ══ MENU DROPDOWN: Fechamento vs Metas ══
 function toggleMenuPptx(){
   const m=document.getElementById('menu-pptx');
@@ -5286,11 +5388,14 @@ async function gerarApresentacaoMetas() {
       maiorVendaMin: cfgB.maiorVendaMin || 2000
     };
 
+    // Bônus por categoria (0 = sem bônus no mês); fallback: valor geral antigo
+    const bCat = id => (cfgB.cat && cfgB.cat[id]!==undefined) ? cfgB.cat[id] : BONUS.acessorio;
+
     const totalColetivo = BONUS.sapHiper  // Sapatos: vale o nível mais alto atingido (não soma os 3)
-                        + (METAS.meias>0    ? BONUS.acessorio : 0)
-                        + (METAS.cintos>0   ? BONUS.acessorio : 0)
-                        + (METAS.limpeza>0  ? BONUS.acessorio : 0)
-                        + (METAS.carteiras>0? BONUS.acessorio : 0);
+                        + (METAS.meias>0    ? bCat('meias')     : 0)
+                        + (METAS.cintos>0   ? bCat('cintos')    : 0)
+                        + (METAS.limpeza>0  ? bCat('limpeza')   : 0)
+                        + (METAS.carteiras>0? bCat('carteiras') : 0);
     const totalIndividual = BONUS.maiorMix + BONUS.melhorConv + BONUS.maiorVenda;
     const TOTAL_MAX = totalColetivo + totalIndividual;
 
@@ -5364,13 +5469,16 @@ async function gerarApresentacaoMetas() {
     s.background={color:C.verde};
     strips(s);
     s.addText('METAS DE ACESSÓRIOS',{x:0.4,y:0.4,w:12.5,h:0.8,fontSize:40,bold:true,color:C.branco,fontFace:'Calibri'});
-    s.addText(`${MES} ${ANO}  •  BÔNUS R$ ${BONUS.acessorio},00 POR CATEGORIA BATIDA`,{x:0.4,y:1.25,w:12,h:0.32,fontSize:12,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
+    // Subtítulo dinâmico: valor único quando todas as categorias têm o mesmo bônus
+    const _bvals=[...new Set(['meias','cintos','limpeza','carteiras'].filter(id=>METAS[id]>0).map(id=>bCat(id)).filter(v=>v>0))];
+    const _sub=_bvals.length===1?`BÔNUS R$ ${_bvals[0]},00 POR CATEGORIA BATIDA`:'BÔNUS POR CATEGORIA BATIDA';
+    s.addText(`${MES} ${ANO}  •  ${_sub}`,{x:0.4,y:1.25,w:12,h:0.32,fontSize:12,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
 
     const acessCfg = [
-      {id:'meias',    nome:'MEIAS',    icon:'🧦', val:METAS.meias,    unidade:'pares',       extra:null,        bonus:true},
-      {id:'cintos',   nome:'CINTOS',   icon:'👔', val:METAS.cintos,   unidade:'acessórios',  extra:null,        bonus:true},
-      {id:'limpeza',  nome:'PRODUTOS', icon:'🧴', val:METAS.limpeza,  unidade:'produtos',    extra:'de limpeza',bonus:true},
-      {id:'carteiras',nome:'CARTEIRAS',icon:'👝', val:METAS.carteiras,unidade:'unidades',    extra:null,        bonus:true},
+      {id:'meias',    nome:'MEIAS',    icon:'🧦', val:METAS.meias,    unidade:'pares',       extra:null,        bonus:true, bval:bCat('meias')},
+      {id:'cintos',   nome:'CINTOS',   icon:'👔', val:METAS.cintos,   unidade:'acessórios',  extra:null,        bonus:true, bval:bCat('cintos')},
+      {id:'limpeza',  nome:'PRODUTOS', icon:'🧴', val:METAS.limpeza,  unidade:'produtos',    extra:'de limpeza',bonus:true, bval:bCat('limpeza')},
+      {id:'carteiras',nome:'CARTEIRAS',icon:'👝', val:METAS.carteiras,unidade:'unidades',    extra:null,        bonus:true, bval:bCat('carteiras')},
       {id:'prendedor',nome:'PRENDEDOR',icon:'📎', val:METAS.prendedor,unidade:'prendedores', extra:'item novo', bonus:false}
     ].filter(a => a.val > 0);
 
@@ -5391,14 +5499,19 @@ async function gerarApresentacaoMetas() {
         s.addShape('line',{x:x+0.4,y:5.3,w:aW-0.8,h:0,line:{color:C.ouro,width:0.8}});
         if(a.bonus===false){
           s.addShape('rect',{x:x+0.15,y:5.5,w:aW-0.3,h:1.15,fill:{color:C.escuro},line:{color:C.ouro3,width:0.75}});
-          s.addText('SEM BÔNUS',{x,y:5.62,w:aW,h:0.26,fontSize:10,bold:true,color:C.ouro2,align:'center',charSpacing:2,fontFace:'Calibri'});
-          s.addText('meta de volume',{x,y:5.95,w:aW,h:0.5,fontSize:15,bold:true,color:C.branco,align:'center',valign:'middle',fontFace:'Calibri'});
-          s.addText('foco do mês',{x,y:6.5,w:aW,h:0.25,fontSize:9,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
-        } else {
+          s.addText('BÔNUS',{x,y:5.62,w:aW,h:0.26,fontSize:10,bold:true,color:C.ouro2,align:'center',charSpacing:2,fontFace:'Calibri'});
+          s.addText('junto com\nCINTOS',{x,y:5.88,w:aW,h:0.62,fontSize:13,bold:true,color:C.branco,align:'center',valign:'middle',fontFace:'Calibri'});
+          s.addText('compõe a meta de cintos',{x,y:6.55,w:aW,h:0.25,fontSize:8,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+        } else if((a.bval||0)>0){
           s.addShape('rect',{x:x+0.15,y:5.5,w:aW-0.3,h:1.15,fill:{color:C.ouro},line:{color:C.ouro2,width:0.5}});
           s.addText('BÔNUS',{x,y:5.55,w:aW,h:0.25,fontSize:10,bold:true,color:C.verde,align:'center',charSpacing:2,fontFace:'Calibri'});
-          s.addText(`R$ ${BONUS.acessorio}`,{x,y:5.85,w:aW,h:0.55,fontSize:30,bold:true,color:C.verde,align:'center',fontFace:'Calibri'});
+          s.addText(`R$ ${a.bval}`,{x,y:5.85,w:aW,h:0.55,fontSize:30,bold:true,color:C.verde,align:'center',fontFace:'Calibri'});
           s.addText('por categoria batida',{x,y:6.75,w:aW,h:0.25,fontSize:9,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+        } else {
+          s.addShape('rect',{x:x+0.15,y:5.5,w:aW-0.3,h:1.15,fill:{color:C.escuro},line:{color:C.ouro3,width:0.75}});
+          s.addText('SEM BÔNUS',{x,y:5.62,w:aW,h:0.26,fontSize:10,bold:true,color:C.ouro2,align:'center',charSpacing:2,fontFace:'Calibri'});
+          s.addText('neste mês',{x,y:5.95,w:aW,h:0.5,fontSize:15,bold:true,color:C.branco,align:'center',valign:'middle',fontFace:'Calibri'});
+          s.addText('meta de volume',{x,y:6.5,w:aW,h:0.25,fontSize:9,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
         }
       });
     } else {
@@ -5452,10 +5565,10 @@ async function gerarApresentacaoMetas() {
       [`Super Meta (${sapSuper}+)`, BONUS.sapSuper],
       [`Hiper Meta (${sapHiper}+)`, BONUS.sapHiper]
     ];
-    if(METAS.meias>0)    coletivo.push(['Meta de Meias', BONUS.acessorio]);
-    if(METAS.cintos>0)   coletivo.push(['Meta de Cintos', BONUS.acessorio]);
-    if(METAS.limpeza>0)  coletivo.push(['Meta de Produtos', BONUS.acessorio]);
-    if(METAS.carteiras>0)coletivo.push(['Meta de Carteiras', BONUS.acessorio]);
+    if(METAS.meias>0    && bCat('meias')>0)    coletivo.push(['Meta de Meias', bCat('meias')]);
+    if(METAS.cintos>0   && bCat('cintos')>0)   coletivo.push(['Meta de Cintos', bCat('cintos')]);
+    if(METAS.limpeza>0  && bCat('limpeza')>0)  coletivo.push(['Meta de Produtos', bCat('limpeza')]);
+    if(METAS.carteiras>0&& bCat('carteiras')>0)coletivo.push(['Meta de Carteiras', bCat('carteiras')]);
 
     const rowHC = (colLeft_h-1.0) / coletivo.length;
     coletivo.forEach((row,i) => {
