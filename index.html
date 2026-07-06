@@ -1716,6 +1716,17 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
   box-shadow:0 4px 16px rgba(26,46,14,.28);
 }
 #tela-dash.modo-ultra .cat-card-ultra{box-shadow:0 4px 22px rgba(26,46,14,.42);}
+
+/* ═══ Popup: mês fechado ═══ */
+#modal-mes-fechado{position:fixed;inset:0;background:rgba(10,18,8,.72);backdrop-filter:blur(3px);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;}
+#modal-mes-fechado.open{display:flex;}
+#modal-mes-fechado .mf-card{background:linear-gradient(160deg,var(--v1),var(--v0));border:1px solid var(--oud);max-width:360px;width:100%;padding:30px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);border-radius:6px;}
+#modal-mes-fechado .mf-ico{font-size:40px;margin-bottom:12px;}
+#modal-mes-fechado .mf-tit{font-family:'Playfair Display',serif;font-size:22px;color:var(--ou2);margin-bottom:12px;font-weight:700;}
+#modal-mes-fechado .mf-txt{font-size:14px;color:var(--cr2);line-height:1.6;margin-bottom:22px;}
+#modal-mes-fechado .mf-txt strong{color:var(--cr);}
+#modal-mes-fechado .mf-btn{background:var(--ou);color:var(--v0);border:none;padding:12px 34px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:12px;cursor:pointer;border-radius:3px;}
+#modal-mes-fechado .mf-btn:hover{background:var(--ou2);}
 </style>
 </style>
 </head>
@@ -2770,6 +2781,38 @@ function jaRegistrouHoje(){
   return hist.find(d=>d.data===dt)||null;
 }
 
+// Mês "fechado": a vendedora já registrou VENDAS em algum mês POSTERIOR.
+// Regra: assim que ela lança vendas no mês seguinte, os meses anteriores travam.
+async function mesFechadoPorPosterior(vend, ano, mes){
+  if(!vend || vend==='__gestor__') return false;
+  const hoje=new Date();
+  const anoReal=hoje.getFullYear(), mesReal=hoje.getMonth()+1;
+  let a=ano, m=mes;
+  for(let i=0;i<24;i++){
+    m++; if(m>12){m=1;a++;}
+    if(a>anoReal || (a===anoReal && m>mesReal)) break;   // não passa do mês real atual
+    let regs=[];
+    try{ regs = await getHistMes(vend, a, m) || []; }catch(e){ regs=[]; }
+    if(regs.some(r => !r.especial && CATS.some(c=>(r[c.id]||0)>0))) return true;
+  }
+  return false;
+}
+
+function mostrarMesFechado(){
+  const nomeMes = MESES_NOMES[mesAtivo-1];
+  const txt = `Você já registrou vendas no mês seguinte, então <strong>${nomeMes}</strong> já está fechado.<br><br>Registre as novas vendas no <strong>seu mês atual</strong>.`;
+  let ov=document.getElementById('modal-mes-fechado');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='modal-mes-fechado';
+    ov.innerHTML=`<div class="mf-card"><div class="mf-ico">🔒</div><div class="mf-tit">Mês fechado</div><div class="mf-txt">${txt}</div><button class="mf-btn" onclick="document.getElementById('modal-mes-fechado').classList.remove('open')">Entendi</button></div>`;
+    document.body.appendChild(ov);
+  } else {
+    ov.querySelector('.mf-txt').innerHTML=txt;
+  }
+  ov.classList.add('open');
+}
+
 async function registrarDia(){
   const dt = dataLancamento();
   const [dd,mm] = dt.split('/').map(Number);
@@ -2786,6 +2829,8 @@ async function registrarDia(){
     inicializarDataLancamento();
     return;
   }
+  // ── TRAVA: não registrar em mês já fechado (já lançou vendas em mês posterior) ──
+  if(await mesFechadoPorPosterior(usuario, anoAtivo, mesAtivo)){ mostrarMesFechado(); return; }
   const reg={data:dt};
   if(diaEsp){reg.especial=diaEsp;}
   else{
