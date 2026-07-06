@@ -1652,6 +1652,9 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
 .an-tbl td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--oud2);color:var(--cr);font-family:'DM Mono',monospace;}
 .an-tbl td:first-child{text-align:left;color:var(--cr2);letter-spacing:1px;text-transform:uppercase;font-size:11px;}
 .an-tbl tr:last-child td{border-bottom:none;}
+.an-tbl tfoot td{border-top:2px solid var(--oud);border-bottom:none;padding-top:13px;color:var(--ou2);font-weight:600;}
+.an-tbl tfoot td:first-child{color:var(--ou2);}
+.an-tbl tfoot tr.cmp td{border-top:none;padding-top:5px;}
 .an-up{color:#7fae4f;} .an-down{color:#c4663f;} .an-sembase{color:var(--cr3);font-size:10px;}
 .an-foot{font-size:10px;color:var(--cr3);letter-spacing:.5px;line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid var(--oud2);}
 .an-foot b{color:var(--cr2);}
@@ -1691,6 +1694,28 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
 .hist-cat-delta-key{font-size:8px;color:var(--cr3);letter-spacing:1.2px;text-transform:uppercase;margin-top:3px;}
 .hist-cat-delta-sep{width:1px;height:24px;background:currentColor;opacity:.25;}
 .hist-cat-delta.sem{color:var(--cr3);font-style:italic;font-weight:400;font-size:10px;background:transparent;border:none;padding:2px 0;display:block;text-align:center;}
+
+/* ═══ MODO ULTRA · painel dourado quando o "ultra ativa" está ligado ═══ */
+#tela-dash.modo-ultra{
+  background:
+    repeating-linear-gradient(45deg, rgba(26,46,14,.05) 0 1px, transparent 1px 7px),
+    linear-gradient(165deg,#d4b45a,#c9a950 55%,#b08840);
+  border-radius:8px;padding:10px;transition:background .5s ease;
+}
+#tela-dash.modo-ultra #cats-grid::before{
+  content:'⚡ MODO ULTRA · METAS TURBINADAS ⚡';
+  grid-column:1 / -1;display:block;text-align:center;
+  font-family:'Playfair Display',serif;font-weight:700;letter-spacing:1px;font-size:14px;
+  color:#ebd48a;background:linear-gradient(90deg,#1a2e0e,#283d1a);
+  border:1px solid rgba(26,46,14,.5);padding:11px;margin-bottom:8px;border-radius:4px;
+  box-shadow:0 0 24px rgba(212,180,90,.4);
+}
+#tela-dash.modo-ultra .cat-card{
+  background:linear-gradient(155deg,#283d1a,#1a2e0e);
+  border-color:rgba(26,46,14,.55);
+  box-shadow:0 4px 16px rgba(26,46,14,.28);
+}
+#tela-dash.modo-ultra .cat-card-ultra{box-shadow:0 4px 22px rgba(26,46,14,.42);}
 </style>
 </style>
 </head>
@@ -1777,7 +1802,7 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
       <div class="tabnav">
         <button class="tabnav-btn active" data-tab="painel" onclick="trocarTab('painel')">Painel</button>
         <button class="tabnav-btn" id="tab-btn-anual" data-tab="anual" onclick="trocarTab('anual')" style="display:none;">Histórico Anual</button>
-        <button class="tabnav-btn" id="tab-btn-retro" data-tab="historico" onclick="trocarTab('historico')" style="display:none;">Meu Retrospecto</button>
+        <button class="tabnav-btn" id="tab-btn-retro" data-tab="historico" onclick="trocarTab('historico')" style="display:none;">Minha Evolução</button>
       </div>
 
       <div class="tab-content" id="tab-painel">
@@ -2639,6 +2664,8 @@ function renderCats(ag,cfg,isG){
     diasPassados=diasUteis;
   }
   const diasRestantes=Math.max(diasUteis-diasPassados,1);
+  // Modo Ultra: tema dourado no painel inteiro quando o "ultra ativa" está ligado.
+  { const _td=document.getElementById('tela-dash'); if(_td) _td.classList.toggle('modo-ultra', !!cfg.ultraAtiva); }
   document.getElementById('cats-grid').innerHTML=CATS.map(cat=>{
     const a=ag[cat.id]||0,m=cfg.metas[cat.id]||0;
     const p=m>0?Math.min(a/m*100,100):0,ating=a>=m,falt=Math.max(m-a,0);
@@ -2651,13 +2678,29 @@ function renderCats(ag,cfg,isG){
         ?`<div class="cat-ritmo"><span class="cat-ritmo-info">Meta atingida!</span><span class="cat-ritmo-badge ok">✓ Meta</span></div>`
         :`<div class="cat-ritmo"><span class="cat-ritmo-info">Faltam <strong>${falt}</strong> · ${necessario}/dia</span><span class="cat-ritmo-badge ${noRitmo?'ok':'er'}">${noRitmo?'No ritmo':'⚠ Atrás'}</span></div>`;
     }
-    // Quando ultrameta ativa, substitui visualmente a meta normal
+    // Sapato persegue a HIPERMETA; ao ligar o "ultra ativa", o alvo vira a ultrameta.
+    const ehSapato=(cat.id==='sapatos');
+    const hipSap=(cfg.hipermetas&&cfg.hipermetas.sapatos)||0;
     const ultraAtiva=cfg.ultraAtiva||false;
     const um=(cfg.ultrametas&&cfg.ultrametas[cat.id])||0;
-    const usarUltra=ultraAtiva&&um>0;
+    const usarUltra=ultraAtiva&&um>0;                    // ultra ativa vale pra qualquer categoria (inclusive sapato)
+    const usarHiperSap=ehSapato&&hipSap>0&&!usarUltra;   // sapato fora do ultra mira a Hiper
 
     let metaAlvo,progPct,metaAting,metaFalt,metaTag,metaRitmoHtml,metaNumLabel;
-    if(usarUltra){
+    if(usarHiperSap){
+      metaAlvo=hipSap;
+      progPct=Math.min(a/hipSap*100,100);
+      metaAting=a>=hipSap;
+      metaFalt=Math.max(hipSap-a,0);
+      metaTag='Categoria principal';
+      metaNumLabel='de '+hipSap;
+      const hNec=(!metaAting&&diasRestantes>0)?(metaFalt/diasRestantes).toFixed(1):null;
+      const hAtual=diasPassados>0?(a/diasPassados).toFixed(1):'0';
+      const hNoR=hNec!==null&&parseFloat(hAtual)>=parseFloat(hNec);
+      metaRitmoHtml=metaAting
+        ?'<div class="cat-ritmo"><span class="cat-ritmo-info">Meta atingida!</span><span class="cat-ritmo-badge ok">✓ Meta</span></div>'
+        :'<div class="cat-ritmo"><span class="cat-ritmo-info">Faltam <strong>'+metaFalt+'</strong> · '+hNec+'/dia</span><span class="cat-ritmo-badge '+(hNoR?'ok':'er')+'">'+(hNoR?'No ritmo':'⚠ Atrás')+'</span></div>';
+    } else if(usarUltra){
       metaAlvo=um;
       progPct=Math.min(a/um*100,100);
       metaAting=a>=um;
@@ -4352,10 +4395,21 @@ async function renderHistoricoAnual(){
         : (d>=0 ? `<span class="an-up">▲ ${d}%</span>` : `<span class="an-down">▼ ${Math.abs(d)}%</span>`);
       return `<tr><td>${nome(m)}</td><td>${nfmt(a26)}</td><td>${base?nfmt(a25):'—'}</td><td>${dcell}</td></tr>`;
     }).join('');
+    const totFull26 = totalCheio.sap, tot25 = cmp25.sap, totCmp26 = cmp26.sap;
+    const gSap = tot25>0 ? Math.round((totCmp26-tot25)/tot25*100) : null;
+    const gCell = gSap===null ? '—' : (gSap>=0?`<span class="an-up">▲ ${gSap}%</span>`:`<span class="an-down">▼ ${Math.abs(gSap)}%</span>`);
+    const rotFechCurto = `${nome(fechados[0])}–${nome(fechados[fechados.length-1])}`;
+    const mesmoConjunto = compar.length === fechados.length;
+    const tfoot = mesmoConjunto
+      ? `<tfoot><tr class="an-ttl"><td>Total</td><td>${nfmt(totFull26)}</td><td>${nfmt(tot25)}</td><td>${gCell}</td></tr></tfoot>`
+      : `<tfoot>
+          <tr class="an-ttl"><td>Total · ${rotFechCurto}</td><td>${nfmt(totFull26)}</td><td>${nfmt(tot25)}</td><td>—</td></tr>
+          <tr class="an-ttl cmp"><td>Comparável · ${rotCmp}</td><td>${nfmt(totCmp26)}</td><td>${nfmt(tot25)}</td><td>${gCell}</td></tr>
+        </tfoot>`;
     const sec3 = `<div class="an-sec">
       <div class="an-sec-h">Sapatos mês a mês</div>
       <div class="an-sec-sub">${anoA} vs ${anoP}</div>
-      <table class="an-tbl"><thead><tr><th>Mês</th><th>${anoA}</th><th>${anoP}</th><th>Δ</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+      <table class="an-tbl"><thead><tr><th>Mês</th><th>${anoA}</th><th>${anoP}</th><th>Δ</th></tr></thead><tbody>${linhas}</tbody>${tfoot}</table></div>`;
 
     const foot = `<div class="an-foot">A base de <b>${anoP}</b> começa em fevereiro e não inclui <b>carteiras</b> nem <b>prendedor</b> — por isso a comparação usa Sapatos, Meias, Cintos, Limpeza e Conversão, no período <b>${rotCmp}</b>. O "Total do ano" mostra ${anoA} cheio (${rotFech}).</div>`;
 
@@ -4392,7 +4446,7 @@ function trocarTab(t){
   if(t === 'anual'){ renderHistoricoAnual(); }
 }
 
-// Mostra a aba "Meu Retrospecto" apenas para a vendedora logada (não o gestor)
+// Mostra a aba "Minha Evolução" apenas para a vendedora logada (não o gestor)
 // e somente quando há um mês fechado (o mês anterior ao corrente) para mostrar.
 function atualizarAbaRetro(){
   if(window.__retroAtualizarAba) window.__retroAtualizarAba();
@@ -4436,7 +4490,7 @@ async function abrirCfg(){
     </div>
     <div class="mrow"><label>Hiper Meta (qtd · bônus)</label>
       <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">
-        <input class="minp-n" type="number" min="0" id="cfg-hiper-sapatos" value="${hipSap}" style="width:72px;" title="Quantidade (pares). Deixe 0 para calcular automaticamente.">
+        <input class="minp-n" type="number" min="0" id="cfg-hiper-sapatos" value="${hipSap}" style="width:72px;" title="Quantidade (pares) — é o que a equipe persegue no dia a dia. Se 0, usa a meta base.">
         R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-sapHiper" value="${B.sapHiper}" style="width:72px;">
       </div>
     </div>
@@ -5268,10 +5322,11 @@ async function gerarApresentacaoMetas() {
     s.addText(`${MES} ${ANO}  •  BÔNUS R$ ${BONUS.acessorio},00 POR CATEGORIA BATIDA`,{x:0.4,y:1.25,w:12,h:0.32,fontSize:12,bold:true,color:C.ouro,charSpacing:3,fontFace:'Calibri'});
 
     const acessCfg = [
-      {id:'meias',    nome:'MEIAS',    icon:'🧦', val:METAS.meias,    unidade:'pares',      extra:null},
-      {id:'cintos',   nome:'CINTOS',   icon:'👔', val:METAS.cintos,   unidade:'acessórios', extra: METAS.prendedor>0 ? `+ ${METAS.prendedor} prendedores` : null},
-      {id:'limpeza',  nome:'PRODUTOS', icon:'🧴', val:METAS.limpeza,  unidade:'produtos',   extra:'de limpeza'},
-      {id:'carteiras',nome:'CARTEIRAS',icon:'👝', val:METAS.carteiras,unidade:'unidades',   extra:null}
+      {id:'meias',    nome:'MEIAS',    icon:'🧦', val:METAS.meias,    unidade:'pares',       extra:null,        bonus:true},
+      {id:'cintos',   nome:'CINTOS',   icon:'👔', val:METAS.cintos,   unidade:'acessórios',  extra:null,        bonus:true},
+      {id:'limpeza',  nome:'PRODUTOS', icon:'🧴', val:METAS.limpeza,  unidade:'produtos',    extra:'de limpeza',bonus:true},
+      {id:'carteiras',nome:'CARTEIRAS',icon:'👝', val:METAS.carteiras,unidade:'unidades',    extra:null,        bonus:true},
+      {id:'prendedor',nome:'PRENDEDOR',icon:'📎', val:METAS.prendedor,unidade:'prendedores', extra:'item novo', bonus:false}
     ].filter(a => a.val > 0);
 
     if(acessCfg.length > 0){
@@ -5289,10 +5344,17 @@ async function gerarApresentacaoMetas() {
           s.addText(a.extra,{x,y:4.85,w:aW,h:0.3,fontSize:11,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
         }
         s.addShape('line',{x:x+0.4,y:5.3,w:aW-0.8,h:0,line:{color:C.ouro,width:0.8}});
-        s.addShape('rect',{x:x+0.15,y:5.5,w:aW-0.3,h:1.15,fill:{color:C.ouro},line:{color:C.ouro2,width:0.5}});
-        s.addText('BÔNUS',{x,y:5.55,w:aW,h:0.25,fontSize:10,bold:true,color:C.verde,align:'center',charSpacing:2,fontFace:'Calibri'});
-        s.addText(`R$ ${BONUS.acessorio}`,{x,y:5.85,w:aW,h:0.55,fontSize:30,bold:true,color:C.verde,align:'center',fontFace:'Calibri'});
-        s.addText('por categoria batida',{x,y:6.75,w:aW,h:0.25,fontSize:9,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+        if(a.bonus===false){
+          s.addShape('rect',{x:x+0.15,y:5.5,w:aW-0.3,h:1.15,fill:{color:C.escuro},line:{color:C.ouro3,width:0.75}});
+          s.addText('SEM BÔNUS',{x,y:5.62,w:aW,h:0.26,fontSize:10,bold:true,color:C.ouro2,align:'center',charSpacing:2,fontFace:'Calibri'});
+          s.addText('meta de volume',{x,y:5.95,w:aW,h:0.5,fontSize:15,bold:true,color:C.branco,align:'center',valign:'middle',fontFace:'Calibri'});
+          s.addText('foco do mês',{x,y:6.5,w:aW,h:0.25,fontSize:9,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+        } else {
+          s.addShape('rect',{x:x+0.15,y:5.5,w:aW-0.3,h:1.15,fill:{color:C.ouro},line:{color:C.ouro2,width:0.5}});
+          s.addText('BÔNUS',{x,y:5.55,w:aW,h:0.25,fontSize:10,bold:true,color:C.verde,align:'center',charSpacing:2,fontFace:'Calibri'});
+          s.addText(`R$ ${BONUS.acessorio}`,{x,y:5.85,w:aW,h:0.55,fontSize:30,bold:true,color:C.verde,align:'center',fontFace:'Calibri'});
+          s.addText('por categoria batida',{x,y:6.75,w:aW,h:0.25,fontSize:9,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
+        }
       });
     } else {
       s.addText('Nenhuma meta de acessórios configurada para este mês.',{x:0.4,y:3.5,w:12.5,h:0.5,fontSize:16,italic:true,color:C.ouro2,align:'center',fontFace:'Calibri'});
@@ -5622,8 +5684,10 @@ renderSel();
 
   // ---------- flag de popup visto ----------
   function fk(vend,ano,mes){ return `${vend}_${ano}_${String(mes).padStart(2,'0')}`; }
-  async function jaViu(vend,ano,mes){ try{ const d=await db.collection('ls_retrospecto').doc(fk(vend,ano,mes)).get(); return d.exists && d.data().popupVisto===true; }catch(e){ return false; } }
-  async function marcarViu(vend,ano,mes){ try{ await db.collection('ls_retrospecto').doc(fk(vend,ano,mes)).set({popupVisto:true, em:new Date().toISOString()},{merge:true}); }catch(e){} }
+  // Trava do popup (V2): campo novo, começa vazio pra todas → o retrospecto do
+  // mês anterior reaparece uma vez no próximo registro, e daí segue automático.
+  async function jaViu(vend,ano,mes){ try{ const d=await db.collection('ls_retrospecto').doc(fk(vend,ano,mes)).get(); return d.exists && d.data().popupVistoV2===true; }catch(e){ return false; } }
+  async function marcarViu(vend,ano,mes){ try{ await db.collection('ls_retrospecto').doc(fk(vend,ano,mes)).set({popupVistoV2:true, em:new Date().toISOString()},{merge:true}); }catch(e){} }
 
   const ICO={ sapatos:'<svg viewBox="0 0 24 24"><path d="M2 17h18a2 2 0 0 0 2-2c0-1-1-2-3-2.5C16 12 14 9 13 8c-1 0-2 1-2 2v7"/><path d="M2 17v2h20"/></svg>',
     meias:'<svg viewBox="0 0 24 24"><path d="M9 2v8l-4 5a3 3 0 0 0 4 4l5-4h2V2z"/></svg>',
@@ -5791,11 +5855,11 @@ renderSel();
     const cr = (h25&&h25.sap>0)?Math.round((acc.sapatos-h25.sap)/h25.sap*100):null;
     const fr = cr!==null && cr>0 ? `Você cresceu <b>+${cr}% vs ${MESES_NOMES[mes-1].toLowerCase()}/2025</b>. Tem um relatório completo te esperando.` : `Sua análise completa do mês está pronta. Veja seus destaques e onde evoluir.`;
     ov.innerHTML=`<div class="pcard"><button class="pclose" onclick="document.getElementById('rt-pop').classList.remove('open')">×</button>
-      <div class="pselo">★ Retrospecto Mensal</div>
+      <div class="pselo">★ Minha Evolução</div>
       <div class="ptit">Veja como foi o<br>seu <b>${MESES_NOMES[mes-1].toLowerCase()}</b>, ${nomeDe(vend)}</div>
       <div class="pmes">${MESES_NOMES[mes-1]} / ${ano} · fechado</div>
       <div class="pfr">${fr}</div>
-      <button class="pcta" id="rt-pop-cta">Ver minha avaliação completa →</button>
+      <button class="pcta" id="rt-pop-cta">Ver minha evolução completa →</button>
       <button class="pskip" onclick="document.getElementById('rt-pop').classList.remove('open')">Depois eu vejo</button></div>`;
     ov.classList.add('open');
     document.getElementById('rt-pop-cta').onclick=function(){ ov.classList.remove('open'); if(window.__retroAbrirAba) window.__retroAbrirAba(ano,mes); };
@@ -5812,7 +5876,7 @@ renderSel();
     if(!rep){ rep=document.createElement('div'); rep.id='rt-report'; const tab=document.getElementById('tab-historico'); if(tab) tab.appendChild(rep); }
     const ano=anoAtivo, mes=mesAtivo;
     if(!dispVis(vend)){
-      rep.innerHTML='<div style="padding:36px 20px;text-align:center;color:#a9ad97;font-family:Barlow,sans-serif">O retrospecto de <b style="color:#e0c878">'+MESES_NOMES[mes-1]+'</b> fica disponível quando o mês fechar.</div>';
+      rep.innerHTML='<div style="padding:36px 20px;text-align:center;color:#a9ad97;font-family:Barlow,sans-serif">A sua evolução de <b style="color:#e0c878">'+MESES_NOMES[mes-1]+'</b> fica disponível quando o mês fechar.</div>';
       return;
     }
     rep.innerHTML='<div style="padding:34px;text-align:center;color:#a9ad97;font-family:monospace;font-size:12px">Carregando…</div>';
