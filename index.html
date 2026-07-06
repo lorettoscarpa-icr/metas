@@ -4504,6 +4504,10 @@ function atualizarAbaRetro(){
 async function abrirCfg(){
   if(usuario !== '__gestor__'){ toast('Apenas o gestor pode editar metas.'); return; }
   const cfg=cfgAtualCache();
+// Sincroniza o campo de meta de sapatos (lista) com o da escada (bônus) — mesma fonte de verdade
+window.syncSapMeta = function(v){ const e=document.getElementById('cfg-meta-sap-escada'); if(e&&e.value!==v) e.value=v; };
+window.syncSapMetaTop = function(v){ const e=document.getElementById('cfg-sapatos'); if(e&&e.value!==v) e.value=v; };
+
   const B=Object.assign({sapMeta:100,sapSuper:150,sapHiper:200,acessorio:50,maiorMix:100,melhorConv:100,maiorVenda:100,maiorVendaMin:2000},cfg.bonus||{});
   const hipSap = (cfg.hipermetas && cfg.hipermetas.sapatos) || 0;
   const supSap = (cfg.supermetas && cfg.supermetas.sapatos) || 0;
@@ -4524,16 +4528,19 @@ async function abrirCfg(){
   `+CATS.map(c=>`<div class="mrow">
     <label>${c.svg} ${c.nome}</label>
     <div style="display:flex;gap:8px;align-items:center;">
-      <input class="minp-n" type="number" min="0" id="cfg-${c.id}" value="${cfg.metas[c.id]||0}" style="width:72px;" title="Meta normal">
+      <input class="minp-n" type="number" min="0" id="cfg-${c.id}" value="${cfg.metas[c.id]||0}" style="width:72px;" title="Meta normal"${c.id==='sapatos'?' oninput="syncSapMeta(this.value)"':''}>
       <span style="color:var(--ou);font-size:14px;">⚡</span>
       <input class="minp-n" type="number" min="0" id="cfg-ultra-${c.id}" value="${(cfg.ultrametas&&cfg.ultrametas[c.id])||0}" style="width:72px;border-color:rgba(212,180,90,.4);" title="Ultrameta">
     </div>
   </div>`).join('')+`
     <div style="font-size:9px;color:var(--ou);letter-spacing:1.5px;text-transform:uppercase;padding:14px 0 6px;border-bottom:1px solid rgba(201,168,76,.3);margin:14px 0 4px;">💰 Bônus da Apresentação de Metas</div>
 
-    <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Sapatos · 3 níveis</div>
-    <div class="mrow"><label>Bônus Meta</label>
-      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-sapMeta" value="${B.sapMeta}" style="width:72px;"></div>
+    <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Sapatos · Escada de metas <span style="color:var(--ou);">(a HIPER é o alvo diário das vendedoras · ⚡ ultrameta fica pro modo ultra)</span></div>
+    <div class="mrow"><label>Meta (qtd · bônus)</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">
+        <input class="minp-n" type="number" min="0" id="cfg-meta-sap-escada" value="${cfg.metas.sapatos||0}" style="width:72px;" title="Quantidade (pares) da meta base — sincronizada com o campo Sapatos da lista acima." oninput="syncSapMetaTop(this.value)">
+        R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-sapMeta" value="${B.sapMeta}" style="width:72px;">
+      </div>
     </div>
     <div class="mrow"><label>Super Meta (qtd · bônus)</label>
       <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">
