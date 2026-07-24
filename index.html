@@ -2161,6 +2161,7 @@ let individualCelebradaSap=false; // meta individual de sapatos da vendedora log
 let melhorMixLider=null;     // ID da vendedora líder do Melhor Mix de Acessórios
 let melhorConvLider=null;    // ID da vendedora líder da Melhor Conversão de Mix
 let anoAtivo=new Date().getFullYear(), mesAtivo=new Date().getMonth()+1;
+let abaAtiva='painel';       // aba atual do painel ('painel' | 'historico' | 'anual')
 CATS.forEach(c=>diaInp[c.id]=0);
 
 // Cache local (populado pelos listeners Firestore)
