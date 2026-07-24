@@ -1695,12 +1695,20 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
 .hist-cat-delta-sep{width:1px;height:24px;background:currentColor;opacity:.25;}
 .hist-cat-delta.sem{color:var(--cr3);font-style:italic;font-weight:400;font-size:10px;background:transparent;border:none;padding:2px 0;display:block;text-align:center;}
 
-/* ═══ MODO ULTRA · painel dourado quando o "ultra ativa" está ligado ═══ */
+/* ═══ MODO ULTRA · só o FUNDO fica dourado; o painel mantém as cores normais ═══ */
 #tela-dash.modo-ultra{
   background:
     repeating-linear-gradient(45deg, rgba(26,46,14,.05) 0 1px, transparent 1px 7px),
     linear-gradient(165deg,#d4b45a,#c9a950 55%,#b08840);
   border-radius:8px;padding:10px;transition:background .5s ease;
+}
+/* O conteúdo do painel volta ao fundo normal (opaco) — assim o dourado aparece
+   apenas ao redor/atrás do painel, e nada por dentro muda de cor. */
+#tela-dash.modo-ultra main{
+  background:var(--v0);
+  border-radius:8px;
+  box-shadow:0 8px 30px rgba(26,46,14,.28);
+  transition:background .5s ease;
 }
 #tela-dash.modo-ultra #cats-grid::before{
   content:'⚡ MODO ULTRA · METAS TURBINADAS ⚡';
@@ -1710,12 +1718,6 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
   border:1px solid rgba(26,46,14,.5);padding:11px;margin-bottom:8px;border-radius:4px;
   box-shadow:0 0 24px rgba(212,180,90,.4);
 }
-#tela-dash.modo-ultra .cat-card{
-  background:linear-gradient(155deg,#283d1a,#1a2e0e);
-  border-color:rgba(26,46,14,.55);
-  box-shadow:0 4px 16px rgba(26,46,14,.28);
-}
-#tela-dash.modo-ultra .cat-card-ultra{box-shadow:0 4px 22px rgba(26,46,14,.42);}
 
 /* ═══ Popup: mês fechado ═══ */
 #modal-mes-fechado{position:fixed;inset:0;background:rgba(10,18,8,.72);backdrop-filter:blur(3px);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;}
@@ -2679,7 +2681,7 @@ function renderCats(ag,cfg,isG){
     diasPassados=diasUteis;
   }
   const diasRestantes=Math.max(diasUteis-diasPassados,1);
-  // Modo Ultra: tema dourado no painel inteiro quando o "ultra ativa" está ligado.
+  // Modo Ultra: fundo dourado atrás do painel quando o "ultra ativa" está ligado (o painel mantém as cores normais).
   { const _td=document.getElementById('tela-dash'); if(_td) _td.classList.toggle('modo-ultra', !!cfg.ultraAtiva); }
   document.getElementById('cats-grid').innerHTML=CATS.map(cat=>{
     const a=ag[cat.id]||0,m=cfg.metas[cat.id]||0;
