@@ -1656,6 +1656,9 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
 .an-tbl tfoot td:first-child{color:var(--ou2);}
 .an-tbl tfoot tr.cmp td{border-top:none;padding-top:5px;}
 .an-up{color:#7fae4f;} .an-down{color:#c4663f;} .an-sembase{color:var(--cr3);font-size:10px;}
+/* Coluna Diferença: pares em destaque + % como apoio */
+.an-dif-un{font-size:9px;letter-spacing:1px;text-transform:uppercase;opacity:.7;}
+.an-dif-pct{display:block;font-size:10px;opacity:.7;margin-top:2px;}
 .an-foot{font-size:10px;color:var(--cr3);letter-spacing:.5px;line-height:1.6;margin-top:16px;padding-top:12px;border-top:1px solid var(--oud2);}
 .an-foot b{color:var(--cr2);}
 #hist-sec select{background:var(--bg2);color:var(--cr);border:1px solid var(--oud);padding:6px 10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-family:inherit;cursor:pointer;}
@@ -4438,32 +4441,46 @@ async function renderHistoricoAnual(){
     }
 
     // ── Seção 3: sapatos mês a mês ──
+    // Ordem das colunas: ano anterior → ano atual → diferença em pares (a mais / a menos).
+    const difCell = (vAnt, vAtu)=>{
+      if(!(vAnt > 0)) return `<span class="an-sembase">sem base ${String(anoP).slice(2)}</span>`;
+      const dp  = vAtu - vAnt;
+      const pct = Math.round(dp/vAnt*100);
+      const cls = dp >= 0 ? 'an-up' : 'an-down';
+      const sig = dp >= 0 ? '+' : '−';
+      return `<span class="${cls}">${dp>=0?'▲':'▼'} ${sig}${nfmt(Math.abs(dp))} <span class="an-dif-un">pares</span></span>`
+           + `<span class="an-dif-pct ${cls}">${sig}${Math.abs(pct)}%</span>`;
+    };
     const linhas = fechados.map(m=>{
       const a26 = histAggMes(alvo, anoA, m).sap;
       const a25 = histAggMes(alvo, anoP, m).sap;
-      const base = a25 > 0;
-      const d = base ? Math.round((a26-a25)/a25*100) : null;
-      const dcell = d===null ? `<span class="an-sembase">sem base ${String(anoP).slice(2)}</span>`
-        : (d>=0 ? `<span class="an-up">▲ ${d}%</span>` : `<span class="an-down">▼ ${Math.abs(d)}%</span>`);
-      return `<tr><td>${nome(m)}</td><td>${nfmt(a26)}</td><td>${base?nfmt(a25):'—'}</td><td>${dcell}</td></tr>`;
+      return `<tr><td>${nome(m)}</td><td>${a25>0?nfmt(a25):'—'}</td><td>${nfmt(a26)}</td><td>${difCell(a25,a26)}</td></tr>`;
     }).join('');
     const totFull26 = totalCheio.sap, tot25 = cmp25.sap, totCmp26 = cmp26.sap;
-    const gSap = tot25>0 ? Math.round((totCmp26-tot25)/tot25*100) : null;
-    const gCell = gSap===null ? '—' : (gSap>=0?`<span class="an-up">▲ ${gSap}%</span>`:`<span class="an-down">▼ ${Math.abs(gSap)}%</span>`);
     const rotFechCurto = `${nome(fechados[0])}–${nome(fechados[fechados.length-1])}`;
     const mesmoConjunto = compar.length === fechados.length;
     const tfoot = mesmoConjunto
-      ? `<tfoot><tr class="an-ttl"><td>Total</td><td>${nfmt(totFull26)}</td><td>${nfmt(tot25)}</td><td>${gCell}</td></tr></tfoot>`
+      ? `<tfoot><tr class="an-ttl"><td>Total</td><td>${nfmt(tot25)}</td><td>${nfmt(totFull26)}</td><td>${difCell(tot25, totFull26)}</td></tr></tfoot>`
       : `<tfoot>
-          <tr class="an-ttl"><td>Total · ${rotFechCurto}</td><td>${nfmt(totFull26)}</td><td>${nfmt(tot25)}</td><td>—</td></tr>
-          <tr class="an-ttl cmp"><td>Comparável · ${rotCmp}</td><td>${nfmt(totCmp26)}</td><td>${nfmt(tot25)}</td><td>${gCell}</td></tr>
+          <tr class="an-ttl"><td>Total · ${rotFechCurto}</td><td>${nfmt(tot25)}</td><td>${nfmt(totFull26)}</td><td>—</td></tr>
+          <tr class="an-ttl cmp"><td>Comparável · ${rotCmp}</td><td>${nfmt(tot25)}</td><td>${nfmt(totCmp26)}</td><td>${difCell(tot25, totCmp26)}</td></tr>
         </tfoot>`;
     const sec3 = `<div class="an-sec">
       <div class="an-sec-h">Sapatos mês a mês</div>
-      <div class="an-sec-sub">${anoA} vs ${anoP}</div>
-      <table class="an-tbl"><thead><tr><th>Mês</th><th>${anoA}</th><th>${anoP}</th><th>Δ</th></tr></thead><tbody>${linhas}</tbody>${tfoot}</table></div>`;
+      <div class="an-sec-sub">${anoP} vs ${anoA}</div>
+      <table class="an-tbl"><thead><tr><th>Mês</th><th>${anoP}</th><th>${anoA}</th><th>Diferença</th></tr></thead><tbody>${linhas}</tbody>${tfoot}</table></div>`;
 
-    const foot = `<div class="an-foot">A base de <b>${anoP}</b> começa em fevereiro e não inclui <b>carteiras</b> nem <b>prendedor</b> — por isso a comparação usa Sapatos, Meias, Cintos, Limpeza e Conversão, no período <b>${rotCmp}</b>. O "Total do ano" mostra ${anoA} cheio (${rotFech}).</div>`;
+    // Vendedoras arquivadas entram no total da equipe mesmo sem aparecer no seletor.
+    // Explicita em quais meses elas contribuíram, pra o total não parecer "faltando gente".
+    let notaArq = '';
+    if(anualVendSel === '__equipe__'){
+      const partes = ARQUIVADAS.map(n=>{
+        const ms = fechados.filter(m => (histDadosCache[n]?.[keyMes(anoA,m)]||[]).some(r=>!r.especial));
+        return ms.length ? `<b>${n}</b> (${ms.map(nome).join(', ')})` : null;
+      }).filter(Boolean);
+      if(partes.length) notaArq = ` O total da equipe já inclui as vendas de ${partes.join(' e ')}, que não aparece no seletor por não estar mais na equipe.`;
+    }
+    const foot = `<div class="an-foot">A base de <b>${anoP}</b> começa em fevereiro e não inclui <b>carteiras</b> nem <b>prendedor</b> — por isso a comparação usa Sapatos, Meias, Cintos, Limpeza e Conversão, no período <b>${rotCmp}</b>. O "Total do ano" mostra ${anoA} cheio (${rotFech}).${notaArq}</div>`;
 
     body.innerHTML = sec1 + sec2 + sec3 + foot;
   } finally {
