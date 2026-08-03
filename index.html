@@ -1588,7 +1588,10 @@ svg{display:inline-block;vertical-align:middle;}
 .mi-titulo{font-family:'Playfair Display',serif;font-size:19px;color:var(--ou2);letter-spacing:.5px;line-height:1.2;}
 .mi-subtitulo{font-size:11px;color:var(--cr3);letter-spacing:.5px;margin-top:4px;}
 .mi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-@media(max-width:640px){.mi-grid{grid-template-columns:repeat(2,1fr);}}
+.mi-grid.cols-5{grid-template-columns:repeat(5,1fr);}
+@media(max-width:980px){.mi-grid.cols-5{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:640px){.mi-grid,.mi-grid.cols-5{grid-template-columns:repeat(2,1fr);}
+  .mi-cell.mi-conv{grid-column:1/-1;}}
 .mi-cell{background:var(--bg2);border:1px solid var(--oud2);padding:14px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:170px;justify-content:center;}
 .mi-cell .cat-ritmo{width:100%;margin-top:4px;padding-top:8px;border-top:1px solid var(--oud2);display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
 .mi-cell .cat-ritmo-info{font-size:10px;color:var(--cr3);}
@@ -1628,6 +1631,11 @@ body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
 
 .mi-cell.sem{opacity:.55;}
 .mi-cell.sem .mi-cell-status{font-size:10px;color:var(--cr3);font-style:italic;}
+
+/* ── Célula de conversão do mix (última da grade) ── */
+.mi-cell.mi-conv{background:linear-gradient(180deg,rgba(201,168,76,.05),rgba(255,255,255,.02));border-color:var(--oud);}
+.mi-conv-nota{font-size:9px;letter-spacing:.6px;color:var(--cr3);opacity:.75;line-height:1.3;}
+body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
 
 /* ── Tab Navigation ── */
 .tabnav{display:flex;gap:4px;border-bottom:1px solid var(--oud2);margin-bottom:24px;}
@@ -3331,6 +3339,68 @@ function renderMetasIndividuais(){
     </div>`;
   }
 
+  // ── Célula de conversão do mix de acessórios (acessórios por 100 sapatos) ──
+  // Mesma leitura das outras células — "Você" x "Meta" —, só que em % e a meta
+  // é a conversão do mesmo mês do ano anterior. Entra depois de Limpeza.
+  const SVG_CONV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>';
+
+  function celulaConv(d){
+    // Sem sapatos vendidos no mês: conversão não é calculável, esconde a célula.
+    if(d.atuSap === 0) return '';
+    const atu = Math.round((d.atuMei + d.atuAce + d.atuLim) / d.atuSap * 100);
+    const iconHtml = `<div class="mi-cell-icon">${SVG_CONV}</div>`;
+
+    // Sem base do ano anterior — só mostra a conversão atual
+    if(d.antSap === 0){
+      return `<div class="mi-cell mi-conv sem">
+        ${iconHtml}
+        <div class="mi-cell-nome">Conversão</div>
+        <div class="mi-pair">
+          <div class="mi-blk"><div class="mi-lbl">Você</div><div class="mi-val feito">${atu}%</div></div>
+        </div>
+        <div class="mi-cell-status">sem base ${anoAtivo-1}</div>
+      </div>`;
+    }
+
+    const ant = Math.round((d.antMei + d.antAce + d.antLim) / d.antSap * 100);
+
+    // Já superou a conversão do ano passado
+    if(atu > ant){
+      return `<div class="mi-cell mi-conv superada">
+        ${iconHtml}
+        <div class="mi-cell-nome">Conversão</div>
+        <div class="mi-pair">
+          <div class="mi-blk"><div class="mi-lbl">Você</div><div class="mi-val feito superada">${atu}%</div></div>
+          <div class="mi-arrow">→</div>
+          <div class="mi-blk"><div class="mi-lbl">Meta</div><div class="mi-val meta">${ant}%</div></div>
+        </div>
+        <div class="mi-bar"><div class="mi-bar-f superada" style="width:100%"></div></div>
+        <div class="mi-foot">
+          <span class="mi-foot-falta superada">✓ Superada · +${atu-ant} pts</span>
+        </div>
+        <div class="mi-conv-nota">acessórios a cada 100 sapatos</div>
+      </div>`;
+    }
+
+    // Ainda falta superar (empate também precisa de +1 pt pra virar)
+    const faltaPts = ant - atu + 1;
+    const pctFeito = ant > 0 ? Math.round((atu/ant)*100) : 0;
+    return `<div class="mi-cell mi-conv pendente">
+      ${iconHtml}
+      <div class="mi-cell-nome">Conversão</div>
+      <div class="mi-pair">
+        <div class="mi-blk"><div class="mi-lbl">Você</div><div class="mi-val feito">${atu}%</div></div>
+        <div class="mi-arrow">→</div>
+        <div class="mi-blk"><div class="mi-lbl">Meta</div><div class="mi-val meta">${ant}%</div></div>
+      </div>
+      <div class="mi-bar"><div class="mi-bar-f" style="width:${Math.min(100,pctFeito)}%"></div></div>
+      <div class="mi-foot">
+        <span class="mi-foot-falta">Faltam +${faltaPts} pts</span>
+      </div>
+      <div class="mi-conv-nota">acessórios a cada 100 sapatos</div>
+    </div>`;
+  }
+
   // Ícones extraídos do array CATS (mesmos da aba Metas Individuais)
   const ICONS = Object.fromEntries(CATS.map(c=>[c.id, c.svg]));
 
@@ -3339,16 +3409,18 @@ function renderMetasIndividuais(){
   function bloco(titulo, sub, modo){
     const d = coletaDados(modo);
     if(d.antSap===0 && d.antMei===0 && d.antAce===0 && d.antLim===0) return '';
+    const convHtml = celulaConv(d);
     return `<div class="mi-card">
       <div class="mi-header">
         <div class="mi-titulo">${titulo}</div>
         <div class="mi-subtitulo">${sub}</div>
       </div>
-      <div class="mi-grid">
+      <div class="mi-grid ${convHtml?'cols-5':'cols-4'}">
         ${celula('Sapatos', ICONS.sapatos, d.atuSap, d.antSap)}
         ${celula('Meias', ICONS.meias, d.atuMei, d.antMei)}
         ${celula('Cintos', ICONS.cintos, d.atuAce, d.antAce)}
         ${celula('Limpeza', ICONS.limpeza, d.atuLim, d.antLim)}
+        ${convHtml}
       </div>
     </div>`;
   }
@@ -3999,40 +4071,8 @@ function renderConversao(){
     // Nomes encurtados pra caber no layout de 5 colunas
     const NOMES_CURTOS={meias:'Meias',cintos:'Cintos',carteiras:'Carteiras',limpeza:'Limpeza',prendedor:'Prendedor'};
 
-    // ── Card extra: Conversão geral 2025 → 2026 (mesmo mês, ano passado vs agora) ──
-    const _totAcess = ACESS.reduce((s,c)=>s+(vd[c.id]||0),0);
-    const _convAgora = sapatos>0 ? (_totAcess/sapatos*100) : null;
-    const _h25 = (HIST_2025[usuario]||{})[mesAtivo];
-    let cardYoY='';
-    if(_convAgora!==null){
-      const svgYoY='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>';
-      if(_h25 && _h25.sap>0){
-        const _acess25=(_h25.ace||0)+(_h25.mei||0)+(_h25.lim||0);
-        const _conv25=_acess25/_h25.sap*100;
-        const _delta=Math.round(_convAgora)-Math.round(_conv25);
-        const _st=_delta>0?'acima':_delta<0?'abaixo':'media';
-        const _lbl=_delta>0?`▲ +${_delta} pts`:_delta<0?`▼ ${_delta} pts`:'✓ igual';
-        cardYoY=`<div class="conv-item st-${_st}">
-          <div class="ci-header">
-            <div class="ci-nome">${svgYoY} vs 2025</div>
-            <div class="ci-indicador ${_st}"></div>
-          </div>
-          <div class="ci-pct ${_st}">${Math.round(_convAgora)}%</div>
-          <div class="ci-sub">2025: ${Math.round(_conv25)}% · agora ${Math.round(_convAgora)}%</div>
-          <div class="ci-meta-linha"><strong class="${_st}">${_lbl}</strong><span>vs ano passado</span></div>
-        </div>`;
-      } else {
-        cardYoY=`<div class="conv-item">
-          <div class="ci-header">
-            <div class="ci-nome">${svgYoY} vs 2025</div>
-            <div class="ci-indicador sem"></div>
-          </div>
-          <div class="ci-pct">${Math.round(_convAgora)}%</div>
-          <div class="ci-sub">conversão geral</div>
-          <div class="ci-meta-linha"><span>sem base 2025</span></div>
-        </div>`;
-      }
-    }
+    // Obs.: o card "vs 2025" (conversão geral do ano passado vs agora) foi movido
+    // pro topo do painel, dentro do card de Metas Individuais (renderMetasIndividuais).
 
     indBody.innerHTML=`<div class="conv-itens">
       ${ACESS.map(cat=>{
@@ -4064,7 +4104,6 @@ function renderConversao(){
           ${rodape}
         </div>`;
       }).join('')}
-      ${cardYoY}
     </div>`;
   }
 
