@@ -1606,6 +1606,11 @@ svg{display:inline-block;vertical-align:middle;}
 .mi-sel-chip.on{border-color:var(--ou);color:var(--ou2);background:rgba(201,168,76,.08);font-weight:600;}
 body.light-mode .mi-sel-chip{color:rgba(14,26,8,.7);}
 body.light-mode .mi-sel-chip.on{color:#1a2e0e;}
+/* O verde de "superada" (#9fd49f) some no fundo creme — no claro usa o mesmo
+   verde escuro que o resto do modo claro já usa pra status positivo. */
+body.light-mode .mi-val.feito.superada{color:#2e6e2e;}
+body.light-mode .mi-foot-falta.superada{color:#2e6e2e;}
+body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6e2e);}
 
 /* "Você → Meta" lado a lado */
 .mi-pair{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;width:100%;}
