@@ -1888,7 +1888,7 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
     <div id="conteudo-principal">
       <div class="tabnav">
         <button class="tabnav-btn active" data-tab="painel" onclick="trocarTab('painel')">Painel</button>
-        <button class="tabnav-btn" id="tab-btn-bonus" data-tab="bonus" onclick="trocarTab('bonus')" style="display:none;">Meu Bônus</button>
+        <button class="tabnav-btn" id="tab-btn-bonus" data-tab="bonus" onclick="trocarTab('bonus')" style="display:none;">Bônus Mensal</button>
         <button class="tabnav-btn" id="tab-btn-anual" data-tab="anual" onclick="trocarTab('anual')" style="display:none;">Histórico Anual</button>
         <button class="tabnav-btn" id="tab-btn-retro" data-tab="historico" onclick="trocarTab('historico')" style="display:none;">Minha Evolução</button>
       </div>
@@ -3771,6 +3771,21 @@ function renderBonusVendedora(){
       bateu?`${nf(feito)} de ${nf(alvo)} — batida`
            :`${nf(feito)} de ${nf(alvo)} · faltam ${nf(alvo-feito)}`, val);
   });
+
+  // Extra por bater TODAS as ultrametas ⚡ — mesma regra da folha e da Lista
+  const ultraTodas=cfgB.ultraTodas||0;
+  if(ultraTodas>0 && cfg.ultraAtiva){
+    const U=cfg.ultrametas||{};
+    const ativas=CATS.filter(c=>(U[c.id]||0)>0);
+    if(ativas.length){
+      const faltou=ativas.filter(c=>(ag[c.id]||0)<U[c.id]);
+      eq+=linha(!faltou.length?'ok':(faltou.length===1?'perto':'aberto'),
+        `Todas as ultrametas ⚡ · equipe`,
+        !faltou.length ? `As ${ativas.length} batidas`
+                       : `${ativas.length-faltou.length} de ${ativas.length} · falta ${faltou.map(c=>c.nome).join(', ')}`,
+        ultraTodas);
+    }
+  }
 
   const g3=garantido-g1-g2, j3=emJogo-j1-j2;  // subtotal do bloco 3
 
