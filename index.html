@@ -1612,6 +1612,53 @@ body.light-mode .mi-val.feito.superada{color:#2e6e2e;}
 body.light-mode .mi-foot-falta.superada{color:#2e6e2e;}
 body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6e2e);}
 
+/* ── Card "Seus bônus" · placar do que as metas valem (só vendedora) ── */
+.bn-card{background:linear-gradient(135deg,rgba(201,168,76,.06),rgba(201,168,76,.02));border:1px solid var(--oud);padding:18px 18px 14px;margin-bottom:18px;position:relative;}
+.bn-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--ou);}
+.bn-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+.bn-tit{font-family:'Playfair Display',serif;font-size:19px;color:var(--ou2);letter-spacing:.5px;line-height:1.2;}
+.bn-sub{font-size:11px;color:var(--cr3);letter-spacing:.5px;margin-top:4px;}
+.bn-tot{display:flex;gap:8px;}
+.bn-tot-blk{display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding:8px 14px;border:1px solid var(--oud2);background:rgba(255,255,255,.025);min-width:110px;}
+.bn-tot-blk.ok{border-color:rgba(78,158,78,.45);background:rgba(78,158,78,.06);}
+.bn-tot-lbl{font-size:8px;letter-spacing:1.8px;text-transform:uppercase;color:var(--cr3);}
+.bn-tot-val{font-family:'Cormorant Garamond',serif;font-size:24px;line-height:1;color:var(--ou2);}
+.bn-tot-blk.ok .bn-tot-val{color:#9fd49f;}
+
+.bn-grupo{margin-top:22px;}
+.bn-grupo-tit{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ou2);
+  padding-bottom:7px;border-bottom:1px solid var(--oud);}
+.bn-grupo-res{font-size:9px;letter-spacing:1px;color:var(--cr3);text-transform:none;white-space:nowrap;}
+.bn-grupo-sub{font-size:11px;color:var(--cr3);padding:8px 2px 2px;line-height:1.5;}
+.bn-linha{display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--oud2);}
+.bn-linha:last-child{border-bottom:none;}
+.bn-ico{font-size:12px;line-height:1;text-align:center;color:var(--cr3);}
+.bn-nome{font-size:12.5px;color:var(--cr);letter-spacing:.3px;}
+.bn-sit{font-size:11px;color:var(--cr3);margin-top:3px;}
+.bn-val{font-family:'Cormorant Garamond',serif;font-size:19px;line-height:1;color:var(--ou2);white-space:nowrap;}
+.bn-val em{font-style:normal;font-size:11px;color:var(--cr3);}
+.bn-linha.ok .bn-ico,.bn-linha.ok .bn-val{color:#9fd49f;}
+.bn-linha.ok .bn-sit{color:#8fc98f;}
+.bn-linha.lidera .bn-ico,.bn-linha.lidera .bn-sit{color:var(--ou2);}
+.bn-linha.perto .bn-ico{color:var(--ou);}
+.bn-linha.aberto{opacity:.6;}
+
+/* No creme, o verde claro some — mesmo verde escuro do resto do modo claro */
+body.light-mode .bn-tot-blk.ok .bn-tot-val,
+body.light-mode .bn-linha.ok .bn-ico,
+body.light-mode .bn-linha.ok .bn-val,
+body.light-mode .bn-linha.ok .bn-sit{color:#2e6e2e;}
+
+@media(max-width:640px){
+  .bn-head{flex-direction:column;gap:12px;}
+  .bn-tot{width:100%;}
+  .bn-tot-blk{flex:1;min-width:0;}
+  .bn-linha{grid-template-columns:18px 1fr auto;gap:9px;}
+  .bn-nome{font-size:12px;}
+  .bn-val{font-size:17px;}
+}
+
 /* "Você → Meta" lado a lado */
 .mi-pair{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;width:100%;}
 .mi-blk{display:flex;flex-direction:column;align-items:center;line-height:1;}
@@ -1802,10 +1849,8 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
       <div id="wrap-gerar-pptx" style="display:none;position:relative;">
         <button class="bsm" id="btn-gerar-pptx" style="background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.5);color:var(--ou);" onclick="event.stopPropagation();toggleMenuPptx()">📊 Gerar Apresentação ▾</button>
         <div id="menu-pptx" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--bgd,#1a1f1a);border:1px solid rgba(201,168,76,.5);border-radius:8px;min-width:260px;z-index:1000;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden;">
-          <button onclick="fecharMenuPptx();gerarApresentacaoMes()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
-            <div style="font-weight:600;">📊 Fechamento do mês</div>
-            <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Resultados, ranking e insights</div>
-          </button>
+          <!-- Ordem do mês: os dois de abertura primeiro, os dois de fechamento depois -->
+          <div style="padding:9px 14px 6px;font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:var(--ou,#c9a84c);background:rgba(201,168,76,.07);border-bottom:1px solid rgba(201,168,76,.2);">Início do Mês</div>
           <button onclick="fecharMenuPptx();gerarApresentacaoMetas()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
             <div style="font-weight:600;">🎯 Metas do mês</div>
             <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Bônus, desafios e regras</div>
@@ -1813,6 +1858,15 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
           <button onclick="fecharMenuPptx();gerarFolhaBonus()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
             <div style="font-weight:600;">🧾 Folha de Bônus</div>
             <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Lista impressa pra entregar às vendedoras</div>
+          </button>
+          <div style="padding:9px 14px 6px;font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:var(--ou,#c9a84c);background:rgba(201,168,76,.07);border-top:1px solid rgba(201,168,76,.2);border-bottom:1px solid rgba(201,168,76,.2);">Fechamento do Mês</div>
+          <button onclick="fecharMenuPptx();gerarApresentacaoMes()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight:600;">📊 Fechamento do mês</div>
+            <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Resultados, ranking e insights</div>
+          </button>
+          <button onclick="fecharMenuPptx();gerarListaBonus()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight:600;">💰 Lista de Bônus</div>
+            <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Quem ganhou e quanto pagar — pro financeiro</div>
           </button>
         </div>
       </div>
@@ -1834,6 +1888,7 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
     <div id="conteudo-principal">
       <div class="tabnav">
         <button class="tabnav-btn active" data-tab="painel" onclick="trocarTab('painel')">Painel</button>
+        <button class="tabnav-btn" id="tab-btn-bonus" data-tab="bonus" onclick="trocarTab('bonus')" style="display:none;">Meu Bônus</button>
         <button class="tabnav-btn" id="tab-btn-anual" data-tab="anual" onclick="trocarTab('anual')" style="display:none;">Histórico Anual</button>
         <button class="tabnav-btn" id="tab-btn-retro" data-tab="historico" onclick="trocarTab('historico')" style="display:none;">Minha Evolução</button>
       </div>
@@ -1955,6 +2010,10 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
         <div id="conv-comp-body"></div>
       </div>
       </div><!-- /tab-painel -->
+
+      <div class="tab-content" id="tab-bonus" style="display:none;">
+        <div id="bonus-card"></div>
+      </div><!-- /tab-bonus -->
 
       <div class="tab-content" id="tab-historico" style="display:none;">
       <div id="hist-sec">
@@ -2081,18 +2140,43 @@ const CATS=[
 const ACESS = CATS.filter(c=>c.acess);
 const ARQUIVADAS = ['Joice'];
 
-// ══ COMPETIÇÕES DE "MAIOR CONVERSÃO" POR ITEM DO MIX ══
-// Disputas individuais que o gestor liga/desliga por mês no modal de Metas.
-// `cats` são as categorias somadas na conta da conversão (item ÷ sapatos).
-// Valor 0 em cfg.bonus.convComp[id] = sem competição naquele mês.
-const CONV_COMP = [
+// ══ COMPETIÇÕES POR ITEM DO MIX ══
+// Grupos de categorias usados nas duas disputas individuais que o gestor liga
+// ou desliga por mês no modal de Metas:
+//   · maior CONVERSÃO — taxa (itens do grupo ÷ sapatos)   → cfg.bonus.convComp
+//   · maior VENDEDORA — volume (unidades vendidas no grupo) → cfg.bonus.volComp
+// Valor 0 em qualquer uma delas = sem competição naquele mês.
+const COMP_ITENS = [
   {id:'meias',           label:'Meias',              rotulo:'MEIAS',              icone:'🧦', cats:['meias']},
   {id:'cintosCarteiras', label:'Cintos + Carteiras', rotulo:'CINTOS + CARTEIRAS', icone:'👔', cats:['cintos','carteiras']},
   {id:'limpeza',         label:'Produtos de Limpeza',rotulo:'PRODUTOS',           icone:'🧴', cats:['limpeza']},
   {id:'prendedor',       label:'Prendedores',        rotulo:'PRENDEDORES',        icone:'📎', cats:['prendedor']}
 ];
-// Lê o valor configurado de uma competição (0 = desligada).
+// Lê o valor configurado de cada competição (0 = desligada).
 function bConvComp(cfgB,id){ return (cfgB && cfgB.convComp && cfgB.convComp[id]) || 0; }
+function bVolComp(cfgB,id){ return (cfgB && cfgB.volComp && cfgB.volComp[id]) || 0; }
+
+// Ranking por volume (unidades) num grupo de categorias, da maior pra menor.
+function rankVolGrupo(pv,cats){
+  return VENDEDORAS.map(v=>({id:v.id, val:cats.reduce((s,c)=>s+((pv[v.id]||{})[c]||0),0)}))
+                   .sort((a,b)=>b.val-a.val);
+}
+
+// Conversão (itens ÷ sapatos × 100) de uma vendedora num grupo de categorias.
+// null quando ela não vendeu sapato no mês — sem denominador não há conversão.
+function convGrupo(acc,cats){
+  const sap=(acc&&acc.sapatos)||0;
+  if(!sap) return null;
+  return cats.reduce((s,id)=>s+((acc&&acc[id])||0),0)/sap*100;
+}
+
+// Ranking de conversão num grupo de categorias, da maior pra menor.
+// Quem não vendeu sapato fica de fora (não é zero, é indefinido).
+function rankConvGrupo(pv,cats){
+  return VENDEDORAS.map(v=>({id:v.id, pct:convGrupo(pv[v.id],cats)}))
+                   .filter(x=>x.pct!==null)
+                   .sort((a,b)=>b.pct-a.pct);
+}
 // Bônus das metas individuais batidas (superar o próprio mês do ano anterior).
 function bMetaInd(cfgB){
   const m = (cfgB && cfgB.metaInd) || {};
@@ -2195,7 +2279,7 @@ let individualCelebradaSap=false; // meta individual de sapatos da vendedora log
 let melhorMixLider=null;     // ID da vendedora líder do Melhor Mix de Acessórios
 let melhorConvLider=null;    // ID da vendedora líder da Melhor Conversão de Mix
 let anoAtivo=new Date().getFullYear(), mesAtivo=new Date().getMonth()+1;
-let abaAtiva='painel';       // aba atual do painel ('painel' | 'historico' | 'anual')
+let abaAtiva='painel';       // aba atual ('painel' | 'bonus' | 'historico' | 'anual')
 CATS.forEach(c=>diaInp[c.id]=0);
 
 // Cache local (populado pelos listeners Firestore)
@@ -2682,7 +2766,7 @@ function render(){
   renderCards(ag,cfg);renderCats(ag,cfg,isG);
   document.getElementById('bloco-reg').style.display=isG?'none':'block';
   if(!isG){renderReg(ag,cfg);renderHist();}
-  renderMetasIndividuais();renderDestaques();renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();atualizarResumoHistInline();
+  renderMetasIndividuais();renderBonusVendedora();renderDestaques();renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();atualizarResumoHistInline();
 }
 
 function renderCards(ag,cfg){
@@ -3496,6 +3580,226 @@ function renderMetasIndividuais(){
   }
 
   card.innerHTML = `<div class="mi-selbar">${chipsHtml}</div>${blocosHtml}`;
+}
+
+// ══ CARD "SEUS BÔNUS" · só pra vendedora ══
+// A folha impressa é a tabela de preços; aqui é o placar. Cada linha lê a mesma
+// config que a folha e a apresentação usam, e mostra o estado agora:
+//   ok     — já garantido (meta batida)
+//   lidera — na sua mão, mas ainda pode virar (disputas)
+//   perto  — falta pouco
+//   aberto — o resto
+// Bônus com valor 0 não gera linha, igual à folha.
+function renderBonusVendedora(){
+  const card=document.getElementById('bonus-card');
+  const btn=document.getElementById('tab-btn-bonus');
+  if(!card) return;
+  card.innerHTML='';
+  // A aba só existe pra vendedora e num mês que já começou
+  const some=()=>{
+    if(btn) btn.style.display='none';
+    if(abaAtiva==='bonus') trocarTab('painel');
+  };
+  if(usuario==='__gestor__' || mesFuturo()){ some(); return; }
+
+  const cfg=cfgAtualCache(), cfgB=cfg.bonus||{};
+  const M=cfg.metas||{}, HIP=cfg.hipermetas||{}, SUP=cfg.supermetas||{};
+  const pv=accPorV(), ag=accGlobal(), eu=pv[usuario]||{};
+  const MI=bMetaInd(cfgB);
+  const bCat=id=>(cfgB.cat&&cfgB.cat[id]!==undefined)?cfgB.cat[id]:(id==='prendedor'?0:(cfgB.acessorio||0));
+  const nf=v=>(v||0).toLocaleString('pt-BR');
+  const ord=n=>n+'º';
+
+  let garantido=0, emJogo=0, liderando=0, nLinhas=0;
+  function linha(st,nome,situacao,valor,valorHtml){
+    if(st==='ok') garantido+=valor; else emJogo+=valor;
+    if(st==='lidera') liderando++;
+    nLinhas++;
+    const ico={ok:'✓',lidera:'🏆',perto:'▲',aberto:'○'}[st];
+    return `<div class="bn-linha ${st}">
+      <div class="bn-ico">${ico}</div>
+      <div class="bn-txt"><div class="bn-nome">${nome}</div><div class="bn-sit">${situacao}</div></div>
+      <div class="bn-val">${valorHtml||('R$ '+nf(valor))}</div>
+    </div>`;
+  }
+
+  // ─── 1. Depende de você ─── metas que ela bate sozinha
+  let ind='';
+
+  // Metas individuais: superar o próprio mês do ano passado
+  const h25=(HIST_2025[usuario]||{})[mesAtivo];
+  const metasInd = h25 ? [
+    {nome:'Sapatos', atu:eu.sapatos||0, alvo:h25.sap||0},
+    {nome:'Meias',   atu:eu.meias||0,   alvo:h25.mei||0},
+    {nome:'Cintos',  atu:(eu.cintos||0)+(eu.carteiras||0)+(eu.prendedor||0), alvo:h25.ace||0},
+    {nome:'Limpeza', atu:eu.limpeza||0, alvo:h25.lim||0}
+  ].filter(m=>m.alvo>0) : [];
+
+  if(MI.porMeta>0){
+    metasInd.forEach(m=>{
+      const bateu=m.atu>m.alvo, pct=Math.round(m.atu/m.alvo*100);
+      ind+=linha(bateu?'ok':(pct>=80?'perto':'aberto'),
+        `${m.nome} · superar ${m.alvo}`,
+        bateu?`Você fez ${m.atu} — ${m.atu-m.alvo} acima`
+             :`Você fez ${m.atu} · faltam ${m.alvo-m.atu+1}`,
+        MI.porMeta);
+    });
+  }
+  if(MI.todas>0 && metasInd.length){
+    const batidas=metasInd.filter(m=>m.atu>m.alvo).length, total=metasInd.length;
+    const todas=batidas===total;
+    ind+=linha(todas?'ok':(batidas>=total-1?'perto':'aberto'),
+      'Bater todas as suas metas',
+      todas?`As ${total} superadas`:`${batidas} de ${total} superadas`,
+      MI.todas);
+  }
+
+  const g1=garantido, j1=emJogo, n1=nLinhas;  // fecha o subtotal do bloco 1
+
+  // ─── 2. Ranking individual ─── disputas: dependem também das colegas
+  let rank='';
+
+  // Empate em disputa divide o bônus — a linha mostra a cota, não o cheio.
+  const cotaEmpate=(vals,valor)=>{
+    const n=vals.filter(v=>v===vals[0]).length;
+    return {n, valor: n>1 ? Math.round(valor*100/n)/100 : valor};
+  };
+
+  // Volume — o mix inteiro e as competições por item
+  function linhaVol(nome,cats,valor,unidade){
+    const r=rankVolGrupo(pv,cats);
+    const i=r.findIndex(x=>x.id===usuario);
+    if(i<0) return linha('aberto',nome,'Sem registro no mês',valor);
+    const gap=r[0].val-r[i].val;
+    if(i===0){
+      const e=cotaEmpate(r.map(x=>x.val),valor);
+      return linha('lidera',nome, e.n>1
+        ? `Empatada em 1º com ${r[i].val} ${unidade} · dividido entre ${e.n}`
+        : `Você lidera com ${r[i].val} ${unidade}`, e.valor);
+    }
+    return linha(gap<=5?'perto':'aberto',nome,
+      `Você está em ${ord(i+1)} com ${r[i].val} ${unidade} · faltam ${gap}`,valor);
+  }
+  if((cfgB.maiorMix||0)>0)
+    rank+=linhaVol('Maior vendedora de mix',ACESS.map(c=>c.id),cfgB.maiorMix,'acessórios');
+  COMP_ITENS.forEach(cc=>{
+    const v=bVolComp(cfgB,cc.id);
+    if(v>0) rank+=linhaVol(`Maior vendedora de ${cc.label.toLowerCase()}`,cc.cats,v,'un');
+  });
+
+  // Conversão — a geral e as competições ligadas no mês
+  function linhaConv(nome,cats,valor){
+    const r=rankConvGrupo(pv,cats);
+    const i=r.findIndex(x=>x.id===usuario);
+    if(i<0) return linha('aberto',nome,'Sem sapatos registrados no mês',valor);
+    const minha=Math.round(r[i].pct), gap=Math.round(r[0].pct)-minha;
+    if(i===0){
+      const e=cotaEmpate(r.map(x=>x.pct),valor);
+      return linha('lidera',nome, e.n>1
+        ? `Empatada em 1º com ${minha}% · dividido entre ${e.n}`
+        : `Você lidera com ${minha}%`, e.valor);
+    }
+    return linha(gap<=5?'perto':'aberto',nome,
+      `Você está em ${ord(i+1)} com ${minha}% · faltam ${gap} pts`,valor);
+  }
+  if((cfgB.melhorConv||0)>0) rank+=linhaConv('Melhor conversão de mix',ACESS.map(c=>c.id),cfgB.melhorConv);
+  COMP_ITENS.forEach(cc=>{
+    const v=bConvComp(cfgB,cc.id);
+    if(v>0) rank+=linhaConv(`Maior conversão de ${cc.label.toLowerCase()}`,cc.cats,v);
+  });
+
+  // Maior venda do mês
+  if((cfgB.maiorVenda||0)>0){
+    // Só venda acima do mínimo vale o bônus — é a regra da folha. Sem esse filtro
+    // o painel dizia "você lidera" pra quem tinha só vendas abaixo do corte.
+    const minVenda=cfgB.maiorVendaMin||0;
+    const maiorDe=id=>{
+      const reg=cacheHist[keyMV(id,anoAtivo,mesAtivo)];
+      const validas=((reg&&reg.vendas)||[]).filter(s=>s.valor>=minVenda).map(s=>s.valor);
+      return validas.length?Math.max(...validas):0;
+    };
+    const todas=VENDEDORAS.map(v=>maiorDe(v.id)).sort((a,b)=>b-a);
+    const minha=maiorDe(usuario), maxGeral=todas[0]||0;
+    let st,sit,val=cfgB.maiorVenda;
+    if(minha>0 && minha>=maxGeral){
+      const e=cotaEmpate(todas,cfgB.maiorVenda); val=e.valor;
+      st='lidera';
+      sit=e.n>1 ? `Empatada em 1º com R$ ${nf(minha)} · dividido entre ${e.n}`
+                : `Você lidera com R$ ${nf(minha)}`;
+    }
+    else if(minha>0){ st='aberto'; sit=`Sua maior: R$ ${nf(minha)} · a líder tem R$ ${nf(maxGeral)}`; }
+    else { st='aberto'; sit=`Nenhuma venda acima de R$ ${nf(cfgB.maiorVendaMin||0)} registrada`; }
+    rank+=linha(st,'Maior venda do mês',sit,val);
+  }
+
+  const g2=garantido-g1, j2=emJogo-j1, n2=nLinhas-n1;  // fecha o subtotal do bloco 2
+
+  // ─── 3. Metas da equipe ─── coletivas: dependem das quatro juntas
+  let eq='';
+
+  // Escada de sapatos: vale o nível mais alto atingido, então o que está em jogo
+  // é só a diferença entre o nível já batido e o teto.
+  const niveis=[
+    {n:'Meta',       q:M.sapatos||0,   v:cfgB.sapMeta||0},
+    {n:'Super Meta', q:SUP.sapatos||0, v:cfgB.sapSuper||0},
+    {n:'Hiper Meta', q:HIP.sapatos||0, v:cfgB.sapHiper||0}
+  ].filter(x=>x.q>0&&x.v>0);
+  if(niveis.length){
+    const feito=ag.sapatos||0;
+    const batidos=niveis.filter(x=>feito>=x.q);
+    const jaVale=batidos.length?Math.max(...batidos.map(x=>x.v)):0;
+    const teto=Math.max(...niveis.map(x=>x.v));
+    const proximo=niveis.find(x=>feito<x.q);
+    garantido+=jaVale; emJogo+=Math.max(0,teto-jaVale);
+    const st=jaVale>0?'ok':'aberto';
+    eq+=`<div class="bn-linha ${st}">
+      <div class="bn-ico">${jaVale>0?'✓':'○'}</div>
+      <div class="bn-txt"><div class="bn-nome">Sapatos · escada da equipe</div>
+        <div class="bn-sit">${proximo
+          ? `Equipe em ${nf(feito)} pares · faltam ${nf(proximo.q-feito)} pra ${proximo.n} (R$ ${nf(proximo.v)})`
+          : `Equipe em ${nf(feito)} pares · todos os níveis batidos`}</div></div>
+      <div class="bn-val">R$ ${nf(jaVale>0?jaVale:teto)}${(jaVale>0&&teto>jaVale)?` <em>de ${nf(teto)}</em>`:''}</div>
+    </div>`;
+  }
+
+  // Metas de acessórios da equipe
+  ACESS.forEach(c=>{
+    const alvo=M[c.id]||0, val=bCat(c.id);
+    if(alvo<=0||val<=0) return;
+    const feito=ag[c.id]||0, bateu=feito>=alvo, pct=Math.round(feito/alvo*100);
+    eq+=linha(bateu?'ok':(pct>=80?'perto':'aberto'), `${c.nome} · equipe`,
+      bateu?`${nf(feito)} de ${nf(alvo)} — batida`
+           :`${nf(feito)} de ${nf(alvo)} · faltam ${nf(alvo-feito)}`, val);
+  });
+
+  const g3=garantido-g1-g2, j3=emJogo-j1-j2;  // subtotal do bloco 3
+
+  if(!ind && !rank && !eq){ some(); return; }
+  if(btn) btn.style.display='';
+
+  // Resumo do bloco. No ranking não existe "garantido" — disputa vira até o fim
+  // do mês —, então ali o número útil é quantas ela está segurando agora.
+  const grupo=(tit,sub,html,res)=>html?`<div class="bn-grupo">
+    <div class="bn-grupo-tit"><span>${tit}</span><span class="bn-grupo-res">${res}</span></div>
+    <div class="bn-grupo-sub">${sub}</div>${html}</div>`:'';
+  const resVal=(g,j)=>`R$ ${nf(g)} garantido · R$ ${nf(j)} em jogo`;
+
+  card.innerHTML=`<div class="bn-card">
+    <div class="bn-head">
+      <div>
+        <div class="bn-tit">Seus bônus de ${MESES_NOMES[mesAtivo-1]}</div>
+        <div class="bn-sub">o que você já garantiu e o que ainda está em jogo</div>
+      </div>
+      <div class="bn-tot">
+        <div class="bn-tot-blk ${garantido>0?'ok':''}"><span class="bn-tot-lbl">Garantido</span><span class="bn-tot-val">R$ ${nf(garantido)}</span></div>
+        <div class="bn-tot-blk"><span class="bn-tot-lbl">Em jogo</span><span class="bn-tot-val">R$ ${nf(emJogo)}</span></div>
+      </div>
+    </div>
+    ${grupo('Depende de Você','metas que você bate sozinha — batida, ninguém tira',ind,resVal(g1,j1))}
+    ${grupo('Ranking Individual','disputas com a equipe — vale quem estiver na frente quando o mês fechar',
+      rank,`${liderando} de ${n2} na sua mão · R$ ${nf(j2)} em disputa`)}
+    ${grupo('Metas da Equipe','as quatro juntas — o seu esforço conta, mas não decide sozinho',eq,resVal(g3,j3))}
+  </div>`;
 }
 
 function renderDestaques(){
@@ -4677,8 +4981,13 @@ window.syncSapMetaTop = function(v){ const e=document.getElementById('cfg-sapato
     <div style="font-size:9px;color:var(--cr3);letter-spacing:.5px;text-transform:none;padding:0 0 6px;">por meta batida · extra se bater todas</div>
 
     <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Maior conversão por item · competição do mês <span style="color:var(--ou);">(0 = sem competição)</span></div>
-    ${CONV_COMP.map(cc=>`<div class="mrow"><label>${cc.icone} Maior conversão de ${cc.label}</label>
+    ${COMP_ITENS.map(cc=>`<div class="mrow"><label>${cc.icone} Maior conversão de ${cc.label}</label>
       <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-conv-${cc.id}" value="${bConvComp(cfg.bonus,cc.id)}" style="width:72px;" title="Bônus pra quem tiver a maior conversão de ${cc.label} no mês"></div>
+    </div>`).join('')}
+
+    <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Maior vendedora por item · competição do mês <span style="color:var(--ou);">(volume · 0 = sem competição)</span></div>
+    ${COMP_ITENS.map(cc=>`<div class="mrow"><label>${cc.icone} Maior vendedora de ${cc.label}</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-vol-${cc.id}" value="${bVolComp(cfg.bonus,cc.id)}" style="width:72px;" title="Bônus pra quem vender MAIS unidades de ${cc.label} no mês (volume, não taxa)"></div>
     </div>`).join('')}
   `;
   document.getElementById('modal').classList.add('open');
@@ -4722,10 +5031,13 @@ async function salvarCfg(){
     porMeta: parseInt(document.getElementById('cfg-bonus-metaInd-porMeta')?.value)||0,
     todas:   parseInt(document.getElementById('cfg-bonus-metaInd-todas')?.value)||0
   };
-  // Competições de maior conversão por item do mix (0 = sem competição no mês)
+  // Competições por item do mix — conversão (taxa) e vendedora (volume).
+  // 0 = sem competição no mês.
   cfg.bonus.convComp = {};
-  CONV_COMP.forEach(cc=>{
+  cfg.bonus.volComp = {};
+  COMP_ITENS.forEach(cc=>{
     cfg.bonus.convComp[cc.id] = parseInt(document.getElementById('cfg-bonus-conv-'+cc.id)?.value)||0;
+    cfg.bonus.volComp[cc.id]  = parseInt(document.getElementById('cfg-bonus-vol-'+cc.id)?.value)||0;
   });
   loading(true);await saveCfgMes(anoAtivo,mesAtivo,cfg);loading(false);
   fecharCfg();render();toast(`✓ Metas de ${MESES_NOMES[mesAtivo-1]} atualizadas!`);
@@ -5371,6 +5683,131 @@ async function gerarApresentacaoMes() {
   }
 }
 
+// ══ APURAÇÃO DE BÔNUS DO MÊS ══
+// Quem ganhou o quê e quanto a loja paga a cada uma, no mês ativo.
+// Duas decisões que valem registrar:
+//  · Empate não é resolvido aqui. As duas entram como vencedoras E o caso vai
+//    pro alerta — escolher uma em silêncio seria pior do que avisar o gestor.
+//  · Bônus coletivo é pago a CADA vendedora (é como a folha e a apresentação
+//    apresentam: "quanto VOCÊ pode ganhar" inclui o coletivo).
+function apurarBonus(){
+  const cfg=cfgAtualCache(), cfgB=cfg.bonus||{};
+  const M=cfg.metas||{}, HIP=cfg.hipermetas||{}, SUP=cfg.supermetas||{};
+  const pv=accPorV(), ag=accGlobal();
+  const MI=bMetaInd(cfgB);
+  const bCat=id=>(cfgB.cat&&cfgB.cat[id]!==undefined)?cfgB.cat[id]:(id==='prendedor'?0:(cfgB.acessorio||0));
+  const nf=v=>(v||0).toLocaleString('pt-BR');
+  const nomeDe=id=>{const v=VENDEDORAS.find(x=>x.id===id);return v?v.nome:id;};
+
+  const res={};
+  VENDEDORAS.forEach(v=>res[v.id]={id:v.id, nome:v.nome, linhas:[], total:0});
+  const add=(id,grupo,desc,valor)=>{
+    const r=res[id]; if(!r) return;
+    r.linhas.push({grupo,desc,valor}); r.total+=valor;
+  };
+  const naoPagos=[], empates=[];
+
+  // Vencedoras por maior valor. Empate devolve todas; ninguém pontuou devolve [].
+  function vencedores(lista){
+    const validos=lista.filter(x=>x.val!==null && x.val!==undefined);
+    if(!validos.length) return [];
+    const max=Math.max(...validos.map(x=>x.val));
+    if(!(max>0)) return [];
+    return validos.filter(x=>x.val===max);
+  }
+  function disputa(nome,lista,valor,fmt,motivoVazio){
+    if(!(valor>0)) return;
+    const win=vencedores(lista);
+    if(!win.length){ naoPagos.push({nome, motivo:motivoVazio||'ninguém pontuou neste mês', valor}); return; }
+    // Empate em disputa divide o bônus entre as empatadas (regra da casa).
+    // Meta coletiva não passa por aqui — lá não existe disputa.
+    const cota = win.length>1 ? Math.round(valor*100/win.length)/100 : valor;
+    if(win.length>1) empates.push({nome, quem:win.map(w=>nomeDe(w.id)), valor, cota});
+    win.forEach(w=>add(w.id,'disputa',
+      `${nome} — ${fmt(w.val)}${win.length>1?` · empate de ${win.length}, bônus dividido`:''}`, cota));
+  }
+
+  // ── Metas individuais: superar o próprio mês do ano anterior ──
+  if(MI.porMeta>0 || MI.todas>0){
+    VENDEDORAS.forEach(v=>{
+      const h=(HIST_2025[v.id]||{})[mesAtivo], a=pv[v.id]||{};
+      if(!h) return;
+      const metas=[
+        {nome:'Sapatos', atu:a.sapatos||0, alvo:h.sap||0},
+        {nome:'Meias',   atu:a.meias||0,   alvo:h.mei||0},
+        {nome:'Cintos',  atu:(a.cintos||0)+(a.carteiras||0)+(a.prendedor||0), alvo:h.ace||0},
+        {nome:'Limpeza', atu:a.limpeza||0, alvo:h.lim||0}
+      ].filter(m=>m.alvo>0);
+      if(!metas.length) return;
+      const batidas=metas.filter(m=>m.atu>m.alvo);
+      if(MI.porMeta>0) batidas.forEach(m=>
+        add(v.id,'individual',`Meta individual · ${m.nome} — fez ${nf(m.atu)}, superou ${nf(m.alvo)}`,MI.porMeta));
+      if(MI.todas>0 && batidas.length===metas.length)
+        add(v.id,'individual',`Bateu TODAS as metas individuais (${metas.length} de ${metas.length})`,MI.todas);
+    });
+  }
+
+  // ── Disputas de volume ──
+  disputa('Maior vendedora de mix',
+    VENDEDORAS.map(v=>({id:v.id, val:ACESS.reduce((s,c)=>s+((pv[v.id]||{})[c.id]||0),0)})),
+    cfgB.maiorMix||0, v=>`${nf(v)} acessórios`);
+  COMP_ITENS.forEach(cc=>disputa(`Maior vendedora de ${cc.label.toLowerCase()}`,
+    rankVolGrupo(pv,cc.cats), bVolComp(cfgB,cc.id), v=>`${nf(v)} un`));
+
+  // ── Disputas de conversão ──
+  disputa('Melhor conversão de mix',
+    rankConvGrupo(pv,ACESS.map(c=>c.id)).map(x=>({id:x.id,val:x.pct})),
+    cfgB.melhorConv||0, v=>`${Math.round(v)}%`, 'ninguém vendeu sapato neste mês');
+  COMP_ITENS.forEach(cc=>disputa(`Maior conversão de ${cc.label.toLowerCase()}`,
+    rankConvGrupo(pv,cc.cats).map(x=>({id:x.id,val:x.pct})),
+    bConvComp(cfgB,cc.id), v=>`${Math.round(v)}%`, 'ninguém vendeu sapato neste mês'));
+
+  // ── Maior venda do mês ── só vendas que passam do mínimo valem
+  if((cfgB.maiorVenda||0)>0){
+    const min=cfgB.maiorVendaMin||0;
+    disputa(`Maior venda do mês (acima de R$ ${nf(min)})`,
+      VENDEDORAS.map(v=>{
+        const reg=cacheHist[keyMV(v.id,anoAtivo,mesAtivo)];
+        const validas=((reg&&reg.vendas)||[]).filter(s=>s.valor>=min).map(s=>s.valor);
+        return {id:v.id, val:validas.length?Math.max(...validas):0};
+      }),
+      cfgB.maiorVenda, v=>`R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`,
+      `nenhuma venda acima de R$ ${nf(min)} registrada`);
+  }
+
+  // ── Metas coletivas: pagas a cada vendedora ──
+  const niveis=[
+    {n:'Meta',       q:M.sapatos||0,   v:cfgB.sapMeta||0},
+    {n:'Super Meta', q:SUP.sapatos||0, v:cfgB.sapSuper||0},
+    {n:'Hiper Meta', q:HIP.sapatos||0, v:cfgB.sapHiper||0}
+  ].filter(x=>x.q>0&&x.v>0);
+  if(niveis.length){
+    const feito=ag.sapatos||0;
+    const batidos=niveis.filter(x=>feito>=x.q);
+    if(batidos.length){
+      const alvo=batidos.reduce((a,b)=>b.v>a.v?b:a);
+      VENDEDORAS.forEach(v=>add(v.id,'equipe',
+        `Meta coletiva · Sapatos ${alvo.n} — equipe fez ${nf(feito)} de ${nf(alvo.q)}`,alvo.v));
+    }else{
+      const prox=niveis.reduce((a,b)=>b.q<a.q?b:a);
+      naoPagos.push({nome:`Meta coletiva · Sapatos ${prox.n}`,
+        motivo:`equipe fez ${nf(feito)} de ${nf(prox.q)}`, valor:prox.v});
+    }
+  }
+  ACESS.forEach(c=>{
+    const alvo=M[c.id]||0, val=bCat(c.id);
+    if(alvo<=0||val<=0) return;
+    const feito=ag[c.id]||0;
+    if(feito>=alvo) VENDEDORAS.forEach(v=>add(v.id,'equipe',
+      `Meta coletiva · ${c.nome} — equipe fez ${nf(feito)} de ${nf(alvo)}`,val));
+    else naoPagos.push({nome:`Meta coletiva · ${c.nome}`,
+      motivo:`equipe fez ${nf(feito)} de ${nf(alvo)}`, valor:val});
+  });
+
+  const lista=VENDEDORAS.map(v=>res[v.id]).sort((a,b)=>b.total-a.total);
+  return {lista, naoPagos, empates, total:lista.reduce((s,r)=>s+r.total,0)};
+}
+
 // ══ FOLHA DE BÔNUS (impressa) ══
 // Gera a folha mensal de bônus no padrão da marca, lendo a config do mês ativo.
 // Abre a janela de impressão: dá pra imprimir direto ou salvar em PDF.
@@ -5419,17 +5856,25 @@ function gerarFolhaBonus(){
   if(MI.porMeta>0) rows+=li('Bater suas METAS INDIVIDUAIS',`R$ ${MI.porMeta} POR META BATIDA`);
   if(MI.todas>0)   rows+=li('Bater TODAS as suas METAS INDIVIDUAIS',`R$ ${MI.todas} DE BÔNUS EXTRA`,true);
 
-  // Competições de maior conversão por item — só as ligadas no mês
-  const compAtivas = CONV_COMP.filter(cc=>bConvComp(cfgB,cc.id)>0);
+  // Competições por item — só as ligadas no mês, cada tipo na sua seção
+  const compAtivas = COMP_ITENS.filter(cc=>bConvComp(cfgB,cc.id)>0);
   if(compAtivas.length){
     rows+=`<div class="sec">COMPETIÇÃO DE CONVERSÃO · MAIOR TAXA LEVA</div>`;
     compAtivas.forEach(cc=>{
       rows+=li(`Maior CONVERSÃO DE ${cc.rotulo}`,`R$ ${bConvComp(cfgB,cc.id)} DE BÔNUS`);
     });
   }
+  const volAtivas = COMP_ITENS.filter(cc=>bVolComp(cfgB,cc.id)>0);
+  if(volAtivas.length){
+    rows+=`<div class="sec">COMPETIÇÃO DE VOLUME · QUEM VENDER MAIS LEVA</div>`;
+    volAtivas.forEach(cc=>{
+      rows+=li(`Maior VENDEDORA DE ${cc.label.toUpperCase()}`,`R$ ${bVolComp(cfgB,cc.id)} DE BÔNUS`);
+    });
+  }
 
   const totAcess=acess.reduce((s,[id])=>s+(((M[id]||0)>0)?bCat(id):0),0) + (((M.prendedor||0)>0)?bCat('prendedor'):0);
-  const totComp=compAtivas.reduce((s,cc)=>s+bConvComp(cfgB,cc.id),0);
+  const totComp=compAtivas.reduce((s,cc)=>s+bConvComp(cfgB,cc.id),0)
+              + volAtivas.reduce((s,cc)=>s+bVolComp(cfgB,cc.id),0);
   const totMetaInd=MI.porMeta*4 + MI.todas;  // 4 metas individuais: sapatos, meias, cintos, limpeza
   const total=B.sapHiper + totAcess + B.maiorMix + B.melhorConv + B.maiorVenda + totMetaInd + totComp;
 
@@ -5469,6 +5914,127 @@ function gerarFolhaBonus(){
 
   const w=window.open('','_blank');
   if(!w){ toast('⚠ Libere pop-ups para gerar a folha.'); return; }
+  w.document.write(html); w.document.close();
+}
+
+// ══ LISTA DE BÔNUS (impressa) ══
+// Relatório de pagamento do mês: quem ganhou o quê, por quê, e quanto a loja
+// paga a cada uma. É o documento que o financeiro usa pra fechar a folha.
+function gerarListaBonus(){
+  const {lista, naoPagos, empates, total} = apurarBonus();
+  const MES = MESES_NOMES[mesAtivo-1].toUpperCase(), ANO = anoAtivo;
+  const nf = v=>(v||0).toLocaleString('pt-BR');
+  const brl = v=>`R$ ${(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+
+  // Mês ainda em andamento = número parcial. Precisa estar escrito no papel,
+  // senão alguém paga em cima de um fechamento que ainda vai mudar.
+  const h=new Date();
+  const emAndamento = (anoAtivo>h.getFullYear()) ||
+                      (anoAtivo===h.getFullYear() && mesAtivo>=h.getMonth()+1);
+  const emitido = h.toLocaleDateString('pt-BR') + ' às ' +
+                  h.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  const premiadas = lista.filter(r=>r.total>0);
+
+  let corpo = '';
+  if(emAndamento) corpo += `<div class="alerta">
+    <b>Mês ainda em andamento.</b> Estes valores são uma prévia e podem mudar até
+    o fim de ${MESES_NOMES[mesAtivo-1]}. Para pagar, tire a lista com o mês fechado.
+  </div>`;
+  if(empates.length) corpo += `<div class="alerta">
+    <b>${empates.length===1?'1 empate no mês':empates.length+' empates no mês'} — bônus dividido.</b>
+    ${empates.map(e=>`${e.nome}: ${e.quem.join(' e ')} empataram, e os ${brl(e.valor)}
+      foram divididos em ${brl(e.cota)} para cada uma.`).join(' ')}
+  </div>`;
+
+  // ── Resumo: é o que o financeiro precisa ver primeiro ──
+  corpo += `<div class="sec">RESUMO DO PAGAMENTO</div><table class="res">`;
+  if(premiadas.length){
+    premiadas.forEach(r=>{
+      corpo += `<tr><td>${r.nome}</td><td class="n">${r.linhas.length} ${r.linhas.length===1?'item':'itens'}</td><td class="v">${brl(r.total)}</td></tr>`;
+    });
+  } else {
+    corpo += `<tr><td colspan="3" class="vazio">Nenhum bônus a pagar neste mês.</td></tr>`;
+  }
+  corpo += `<tr class="tot"><td>TOTAL A PAGAR</td><td class="n">${premiadas.length} ${premiadas.length===1?'vendedora':'vendedoras'}</td><td class="v">${brl(total)}</td></tr></table>`;
+
+  // ── Detalhe por vendedora: o "por quê" de cada valor ──
+  premiadas.forEach(r=>{
+    corpo += `<div class="sec">${r.nome.toUpperCase()} · ${brl(r.total)}</div><table class="det">`;
+    r.linhas.forEach(l=>{
+      corpo += `<tr><td class="g">${{individual:'META',disputa:'DISPUTA',equipe:'EQUIPE'}[l.grupo]}</td>
+        <td>${l.desc}</td><td class="v">${brl(l.valor)}</td></tr>`;
+    });
+    corpo += `<tr class="sub"><td></td><td>Total ${r.nome}</td><td class="v">${brl(r.total)}</td></tr></table>`;
+  });
+
+  const semNada = lista.filter(r=>r.total===0);
+  if(semNada.length) corpo += `<div class="sec">SEM BÔNUS NESTE MÊS</div>
+    <div class="nota">${semNada.map(r=>r.nome).join(' · ')}</div>`;
+
+  if(naoPagos.length){
+    corpo += `<div class="sec">BÔNUS QUE NÃO SAÍRAM</div><table class="det">`;
+    naoPagos.forEach(n=>{
+      corpo += `<tr><td class="g">—</td><td>${n.nome} <i>· ${n.motivo}</i></td><td class="v off">${brl(n.valor)}</td></tr>`;
+    });
+    corpo += `</table>`;
+  }
+
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Lista de Bônus · ${MES} ${ANO}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Barlow:wght@400;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    @page{size:A4;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    body{font-family:'Barlow',sans-serif;background:#fff;color:#1f3520;}
+    .page{width:210mm;min-height:297mm;padding:14mm 14mm 18mm;position:relative;border-top:4mm solid #1f3520;}
+    .head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.2px solid #1f3520;padding-bottom:4mm;margin-bottom:5mm;}
+    h1{font-family:'Playfair Display',serif;font-size:24pt;font-weight:700;}
+    .head .sub{font-family:'DM Mono',monospace;font-size:7.5pt;letter-spacing:1.6px;color:#5c6a54;margin-top:1mm;}
+    .mes{text-align:right;}
+    .mes b{display:block;font-size:12pt;letter-spacing:1px;}
+    .mes span{font-family:'DM Mono',monospace;font-size:7pt;color:#5c6a54;letter-spacing:1.4px;}
+    .alerta{border-left:2mm solid #b8860b;background:#fdf6e3;padding:3mm 4mm;margin-bottom:4mm;font-size:9pt;line-height:1.5;}
+    .alerta b{color:#8a6508;}
+    .sec{font-family:'DM Mono',monospace;font-size:8.5pt;letter-spacing:1.6px;color:#1f3520;
+      border-bottom:1px solid #c9a950;padding-bottom:1.5mm;margin:7mm 0 2.5mm;}
+    table{width:100%;border-collapse:collapse;}
+    td{padding:2.2mm 2mm;font-size:9.5pt;border-bottom:.4px solid #e2e0d6;vertical-align:top;}
+    td.v{text-align:right;white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums;}
+    td.n{text-align:right;white-space:nowrap;font-size:8pt;color:#5c6a54;}
+    td.g{width:18mm;font-family:'DM Mono',monospace;font-size:6.5pt;letter-spacing:1.2px;color:#7a8a72;padding-top:3mm;}
+    td.off{color:#9a9a90;font-weight:400;text-decoration:line-through;}
+    td i{color:#5c6a54;font-style:italic;}
+    .res td{font-size:11pt;padding:2.8mm 2mm;}
+    .res tr.tot td{border-top:1.2px solid #1f3520;border-bottom:none;font-weight:700;font-size:12pt;padding-top:3mm;}
+    .det tr.sub td{border-bottom:none;font-weight:700;color:#1f3520;background:#f4f2e8;}
+    .vazio{color:#5c6a54;font-style:italic;}
+    .nota{font-size:9.5pt;color:#5c6a54;padding:1mm 2mm;}
+    .ass{margin-top:10mm;padding-top:4mm;border-top:1px solid #c9a950;display:flex;justify-content:space-between;align-items:flex-end;}
+    .ass .l{font-family:'Playfair Display',serif;font-size:11pt;}
+    .ass .s{font-family:'DM Mono',monospace;font-size:6.5pt;color:#5c6a54;letter-spacing:1.4px;text-align:right;line-height:1.7;}
+    /* Ninguém quer o bloco de uma vendedora partido no meio da folha */
+    @media print{
+      .sec{break-after:avoid;page-break-after:avoid;}
+      table,.alerta{break-inside:avoid;page-break-inside:avoid;}
+      .ass{break-inside:avoid;}
+    }
+  </style></head><body>
+  <div class="page">
+    <div class="head">
+      <div><h1>Lista de Bônus</h1><div class="sub">QUEM GANHOU · QUANTO PAGAR · POR QUÊ</div></div>
+      <div class="mes"><b>${MES} ${ANO}</b><span>EMITIDA EM ${emitido}</span></div>
+    </div>
+    ${corpo}
+    <div class="ass">
+      <div class="l">Loretto Scarpa</div>
+      <div class="s">BÔNUS COLETIVO PAGO A CADA VENDEDORA<br>CONFERIDO POR ______________________</div>
+    </div>
+  </div>
+  <script>window.onload=()=>setTimeout(()=>window.print(),600);<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  if(!w){ toast('⚠ Libere pop-ups para gerar a lista.'); return; }
   w.document.write(html); w.document.close();
 }
 
@@ -5542,10 +6108,12 @@ async function gerarApresentacaoMetas() {
                         + (METAS.prendedor>0? bCat('prendedor') : 0);
     // Metas individuais batidas + competições de conversão por item (ligadas no mês)
     const MI = bMetaInd(cfgB);
-    const COMPS = CONV_COMP.filter(cc=>bConvComp(cfgB,cc.id)>0)
-                           .map(cc=>Object.assign({valor:bConvComp(cfgB,cc.id)},cc));
+    const COMPS = COMP_ITENS.filter(cc=>bConvComp(cfgB,cc.id)>0)
+                           .map(cc=>Object.assign({valor:bConvComp(cfgB,cc.id),tipo:'conv'},cc));
+    const VOLS  = COMP_ITENS.filter(cc=>bVolComp(cfgB,cc.id)>0)
+                           .map(cc=>Object.assign({valor:bVolComp(cfgB,cc.id),tipo:'vol'},cc));
     const totalMetaInd = MI.porMeta*4 + MI.todas;  // 4 metas: sapatos, meias, cintos, limpeza
-    const totalComps = COMPS.reduce((s,cc)=>s+cc.valor,0);
+    const totalComps = COMPS.reduce((s,cc)=>s+cc.valor,0) + VOLS.reduce((s,cc)=>s+cc.valor,0);
 
     const totalIndividual = BONUS.maiorMix + BONUS.melhorConv + BONUS.maiorVenda + totalMetaInd + totalComps;
     const TOTAL_MAX = totalColetivo + totalIndividual;
@@ -5688,6 +6256,8 @@ async function gerarApresentacaoMetas() {
       desc:`Bata TODAS as suas metas do mês (superar o seu ${MES} do ano passado)`, bonus:MI.todas});
     COMPS.forEach(cc=>ind.push({icon:cc.icone, titulo:`MAIOR CONVERSÃO DE ${cc.rotulo}`,
       desc:`Maior taxa de ${cc.label.toLowerCase()} por sapato vendido no mês`, bonus:cc.valor}));
+    VOLS.forEach(cc=>ind.push({icon:cc.icone, titulo:`MAIOR VENDEDORA DE ${cc.label.toUpperCase()}`,
+      desc:`Quem vender mais ${cc.label.toLowerCase()} no mês, em unidades`, bonus:cc.valor}));
 
     // Layout elástico: quanto mais itens, mais baixa a linha (a slide tem 7.5" de altura)
     const rowY0 = 2.0, rowGap = 0.14, dispon = 7.25 - rowY0;
@@ -5753,6 +6323,7 @@ async function gerarApresentacaoMetas() {
     if(MI.porMeta>0) individual.push(['Metas individuais (por meta)', MI.porMeta]);
     if(MI.todas>0)   individual.push(['Bateu todas as individuais', MI.todas]);
     COMPS.forEach(cc=>individual.push([`Maior conversão de ${cc.label.toLowerCase()}`, cc.valor]));
+    VOLS.forEach(cc=>individual.push([`Maior vendedora de ${cc.label.toLowerCase()}`, cc.valor]));
 
     const colRight_h = Math.min(3.9, Math.max(2.85, 0.75 + individual.length*0.42));
     s.addShape('rect',{x:colRight_x,y:colY,w:colRight_w,h:colRight_h,fill:{color:C.verde2},line:{color:C.ouro,width:1}});
@@ -5816,7 +6387,8 @@ async function gerarApresentacaoMetas() {
     desafios.push(['⭐', `Busque a maior venda — R$ ${BONUS.maiorVendaMin.toLocaleString('pt-BR')}+ manda no grupo!`]);
     desafios.push(['🏆', `Seja a campeã de mix — R$ ${BONUS.maiorMix} é seu!`]);
     if(totalMetaInd>0) desafios.push(['🎯', `Bata suas metas individuais — supere o seu ${MES} do ano passado`]);
-    if(COMPS.length) desafios.push(['📊', `Competição de conversão: ${COMPS.map(c=>c.label).join(' · ')} — R$ ${totalComps} em disputa`]);
+    if(COMPS.length) desafios.push(['📊', `Competição de conversão: ${COMPS.map(c=>c.label).join(' · ')} — R$ ${COMPS.reduce((s,c)=>s+c.valor,0)} em disputa`]);
+    if(VOLS.length)  desafios.push(['📦', `Competição de volume: ${VOLS.map(c=>c.label).join(' · ')} — R$ ${VOLS.reduce((s,c)=>s+c.valor,0)} em disputa`]);
 
     const dRowH = 4.5 / desafios.length;
     desafios.forEach((d,i) => {
