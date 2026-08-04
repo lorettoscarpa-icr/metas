@@ -3656,13 +3656,24 @@ function renderBonusVendedora(){
   // ─── 2. Ranking individual ─── disputas: dependem também das colegas
   let rank='';
 
+  // Empate em disputa divide o bônus — a linha mostra a cota, não o cheio.
+  const cotaEmpate=(vals,valor)=>{
+    const n=vals.filter(v=>v===vals[0]).length;
+    return {n, valor: n>1 ? Math.round(valor*100/n)/100 : valor};
+  };
+
   // Volume — o mix inteiro e as competições por item
   function linhaVol(nome,cats,valor,unidade){
     const r=rankVolGrupo(pv,cats);
     const i=r.findIndex(x=>x.id===usuario);
     if(i<0) return linha('aberto',nome,'Sem registro no mês',valor);
     const gap=r[0].val-r[i].val;
-    if(i===0) return linha('lidera',nome,`Você lidera com ${r[i].val} ${unidade}`,valor);
+    if(i===0){
+      const e=cotaEmpate(r.map(x=>x.val),valor);
+      return linha('lidera',nome, e.n>1
+        ? `Empatada em 1º com ${r[i].val} ${unidade} · dividido entre ${e.n}`
+        : `Você lidera com ${r[i].val} ${unidade}`, e.valor);
+    }
     return linha(gap<=5?'perto':'aberto',nome,
       `Você está em ${ord(i+1)} com ${r[i].val} ${unidade} · faltam ${gap}`,valor);
   }
@@ -3679,7 +3690,12 @@ function renderBonusVendedora(){
     const i=r.findIndex(x=>x.id===usuario);
     if(i<0) return linha('aberto',nome,'Sem sapatos registrados no mês',valor);
     const minha=Math.round(r[i].pct), gap=Math.round(r[0].pct)-minha;
-    if(i===0) return linha('lidera',nome,`Você lidera com ${minha}%`,valor);
+    if(i===0){
+      const e=cotaEmpate(r.map(x=>x.pct),valor);
+      return linha('lidera',nome, e.n>1
+        ? `Empatada em 1º com ${minha}% · dividido entre ${e.n}`
+        : `Você lidera com ${minha}%`, e.valor);
+    }
     return linha(gap<=5?'perto':'aberto',nome,
       `Você está em ${ord(i+1)} com ${minha}% · faltam ${gap} pts`,valor);
   }
@@ -3699,13 +3715,18 @@ function renderBonusVendedora(){
       const validas=((reg&&reg.vendas)||[]).filter(s=>s.valor>=minVenda).map(s=>s.valor);
       return validas.length?Math.max(...validas):0;
     };
-    const minha=maiorDe(usuario);
-    let maxGeral=0; VENDEDORAS.forEach(v=>{const x=maiorDe(v.id); if(x>maxGeral)maxGeral=x;});
-    let st,sit;
-    if(minha>0 && minha>=maxGeral){ st='lidera'; sit=`Você lidera com R$ ${nf(minha)}`; }
+    const todas=VENDEDORAS.map(v=>maiorDe(v.id)).sort((a,b)=>b-a);
+    const minha=maiorDe(usuario), maxGeral=todas[0]||0;
+    let st,sit,val=cfgB.maiorVenda;
+    if(minha>0 && minha>=maxGeral){
+      const e=cotaEmpate(todas,cfgB.maiorVenda); val=e.valor;
+      st='lidera';
+      sit=e.n>1 ? `Empatada em 1º com R$ ${nf(minha)} · dividido entre ${e.n}`
+                : `Você lidera com R$ ${nf(minha)}`;
+    }
     else if(minha>0){ st='aberto'; sit=`Sua maior: R$ ${nf(minha)} · a líder tem R$ ${nf(maxGeral)}`; }
     else { st='aberto'; sit=`Nenhuma venda acima de R$ ${nf(cfgB.maiorVendaMin||0)} registrada`; }
-    rank+=linha(st,'Maior venda do mês',sit,cfgB.maiorVenda);
+    rank+=linha(st,'Maior venda do mês',sit,val);
   }
 
   const g2=garantido-g1, j2=emJogo-j1, n2=nLinhas-n1;  // fecha o subtotal do bloco 2
@@ -5695,8 +5716,12 @@ function apurarBonus(){
     if(!(valor>0)) return;
     const win=vencedores(lista);
     if(!win.length){ naoPagos.push({nome, motivo:motivoVazio||'ninguém pontuou neste mês', valor}); return; }
-    if(win.length>1) empates.push({nome, quem:win.map(w=>nomeDe(w.id)), valor});
-    win.forEach(w=>add(w.id,'disputa',`${nome} — ${fmt(w.val)}`,valor));
+    // Empate em disputa divide o bônus entre as empatadas (regra da casa).
+    // Meta coletiva não passa por aqui — lá não existe disputa.
+    const cota = win.length>1 ? Math.round(valor*100/win.length)/100 : valor;
+    if(win.length>1) empates.push({nome, quem:win.map(w=>nomeDe(w.id)), valor, cota});
+    win.forEach(w=>add(w.id,'disputa',
+      `${nome} — ${fmt(w.val)}${win.length>1?` · empate de ${win.length}, bônus dividido`:''}`, cota));
   }
 
   // ── Metas individuais: superar o próprio mês do ano anterior ──
@@ -5914,9 +5939,9 @@ function gerarListaBonus(){
     o fim de ${MESES_NOMES[mesAtivo-1]}. Para pagar, tire a lista com o mês fechado.
   </div>`;
   if(empates.length) corpo += `<div class="alerta">
-    <b>${empates.length===1?'1 empate para decidir':empates.length+' empates para decidir'}.</b>
-    ${empates.map(e=>`${e.nome} — ${e.quem.join(' e ')} empataram, e o valor de
-      ${brl(e.valor)} está contado para cada uma.`).join(' ')}
+    <b>${empates.length===1?'1 empate no mês':empates.length+' empates no mês'} — bônus dividido.</b>
+    ${empates.map(e=>`${e.nome}: ${e.quem.join(' e ')} empataram, e os ${brl(e.valor)}
+      foram divididos em ${brl(e.cota)} para cada uma.`).join(' ')}
   </div>`;
 
   // ── Resumo: é o que o financeiro precisa ver primeiro ──
