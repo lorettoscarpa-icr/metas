@@ -1849,19 +1849,20 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
       <div id="wrap-gerar-pptx" style="display:none;position:relative;">
         <button class="bsm" id="btn-gerar-pptx" style="background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.5);color:var(--ou);" onclick="event.stopPropagation();toggleMenuPptx()">📊 Gerar Apresentação ▾</button>
         <div id="menu-pptx" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--bgd,#1a1f1a);border:1px solid rgba(201,168,76,.5);border-radius:8px;min-width:260px;z-index:1000;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden;">
-          <button onclick="fecharMenuPptx();gerarApresentacaoMes()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
-            <div style="font-weight:600;">📊 Fechamento do mês</div>
-            <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Resultados, ranking e insights</div>
-          </button>
+          <!-- Ordem do mês: os dois de abertura primeiro, os dois de fechamento depois -->
           <button onclick="fecharMenuPptx();gerarApresentacaoMetas()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
             <div style="font-weight:600;">🎯 Metas do mês</div>
             <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Bônus, desafios e regras</div>
           </button>
-          <button onclick="fecharMenuPptx();gerarFolhaBonus()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+          <button onclick="fecharMenuPptx();gerarFolhaBonus()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
             <div style="font-weight:600;">🧾 Folha de Bônus</div>
             <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Lista impressa pra entregar às vendedoras</div>
           </button>
-          <button onclick="fecharMenuPptx();gerarListaBonus()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-top:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+          <button onclick="fecharMenuPptx();gerarApresentacaoMes()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight:600;">📊 Fechamento do mês</div>
+            <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Resultados, ranking e insights</div>
+          </button>
+          <button onclick="fecharMenuPptx();gerarListaBonus()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
             <div style="font-weight:600;">💰 Lista de Bônus</div>
             <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Quem ganhou e quanto pagar — pro financeiro</div>
           </button>
