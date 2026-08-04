@@ -1861,6 +1861,10 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
             <div style="font-weight:600;">🧾 Folha de Bônus</div>
             <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Lista impressa pra entregar às vendedoras</div>
           </button>
+          <button onclick="fecharMenuPptx();gerarListaBonus()" style="display:block;width:100%;text-align:left;padding:12px 14px;background:transparent;border:none;color:var(--cr1,#fff);font-size:13px;cursor:pointer;border-top:1px solid rgba(201,168,76,.2);font-family:inherit;" onmouseover="this.style.background='rgba(201,168,76,.10)'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight:600;">💰 Lista de Bônus</div>
+            <div style="font-size:10px;color:var(--cr3,#aaa);margin-top:3px;">Quem ganhou e quanto pagar — pro financeiro</div>
+          </button>
         </div>
       </div>
       <button class="btn-tema" id="btn-tema" onclick="toggleTema()" title="Alternar modo claro/escuro">☀</button>
@@ -3687,9 +3691,13 @@ function renderBonusVendedora(){
 
   // Maior venda do mês
   if((cfgB.maiorVenda||0)>0){
+    // Só venda acima do mínimo vale o bônus — é a regra da folha. Sem esse filtro
+    // o painel dizia "você lidera" pra quem tinha só vendas abaixo do corte.
+    const minVenda=cfgB.maiorVendaMin||0;
     const maiorDe=id=>{
       const reg=cacheHist[keyMV(id,anoAtivo,mesAtivo)];
-      return (reg&&reg.vendas&&reg.vendas.length)?Math.max(...reg.vendas.map(s=>s.valor)):0;
+      const validas=((reg&&reg.vendas)||[]).filter(s=>s.valor>=minVenda).map(s=>s.valor);
+      return validas.length?Math.max(...validas):0;
     };
     const minha=maiorDe(usuario);
     let maxGeral=0; VENDEDORAS.forEach(v=>{const x=maiorDe(v.id); if(x>maxGeral)maxGeral=x;});
@@ -5651,6 +5659,127 @@ async function gerarApresentacaoMes() {
   }
 }
 
+// ══ APURAÇÃO DE BÔNUS DO MÊS ══
+// Quem ganhou o quê e quanto a loja paga a cada uma, no mês ativo.
+// Duas decisões que valem registrar:
+//  · Empate não é resolvido aqui. As duas entram como vencedoras E o caso vai
+//    pro alerta — escolher uma em silêncio seria pior do que avisar o gestor.
+//  · Bônus coletivo é pago a CADA vendedora (é como a folha e a apresentação
+//    apresentam: "quanto VOCÊ pode ganhar" inclui o coletivo).
+function apurarBonus(){
+  const cfg=cfgAtualCache(), cfgB=cfg.bonus||{};
+  const M=cfg.metas||{}, HIP=cfg.hipermetas||{}, SUP=cfg.supermetas||{};
+  const pv=accPorV(), ag=accGlobal();
+  const MI=bMetaInd(cfgB);
+  const bCat=id=>(cfgB.cat&&cfgB.cat[id]!==undefined)?cfgB.cat[id]:(id==='prendedor'?0:(cfgB.acessorio||0));
+  const nf=v=>(v||0).toLocaleString('pt-BR');
+  const nomeDe=id=>{const v=VENDEDORAS.find(x=>x.id===id);return v?v.nome:id;};
+
+  const res={};
+  VENDEDORAS.forEach(v=>res[v.id]={id:v.id, nome:v.nome, linhas:[], total:0});
+  const add=(id,grupo,desc,valor)=>{
+    const r=res[id]; if(!r) return;
+    r.linhas.push({grupo,desc,valor}); r.total+=valor;
+  };
+  const naoPagos=[], empates=[];
+
+  // Vencedoras por maior valor. Empate devolve todas; ninguém pontuou devolve [].
+  function vencedores(lista){
+    const validos=lista.filter(x=>x.val!==null && x.val!==undefined);
+    if(!validos.length) return [];
+    const max=Math.max(...validos.map(x=>x.val));
+    if(!(max>0)) return [];
+    return validos.filter(x=>x.val===max);
+  }
+  function disputa(nome,lista,valor,fmt,motivoVazio){
+    if(!(valor>0)) return;
+    const win=vencedores(lista);
+    if(!win.length){ naoPagos.push({nome, motivo:motivoVazio||'ninguém pontuou neste mês', valor}); return; }
+    if(win.length>1) empates.push({nome, quem:win.map(w=>nomeDe(w.id)), valor});
+    win.forEach(w=>add(w.id,'disputa',`${nome} — ${fmt(w.val)}`,valor));
+  }
+
+  // ── Metas individuais: superar o próprio mês do ano anterior ──
+  if(MI.porMeta>0 || MI.todas>0){
+    VENDEDORAS.forEach(v=>{
+      const h=(HIST_2025[v.id]||{})[mesAtivo], a=pv[v.id]||{};
+      if(!h) return;
+      const metas=[
+        {nome:'Sapatos', atu:a.sapatos||0, alvo:h.sap||0},
+        {nome:'Meias',   atu:a.meias||0,   alvo:h.mei||0},
+        {nome:'Cintos',  atu:(a.cintos||0)+(a.carteiras||0)+(a.prendedor||0), alvo:h.ace||0},
+        {nome:'Limpeza', atu:a.limpeza||0, alvo:h.lim||0}
+      ].filter(m=>m.alvo>0);
+      if(!metas.length) return;
+      const batidas=metas.filter(m=>m.atu>m.alvo);
+      if(MI.porMeta>0) batidas.forEach(m=>
+        add(v.id,'individual',`Meta individual · ${m.nome} — fez ${nf(m.atu)}, superou ${nf(m.alvo)}`,MI.porMeta));
+      if(MI.todas>0 && batidas.length===metas.length)
+        add(v.id,'individual',`Bateu TODAS as metas individuais (${metas.length} de ${metas.length})`,MI.todas);
+    });
+  }
+
+  // ── Disputas de volume ──
+  disputa('Maior vendedora de mix',
+    VENDEDORAS.map(v=>({id:v.id, val:ACESS.reduce((s,c)=>s+((pv[v.id]||{})[c.id]||0),0)})),
+    cfgB.maiorMix||0, v=>`${nf(v)} acessórios`);
+  COMP_ITENS.forEach(cc=>disputa(`Maior vendedora de ${cc.label.toLowerCase()}`,
+    rankVolGrupo(pv,cc.cats), bVolComp(cfgB,cc.id), v=>`${nf(v)} un`));
+
+  // ── Disputas de conversão ──
+  disputa('Melhor conversão de mix',
+    rankConvGrupo(pv,ACESS.map(c=>c.id)).map(x=>({id:x.id,val:x.pct})),
+    cfgB.melhorConv||0, v=>`${Math.round(v)}%`, 'ninguém vendeu sapato neste mês');
+  COMP_ITENS.forEach(cc=>disputa(`Maior conversão de ${cc.label.toLowerCase()}`,
+    rankConvGrupo(pv,cc.cats).map(x=>({id:x.id,val:x.pct})),
+    bConvComp(cfgB,cc.id), v=>`${Math.round(v)}%`, 'ninguém vendeu sapato neste mês'));
+
+  // ── Maior venda do mês ── só vendas que passam do mínimo valem
+  if((cfgB.maiorVenda||0)>0){
+    const min=cfgB.maiorVendaMin||0;
+    disputa(`Maior venda do mês (acima de R$ ${nf(min)})`,
+      VENDEDORAS.map(v=>{
+        const reg=cacheHist[keyMV(v.id,anoAtivo,mesAtivo)];
+        const validas=((reg&&reg.vendas)||[]).filter(s=>s.valor>=min).map(s=>s.valor);
+        return {id:v.id, val:validas.length?Math.max(...validas):0};
+      }),
+      cfgB.maiorVenda, v=>`R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}`,
+      `nenhuma venda acima de R$ ${nf(min)} registrada`);
+  }
+
+  // ── Metas coletivas: pagas a cada vendedora ──
+  const niveis=[
+    {n:'Meta',       q:M.sapatos||0,   v:cfgB.sapMeta||0},
+    {n:'Super Meta', q:SUP.sapatos||0, v:cfgB.sapSuper||0},
+    {n:'Hiper Meta', q:HIP.sapatos||0, v:cfgB.sapHiper||0}
+  ].filter(x=>x.q>0&&x.v>0);
+  if(niveis.length){
+    const feito=ag.sapatos||0;
+    const batidos=niveis.filter(x=>feito>=x.q);
+    if(batidos.length){
+      const alvo=batidos.reduce((a,b)=>b.v>a.v?b:a);
+      VENDEDORAS.forEach(v=>add(v.id,'equipe',
+        `Meta coletiva · Sapatos ${alvo.n} — equipe fez ${nf(feito)} de ${nf(alvo.q)}`,alvo.v));
+    }else{
+      const prox=niveis.reduce((a,b)=>b.q<a.q?b:a);
+      naoPagos.push({nome:`Meta coletiva · Sapatos ${prox.n}`,
+        motivo:`equipe fez ${nf(feito)} de ${nf(prox.q)}`, valor:prox.v});
+    }
+  }
+  ACESS.forEach(c=>{
+    const alvo=M[c.id]||0, val=bCat(c.id);
+    if(alvo<=0||val<=0) return;
+    const feito=ag[c.id]||0;
+    if(feito>=alvo) VENDEDORAS.forEach(v=>add(v.id,'equipe',
+      `Meta coletiva · ${c.nome} — equipe fez ${nf(feito)} de ${nf(alvo)}`,val));
+    else naoPagos.push({nome:`Meta coletiva · ${c.nome}`,
+      motivo:`equipe fez ${nf(feito)} de ${nf(alvo)}`, valor:val});
+  });
+
+  const lista=VENDEDORAS.map(v=>res[v.id]).sort((a,b)=>b.total-a.total);
+  return {lista, naoPagos, empates, total:lista.reduce((s,r)=>s+r.total,0)};
+}
+
 // ══ FOLHA DE BÔNUS (impressa) ══
 // Gera a folha mensal de bônus no padrão da marca, lendo a config do mês ativo.
 // Abre a janela de impressão: dá pra imprimir direto ou salvar em PDF.
@@ -5757,6 +5886,127 @@ function gerarFolhaBonus(){
 
   const w=window.open('','_blank');
   if(!w){ toast('⚠ Libere pop-ups para gerar a folha.'); return; }
+  w.document.write(html); w.document.close();
+}
+
+// ══ LISTA DE BÔNUS (impressa) ══
+// Relatório de pagamento do mês: quem ganhou o quê, por quê, e quanto a loja
+// paga a cada uma. É o documento que o financeiro usa pra fechar a folha.
+function gerarListaBonus(){
+  const {lista, naoPagos, empates, total} = apurarBonus();
+  const MES = MESES_NOMES[mesAtivo-1].toUpperCase(), ANO = anoAtivo;
+  const nf = v=>(v||0).toLocaleString('pt-BR');
+  const brl = v=>`R$ ${(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+
+  // Mês ainda em andamento = número parcial. Precisa estar escrito no papel,
+  // senão alguém paga em cima de um fechamento que ainda vai mudar.
+  const h=new Date();
+  const emAndamento = (anoAtivo>h.getFullYear()) ||
+                      (anoAtivo===h.getFullYear() && mesAtivo>=h.getMonth()+1);
+  const emitido = h.toLocaleDateString('pt-BR') + ' às ' +
+                  h.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  const premiadas = lista.filter(r=>r.total>0);
+
+  let corpo = '';
+  if(emAndamento) corpo += `<div class="alerta">
+    <b>Mês ainda em andamento.</b> Estes valores são uma prévia e podem mudar até
+    o fim de ${MESES_NOMES[mesAtivo-1]}. Para pagar, tire a lista com o mês fechado.
+  </div>`;
+  if(empates.length) corpo += `<div class="alerta">
+    <b>${empates.length===1?'1 empate para decidir':empates.length+' empates para decidir'}.</b>
+    ${empates.map(e=>`${e.nome} — ${e.quem.join(' e ')} empataram, e o valor de
+      ${brl(e.valor)} está contado para cada uma.`).join(' ')}
+  </div>`;
+
+  // ── Resumo: é o que o financeiro precisa ver primeiro ──
+  corpo += `<div class="sec">RESUMO DO PAGAMENTO</div><table class="res">`;
+  if(premiadas.length){
+    premiadas.forEach(r=>{
+      corpo += `<tr><td>${r.nome}</td><td class="n">${r.linhas.length} ${r.linhas.length===1?'item':'itens'}</td><td class="v">${brl(r.total)}</td></tr>`;
+    });
+  } else {
+    corpo += `<tr><td colspan="3" class="vazio">Nenhum bônus a pagar neste mês.</td></tr>`;
+  }
+  corpo += `<tr class="tot"><td>TOTAL A PAGAR</td><td class="n">${premiadas.length} ${premiadas.length===1?'vendedora':'vendedoras'}</td><td class="v">${brl(total)}</td></tr></table>`;
+
+  // ── Detalhe por vendedora: o "por quê" de cada valor ──
+  premiadas.forEach(r=>{
+    corpo += `<div class="sec">${r.nome.toUpperCase()} · ${brl(r.total)}</div><table class="det">`;
+    r.linhas.forEach(l=>{
+      corpo += `<tr><td class="g">${{individual:'META',disputa:'DISPUTA',equipe:'EQUIPE'}[l.grupo]}</td>
+        <td>${l.desc}</td><td class="v">${brl(l.valor)}</td></tr>`;
+    });
+    corpo += `<tr class="sub"><td></td><td>Total ${r.nome}</td><td class="v">${brl(r.total)}</td></tr></table>`;
+  });
+
+  const semNada = lista.filter(r=>r.total===0);
+  if(semNada.length) corpo += `<div class="sec">SEM BÔNUS NESTE MÊS</div>
+    <div class="nota">${semNada.map(r=>r.nome).join(' · ')}</div>`;
+
+  if(naoPagos.length){
+    corpo += `<div class="sec">BÔNUS QUE NÃO SAÍRAM</div><table class="det">`;
+    naoPagos.forEach(n=>{
+      corpo += `<tr><td class="g">—</td><td>${n.nome} <i>· ${n.motivo}</i></td><td class="v off">${brl(n.valor)}</td></tr>`;
+    });
+    corpo += `</table>`;
+  }
+
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Lista de Bônus · ${MES} ${ANO}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Barlow:wght@400;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    @page{size:A4;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    body{font-family:'Barlow',sans-serif;background:#fff;color:#1f3520;}
+    .page{width:210mm;min-height:297mm;padding:14mm 14mm 18mm;position:relative;border-top:4mm solid #1f3520;}
+    .head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.2px solid #1f3520;padding-bottom:4mm;margin-bottom:5mm;}
+    h1{font-family:'Playfair Display',serif;font-size:24pt;font-weight:700;}
+    .head .sub{font-family:'DM Mono',monospace;font-size:7.5pt;letter-spacing:1.6px;color:#5c6a54;margin-top:1mm;}
+    .mes{text-align:right;}
+    .mes b{display:block;font-size:12pt;letter-spacing:1px;}
+    .mes span{font-family:'DM Mono',monospace;font-size:7pt;color:#5c6a54;letter-spacing:1.4px;}
+    .alerta{border-left:2mm solid #b8860b;background:#fdf6e3;padding:3mm 4mm;margin-bottom:4mm;font-size:9pt;line-height:1.5;}
+    .alerta b{color:#8a6508;}
+    .sec{font-family:'DM Mono',monospace;font-size:8.5pt;letter-spacing:1.6px;color:#1f3520;
+      border-bottom:1px solid #c9a950;padding-bottom:1.5mm;margin:7mm 0 2.5mm;}
+    table{width:100%;border-collapse:collapse;}
+    td{padding:2.2mm 2mm;font-size:9.5pt;border-bottom:.4px solid #e2e0d6;vertical-align:top;}
+    td.v{text-align:right;white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums;}
+    td.n{text-align:right;white-space:nowrap;font-size:8pt;color:#5c6a54;}
+    td.g{width:18mm;font-family:'DM Mono',monospace;font-size:6.5pt;letter-spacing:1.2px;color:#7a8a72;padding-top:3mm;}
+    td.off{color:#9a9a90;font-weight:400;text-decoration:line-through;}
+    td i{color:#5c6a54;font-style:italic;}
+    .res td{font-size:11pt;padding:2.8mm 2mm;}
+    .res tr.tot td{border-top:1.2px solid #1f3520;border-bottom:none;font-weight:700;font-size:12pt;padding-top:3mm;}
+    .det tr.sub td{border-bottom:none;font-weight:700;color:#1f3520;background:#f4f2e8;}
+    .vazio{color:#5c6a54;font-style:italic;}
+    .nota{font-size:9.5pt;color:#5c6a54;padding:1mm 2mm;}
+    .ass{margin-top:10mm;padding-top:4mm;border-top:1px solid #c9a950;display:flex;justify-content:space-between;align-items:flex-end;}
+    .ass .l{font-family:'Playfair Display',serif;font-size:11pt;}
+    .ass .s{font-family:'DM Mono',monospace;font-size:6.5pt;color:#5c6a54;letter-spacing:1.4px;text-align:right;line-height:1.7;}
+    /* Ninguém quer o bloco de uma vendedora partido no meio da folha */
+    @media print{
+      .sec{break-after:avoid;page-break-after:avoid;}
+      table,.alerta{break-inside:avoid;page-break-inside:avoid;}
+      .ass{break-inside:avoid;}
+    }
+  </style></head><body>
+  <div class="page">
+    <div class="head">
+      <div><h1>Lista de Bônus</h1><div class="sub">QUEM GANHOU · QUANTO PAGAR · POR QUÊ</div></div>
+      <div class="mes"><b>${MES} ${ANO}</b><span>EMITIDA EM ${emitido}</span></div>
+    </div>
+    ${corpo}
+    <div class="ass">
+      <div class="l">Loretto Scarpa</div>
+      <div class="s">BÔNUS COLETIVO PAGO A CADA VENDEDORA<br>CONFERIDO POR ______________________</div>
+    </div>
+  </div>
+  <script>window.onload=()=>setTimeout(()=>window.print(),600);<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  if(!w){ toast('⚠ Libere pop-ups para gerar a lista.'); return; }
   w.document.write(html); w.document.close();
 }
 
