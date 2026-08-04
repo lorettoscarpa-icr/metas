@@ -1625,16 +1625,12 @@ body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6
 .bn-tot-val{font-family:'Cormorant Garamond',serif;font-size:24px;line-height:1;color:var(--ou2);}
 .bn-tot-blk.ok .bn-tot-val{color:#9fd49f;}
 
-.bn-grupo{margin-top:12px;}
-.bn-grupo-tit{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);padding-bottom:7px;border-bottom:1px solid var(--oud2);}
-/* O grupo da equipe é um <details>: recolhido por padrão, sem JS */
-summary.bn-grupo-tit{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;}
-summary.bn-grupo-tit::-webkit-details-marker{display:none;}
-summary.bn-grupo-tit:hover{color:var(--ou);}
-summary.bn-grupo-tit:focus-visible{outline:1px solid var(--ou);outline-offset:3px;}
-.bn-grupo-res{font-size:9px;letter-spacing:1px;color:var(--cr3);text-transform:none;}
-.bn-grupo-res::after{content:' ▾';color:var(--ou);}
-details.bn-grupo[open] .bn-grupo-res::after{content:' ▴';}
+.bn-grupo{margin-top:22px;}
+.bn-grupo-tit{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ou2);
+  padding-bottom:7px;border-bottom:1px solid var(--oud);}
+.bn-grupo-res{font-size:9px;letter-spacing:1px;color:var(--cr3);text-transform:none;white-space:nowrap;}
+.bn-grupo-sub{font-size:11px;color:var(--cr3);padding:8px 2px 2px;line-height:1.5;}
 .bn-linha{display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--oud2);}
 .bn-linha:last-child{border-bottom:none;}
 .bn-ico{font-size:12px;line-height:1;text-align:center;color:var(--cr3);}
@@ -1885,6 +1881,7 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
     <div id="conteudo-principal">
       <div class="tabnav">
         <button class="tabnav-btn active" data-tab="painel" onclick="trocarTab('painel')">Painel</button>
+        <button class="tabnav-btn" id="tab-btn-bonus" data-tab="bonus" onclick="trocarTab('bonus')" style="display:none;">Meu Bônus</button>
         <button class="tabnav-btn" id="tab-btn-anual" data-tab="anual" onclick="trocarTab('anual')" style="display:none;">Histórico Anual</button>
         <button class="tabnav-btn" id="tab-btn-retro" data-tab="historico" onclick="trocarTab('historico')" style="display:none;">Minha Evolução</button>
       </div>
@@ -1892,8 +1889,6 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
       <div class="tab-content" id="tab-painel">
       <!-- 1. Metas Individuais (forward-looking · o mínimo pra superar ano passado) -->
       <div id="metas-ind-card"></div>
-      <!-- 1b. Seus bônus (placar ao vivo do que as metas valem) -->
-      <div id="bonus-card"></div>
       <div class="cards3" id="cards-top" style="display:none;"></div>
 
       <!-- 2. Última atualização · Vendedoras (selo de confiança antes dos dados de equipe) -->
@@ -2008,6 +2003,10 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
         <div id="conv-comp-body"></div>
       </div>
       </div><!-- /tab-painel -->
+
+      <div class="tab-content" id="tab-bonus" style="display:none;">
+        <div id="bonus-card"></div>
+      </div><!-- /tab-bonus -->
 
       <div class="tab-content" id="tab-historico" style="display:none;">
       <div id="hist-sec">
@@ -2273,7 +2272,7 @@ let individualCelebradaSap=false; // meta individual de sapatos da vendedora log
 let melhorMixLider=null;     // ID da vendedora líder do Melhor Mix de Acessórios
 let melhorConvLider=null;    // ID da vendedora líder da Melhor Conversão de Mix
 let anoAtivo=new Date().getFullYear(), mesAtivo=new Date().getMonth()+1;
-let abaAtiva='painel';       // aba atual do painel ('painel' | 'historico' | 'anual')
+let abaAtiva='painel';       // aba atual ('painel' | 'bonus' | 'historico' | 'anual')
 CATS.forEach(c=>diaInp[c.id]=0);
 
 // Cache local (populado pelos listeners Firestore)
@@ -3586,9 +3585,15 @@ function renderMetasIndividuais(){
 // Bônus com valor 0 não gera linha, igual à folha.
 function renderBonusVendedora(){
   const card=document.getElementById('bonus-card');
+  const btn=document.getElementById('tab-btn-bonus');
   if(!card) return;
   card.innerHTML='';
-  if(usuario==='__gestor__' || mesFuturo()) return;
+  // A aba só existe pra vendedora e num mês que já começou
+  const some=()=>{
+    if(btn) btn.style.display='none';
+    if(abaAtiva==='bonus') trocarTab('painel');
+  };
+  if(usuario==='__gestor__' || mesFuturo()){ some(); return; }
 
   const cfg=cfgAtualCache(), cfgB=cfg.bonus||{};
   const M=cfg.metas||{}, HIP=cfg.hipermetas||{}, SUP=cfg.supermetas||{};
@@ -3598,9 +3603,11 @@ function renderBonusVendedora(){
   const nf=v=>(v||0).toLocaleString('pt-BR');
   const ord=n=>n+'º';
 
-  let garantido=0, emJogo=0;
+  let garantido=0, emJogo=0, liderando=0, nLinhas=0;
   function linha(st,nome,situacao,valor,valorHtml){
     if(st==='ok') garantido+=valor; else emJogo+=valor;
+    if(st==='lidera') liderando++;
+    nLinhas++;
     const ico={ok:'✓',lidera:'🏆',perto:'▲',aberto:'○'}[st];
     return `<div class="bn-linha ${st}">
       <div class="bn-ico">${ico}</div>
@@ -3609,7 +3616,7 @@ function renderBonusVendedora(){
     </div>`;
   }
 
-  // ─── Só depende de você ───
+  // ─── 1. Depende de você ─── metas que ela bate sozinha
   let ind='';
 
   // Metas individuais: superar o próprio mês do ano passado
@@ -3640,7 +3647,12 @@ function renderBonusVendedora(){
       MI.todas);
   }
 
-  // Disputas de volume — o mix inteiro e as competições por item
+  const g1=garantido, j1=emJogo, n1=nLinhas;  // fecha o subtotal do bloco 1
+
+  // ─── 2. Ranking individual ─── disputas: dependem também das colegas
+  let rank='';
+
+  // Volume — o mix inteiro e as competições por item
   function linhaVol(nome,cats,valor,unidade){
     const r=rankVolGrupo(pv,cats);
     const i=r.findIndex(x=>x.id===usuario);
@@ -3651,13 +3663,13 @@ function renderBonusVendedora(){
       `Você está em ${ord(i+1)} com ${r[i].val} ${unidade} · faltam ${gap}`,valor);
   }
   if((cfgB.maiorMix||0)>0)
-    ind+=linhaVol('Maior vendedora de mix',ACESS.map(c=>c.id),cfgB.maiorMix,'acessórios');
+    rank+=linhaVol('Maior vendedora de mix',ACESS.map(c=>c.id),cfgB.maiorMix,'acessórios');
   COMP_ITENS.forEach(cc=>{
     const v=bVolComp(cfgB,cc.id);
-    if(v>0) ind+=linhaVol(`Maior vendedora de ${cc.label.toLowerCase()}`,cc.cats,v,'un');
+    if(v>0) rank+=linhaVol(`Maior vendedora de ${cc.label.toLowerCase()}`,cc.cats,v,'un');
   });
 
-  // Disputas de conversão — a geral e as competições ligadas no mês
+  // Conversão — a geral e as competições ligadas no mês
   function linhaConv(nome,cats,valor){
     const r=rankConvGrupo(pv,cats);
     const i=r.findIndex(x=>x.id===usuario);
@@ -3667,10 +3679,10 @@ function renderBonusVendedora(){
     return linha(gap<=5?'perto':'aberto',nome,
       `Você está em ${ord(i+1)} com ${minha}% · faltam ${gap} pts`,valor);
   }
-  if((cfgB.melhorConv||0)>0) ind+=linhaConv('Melhor conversão de mix',ACESS.map(c=>c.id),cfgB.melhorConv);
+  if((cfgB.melhorConv||0)>0) rank+=linhaConv('Melhor conversão de mix',ACESS.map(c=>c.id),cfgB.melhorConv);
   COMP_ITENS.forEach(cc=>{
     const v=bConvComp(cfgB,cc.id);
-    if(v>0) ind+=linhaConv(`Maior conversão de ${cc.label.toLowerCase()}`,cc.cats,v);
+    if(v>0) rank+=linhaConv(`Maior conversão de ${cc.label.toLowerCase()}`,cc.cats,v);
   });
 
   // Maior venda do mês
@@ -3685,14 +3697,13 @@ function renderBonusVendedora(){
     if(minha>0 && minha>=maxGeral){ st='lidera'; sit=`Você lidera com R$ ${nf(minha)}`; }
     else if(minha>0){ st='aberto'; sit=`Sua maior: R$ ${nf(minha)} · a líder tem R$ ${nf(maxGeral)}`; }
     else { st='aberto'; sit=`Nenhuma venda acima de R$ ${nf(cfgB.maiorVendaMin||0)} registrada`; }
-    ind+=linha(st,'Maior venda do mês',sit,cfgB.maiorVenda);
+    rank+=linha(st,'Maior venda do mês',sit,cfgB.maiorVenda);
   }
 
-  // ─── Depende da equipe ───
-  // Vem recolhido: o que ela controla fica na frente, e o card não abre com
-  // 16 linhas no topo do painel.
+  const g2=garantido-g1, j2=emJogo-j1, n2=nLinhas-n1;  // fecha o subtotal do bloco 2
+
+  // ─── 3. Metas da equipe ─── coletivas: dependem das quatro juntas
   let eq='';
-  const antesG=garantido, antesJ=emJogo;
 
   // Escada de sapatos: vale o nível mais alto atingido, então o que está em jogo
   // é só a diferença entre o nível já batido e o teto.
@@ -3729,7 +3740,17 @@ function renderBonusVendedora(){
            :`${nf(feito)} de ${nf(alvo)} · faltam ${nf(alvo-feito)}`, val);
   });
 
-  if(!ind && !eq) return;
+  const g3=garantido-g1-g2, j3=emJogo-j1-j2;  // subtotal do bloco 3
+
+  if(!ind && !rank && !eq){ some(); return; }
+  if(btn) btn.style.display='';
+
+  // Resumo do bloco. No ranking não existe "garantido" — disputa vira até o fim
+  // do mês —, então ali o número útil é quantas ela está segurando agora.
+  const grupo=(tit,sub,html,res)=>html?`<div class="bn-grupo">
+    <div class="bn-grupo-tit"><span>${tit}</span><span class="bn-grupo-res">${res}</span></div>
+    <div class="bn-grupo-sub">${sub}</div>${html}</div>`:'';
+  const resVal=(g,j)=>`R$ ${nf(g)} garantido · R$ ${nf(j)} em jogo`;
 
   card.innerHTML=`<div class="bn-card">
     <div class="bn-head">
@@ -3742,10 +3763,10 @@ function renderBonusVendedora(){
         <div class="bn-tot-blk"><span class="bn-tot-lbl">Em jogo</span><span class="bn-tot-val">R$ ${nf(emJogo)}</span></div>
       </div>
     </div>
-    ${ind?`<div class="bn-grupo"><div class="bn-grupo-tit">Só depende de você</div>${ind}</div>`:''}
-    ${eq?`<details class="bn-grupo"><summary class="bn-grupo-tit"><span>Depende da equipe</span>
-      <span class="bn-grupo-res">R$ ${nf(garantido-antesG)} garantido · R$ ${nf(emJogo-antesJ)} em jogo</span>
-    </summary>${eq}</details>`:''}
+    ${grupo('Depende de Você','metas que você bate sozinha — batida, ninguém tira',ind,resVal(g1,j1))}
+    ${grupo('Ranking Individual','disputas com a equipe — vale quem estiver na frente quando o mês fechar',
+      rank,`${liderando} de ${n2} na sua mão · R$ ${nf(j2)} em disputa`)}
+    ${grupo('Metas da Equipe','as quatro juntas — o seu esforço conta, mas não decide sozinho',eq,resVal(g3,j3))}
   </div>`;
 }
 
