@@ -2134,18 +2134,27 @@ const CATS=[
 const ACESS = CATS.filter(c=>c.acess);
 const ARQUIVADAS = ['Joice'];
 
-// ══ COMPETIÇÕES DE "MAIOR CONVERSÃO" POR ITEM DO MIX ══
-// Disputas individuais que o gestor liga/desliga por mês no modal de Metas.
-// `cats` são as categorias somadas na conta da conversão (item ÷ sapatos).
-// Valor 0 em cfg.bonus.convComp[id] = sem competição naquele mês.
-const CONV_COMP = [
+// ══ COMPETIÇÕES POR ITEM DO MIX ══
+// Grupos de categorias usados nas duas disputas individuais que o gestor liga
+// ou desliga por mês no modal de Metas:
+//   · maior CONVERSÃO — taxa (itens do grupo ÷ sapatos)   → cfg.bonus.convComp
+//   · maior VENDEDORA — volume (unidades vendidas no grupo) → cfg.bonus.volComp
+// Valor 0 em qualquer uma delas = sem competição naquele mês.
+const COMP_ITENS = [
   {id:'meias',           label:'Meias',              rotulo:'MEIAS',              icone:'🧦', cats:['meias']},
   {id:'cintosCarteiras', label:'Cintos + Carteiras', rotulo:'CINTOS + CARTEIRAS', icone:'👔', cats:['cintos','carteiras']},
   {id:'limpeza',         label:'Produtos de Limpeza',rotulo:'PRODUTOS',           icone:'🧴', cats:['limpeza']},
   {id:'prendedor',       label:'Prendedores',        rotulo:'PRENDEDORES',        icone:'📎', cats:['prendedor']}
 ];
-// Lê o valor configurado de uma competição (0 = desligada).
+// Lê o valor configurado de cada competição (0 = desligada).
 function bConvComp(cfgB,id){ return (cfgB && cfgB.convComp && cfgB.convComp[id]) || 0; }
+function bVolComp(cfgB,id){ return (cfgB && cfgB.volComp && cfgB.volComp[id]) || 0; }
+
+// Ranking por volume (unidades) num grupo de categorias, da maior pra menor.
+function rankVolGrupo(pv,cats){
+  return VENDEDORAS.map(v=>({id:v.id, val:cats.reduce((s,c)=>s+((pv[v.id]||{})[c]||0),0)}))
+                   .sort((a,b)=>b.val-a.val);
+}
 
 // Conversão (itens ÷ sapatos × 100) de uma vendedora num grupo de categorias.
 // null quando ela não vendeu sapato no mês — sem denominador não há conversão.
@@ -3631,19 +3640,22 @@ function renderBonusVendedora(){
       MI.todas);
   }
 
-  // Maior vendedora de mix — volume de acessórios
-  if((cfgB.maiorMix||0)>0){
-    const r=VENDEDORAS.map(v=>({id:v.id,val:ACESS.reduce((s,c)=>s+((pv[v.id]||{})[c.id]||0),0)}))
-                      .sort((a,b)=>b.val-a.val);
+  // Disputas de volume — o mix inteiro e as competições por item
+  function linhaVol(nome,cats,valor,unidade){
+    const r=rankVolGrupo(pv,cats);
     const i=r.findIndex(x=>x.id===usuario);
-    if(i<0) ind+=linha('aberto','Maior vendedora de mix','Sem registro no mês',cfgB.maiorMix);
-    else{
-      const gap=r[0].val-r[i].val;
-      ind+=linha(i===0?'lidera':(gap<=5?'perto':'aberto'),'Maior vendedora de mix',
-        i===0?`Você lidera com ${r[i].val} acessórios`
-             :`Você está em ${ord(i+1)} · faltam ${gap}`, cfgB.maiorMix);
-    }
+    if(i<0) return linha('aberto',nome,'Sem registro no mês',valor);
+    const gap=r[0].val-r[i].val;
+    if(i===0) return linha('lidera',nome,`Você lidera com ${r[i].val} ${unidade}`,valor);
+    return linha(gap<=5?'perto':'aberto',nome,
+      `Você está em ${ord(i+1)} com ${r[i].val} ${unidade} · faltam ${gap}`,valor);
   }
+  if((cfgB.maiorMix||0)>0)
+    ind+=linhaVol('Maior vendedora de mix',ACESS.map(c=>c.id),cfgB.maiorMix,'acessórios');
+  COMP_ITENS.forEach(cc=>{
+    const v=bVolComp(cfgB,cc.id);
+    if(v>0) ind+=linhaVol(`Maior vendedora de ${cc.label.toLowerCase()}`,cc.cats,v,'un');
+  });
 
   // Disputas de conversão — a geral e as competições ligadas no mês
   function linhaConv(nome,cats,valor){
@@ -3656,7 +3668,7 @@ function renderBonusVendedora(){
       `Você está em ${ord(i+1)} com ${minha}% · faltam ${gap} pts`,valor);
   }
   if((cfgB.melhorConv||0)>0) ind+=linhaConv('Melhor conversão de mix',ACESS.map(c=>c.id),cfgB.melhorConv);
-  CONV_COMP.forEach(cc=>{
+  COMP_ITENS.forEach(cc=>{
     const v=bConvComp(cfgB,cc.id);
     if(v>0) ind+=linhaConv(`Maior conversão de ${cc.label.toLowerCase()}`,cc.cats,v);
   });
@@ -4916,8 +4928,13 @@ window.syncSapMetaTop = function(v){ const e=document.getElementById('cfg-sapato
     <div style="font-size:9px;color:var(--cr3);letter-spacing:.5px;text-transform:none;padding:0 0 6px;">por meta batida · extra se bater todas</div>
 
     <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Maior conversão por item · competição do mês <span style="color:var(--ou);">(0 = sem competição)</span></div>
-    ${CONV_COMP.map(cc=>`<div class="mrow"><label>${cc.icone} Maior conversão de ${cc.label}</label>
+    ${COMP_ITENS.map(cc=>`<div class="mrow"><label>${cc.icone} Maior conversão de ${cc.label}</label>
       <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-conv-${cc.id}" value="${bConvComp(cfg.bonus,cc.id)}" style="width:72px;" title="Bônus pra quem tiver a maior conversão de ${cc.label} no mês"></div>
+    </div>`).join('')}
+
+    <div style="font-size:9px;color:var(--cr3);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;">Maior vendedora por item · competição do mês <span style="color:var(--ou);">(volume · 0 = sem competição)</span></div>
+    ${COMP_ITENS.map(cc=>`<div class="mrow"><label>${cc.icone} Maior vendedora de ${cc.label}</label>
+      <div style="display:flex;gap:6px;align-items:center;color:var(--cr3);font-size:11px;">R$ <input class="minp-n" type="number" min="0" id="cfg-bonus-vol-${cc.id}" value="${bVolComp(cfg.bonus,cc.id)}" style="width:72px;" title="Bônus pra quem vender MAIS unidades de ${cc.label} no mês (volume, não taxa)"></div>
     </div>`).join('')}
   `;
   document.getElementById('modal').classList.add('open');
@@ -4961,10 +4978,13 @@ async function salvarCfg(){
     porMeta: parseInt(document.getElementById('cfg-bonus-metaInd-porMeta')?.value)||0,
     todas:   parseInt(document.getElementById('cfg-bonus-metaInd-todas')?.value)||0
   };
-  // Competições de maior conversão por item do mix (0 = sem competição no mês)
+  // Competições por item do mix — conversão (taxa) e vendedora (volume).
+  // 0 = sem competição no mês.
   cfg.bonus.convComp = {};
-  CONV_COMP.forEach(cc=>{
+  cfg.bonus.volComp = {};
+  COMP_ITENS.forEach(cc=>{
     cfg.bonus.convComp[cc.id] = parseInt(document.getElementById('cfg-bonus-conv-'+cc.id)?.value)||0;
+    cfg.bonus.volComp[cc.id]  = parseInt(document.getElementById('cfg-bonus-vol-'+cc.id)?.value)||0;
   });
   loading(true);await saveCfgMes(anoAtivo,mesAtivo,cfg);loading(false);
   fecharCfg();render();toast(`✓ Metas de ${MESES_NOMES[mesAtivo-1]} atualizadas!`);
@@ -5658,17 +5678,25 @@ function gerarFolhaBonus(){
   if(MI.porMeta>0) rows+=li('Bater suas METAS INDIVIDUAIS',`R$ ${MI.porMeta} POR META BATIDA`);
   if(MI.todas>0)   rows+=li('Bater TODAS as suas METAS INDIVIDUAIS',`R$ ${MI.todas} DE BÔNUS EXTRA`,true);
 
-  // Competições de maior conversão por item — só as ligadas no mês
-  const compAtivas = CONV_COMP.filter(cc=>bConvComp(cfgB,cc.id)>0);
+  // Competições por item — só as ligadas no mês, cada tipo na sua seção
+  const compAtivas = COMP_ITENS.filter(cc=>bConvComp(cfgB,cc.id)>0);
   if(compAtivas.length){
     rows+=`<div class="sec">COMPETIÇÃO DE CONVERSÃO · MAIOR TAXA LEVA</div>`;
     compAtivas.forEach(cc=>{
       rows+=li(`Maior CONVERSÃO DE ${cc.rotulo}`,`R$ ${bConvComp(cfgB,cc.id)} DE BÔNUS`);
     });
   }
+  const volAtivas = COMP_ITENS.filter(cc=>bVolComp(cfgB,cc.id)>0);
+  if(volAtivas.length){
+    rows+=`<div class="sec">COMPETIÇÃO DE VOLUME · QUEM VENDER MAIS LEVA</div>`;
+    volAtivas.forEach(cc=>{
+      rows+=li(`Maior VENDEDORA DE ${cc.label.toUpperCase()}`,`R$ ${bVolComp(cfgB,cc.id)} DE BÔNUS`);
+    });
+  }
 
   const totAcess=acess.reduce((s,[id])=>s+(((M[id]||0)>0)?bCat(id):0),0) + (((M.prendedor||0)>0)?bCat('prendedor'):0);
-  const totComp=compAtivas.reduce((s,cc)=>s+bConvComp(cfgB,cc.id),0);
+  const totComp=compAtivas.reduce((s,cc)=>s+bConvComp(cfgB,cc.id),0)
+              + volAtivas.reduce((s,cc)=>s+bVolComp(cfgB,cc.id),0);
   const totMetaInd=MI.porMeta*4 + MI.todas;  // 4 metas individuais: sapatos, meias, cintos, limpeza
   const total=B.sapHiper + totAcess + B.maiorMix + B.melhorConv + B.maiorVenda + totMetaInd + totComp;
 
@@ -5781,10 +5809,12 @@ async function gerarApresentacaoMetas() {
                         + (METAS.prendedor>0? bCat('prendedor') : 0);
     // Metas individuais batidas + competições de conversão por item (ligadas no mês)
     const MI = bMetaInd(cfgB);
-    const COMPS = CONV_COMP.filter(cc=>bConvComp(cfgB,cc.id)>0)
-                           .map(cc=>Object.assign({valor:bConvComp(cfgB,cc.id)},cc));
+    const COMPS = COMP_ITENS.filter(cc=>bConvComp(cfgB,cc.id)>0)
+                           .map(cc=>Object.assign({valor:bConvComp(cfgB,cc.id),tipo:'conv'},cc));
+    const VOLS  = COMP_ITENS.filter(cc=>bVolComp(cfgB,cc.id)>0)
+                           .map(cc=>Object.assign({valor:bVolComp(cfgB,cc.id),tipo:'vol'},cc));
     const totalMetaInd = MI.porMeta*4 + MI.todas;  // 4 metas: sapatos, meias, cintos, limpeza
-    const totalComps = COMPS.reduce((s,cc)=>s+cc.valor,0);
+    const totalComps = COMPS.reduce((s,cc)=>s+cc.valor,0) + VOLS.reduce((s,cc)=>s+cc.valor,0);
 
     const totalIndividual = BONUS.maiorMix + BONUS.melhorConv + BONUS.maiorVenda + totalMetaInd + totalComps;
     const TOTAL_MAX = totalColetivo + totalIndividual;
@@ -5927,6 +5957,8 @@ async function gerarApresentacaoMetas() {
       desc:`Bata TODAS as suas metas do mês (superar o seu ${MES} do ano passado)`, bonus:MI.todas});
     COMPS.forEach(cc=>ind.push({icon:cc.icone, titulo:`MAIOR CONVERSÃO DE ${cc.rotulo}`,
       desc:`Maior taxa de ${cc.label.toLowerCase()} por sapato vendido no mês`, bonus:cc.valor}));
+    VOLS.forEach(cc=>ind.push({icon:cc.icone, titulo:`MAIOR VENDEDORA DE ${cc.label.toUpperCase()}`,
+      desc:`Quem vender mais ${cc.label.toLowerCase()} no mês, em unidades`, bonus:cc.valor}));
 
     // Layout elástico: quanto mais itens, mais baixa a linha (a slide tem 7.5" de altura)
     const rowY0 = 2.0, rowGap = 0.14, dispon = 7.25 - rowY0;
@@ -5992,6 +6024,7 @@ async function gerarApresentacaoMetas() {
     if(MI.porMeta>0) individual.push(['Metas individuais (por meta)', MI.porMeta]);
     if(MI.todas>0)   individual.push(['Bateu todas as individuais', MI.todas]);
     COMPS.forEach(cc=>individual.push([`Maior conversão de ${cc.label.toLowerCase()}`, cc.valor]));
+    VOLS.forEach(cc=>individual.push([`Maior vendedora de ${cc.label.toLowerCase()}`, cc.valor]));
 
     const colRight_h = Math.min(3.9, Math.max(2.85, 0.75 + individual.length*0.42));
     s.addShape('rect',{x:colRight_x,y:colY,w:colRight_w,h:colRight_h,fill:{color:C.verde2},line:{color:C.ouro,width:1}});
@@ -6055,7 +6088,8 @@ async function gerarApresentacaoMetas() {
     desafios.push(['⭐', `Busque a maior venda — R$ ${BONUS.maiorVendaMin.toLocaleString('pt-BR')}+ manda no grupo!`]);
     desafios.push(['🏆', `Seja a campeã de mix — R$ ${BONUS.maiorMix} é seu!`]);
     if(totalMetaInd>0) desafios.push(['🎯', `Bata suas metas individuais — supere o seu ${MES} do ano passado`]);
-    if(COMPS.length) desafios.push(['📊', `Competição de conversão: ${COMPS.map(c=>c.label).join(' · ')} — R$ ${totalComps} em disputa`]);
+    if(COMPS.length) desafios.push(['📊', `Competição de conversão: ${COMPS.map(c=>c.label).join(' · ')} — R$ ${COMPS.reduce((s,c)=>s+c.valor,0)} em disputa`]);
+    if(VOLS.length)  desafios.push(['📦', `Competição de volume: ${VOLS.map(c=>c.label).join(' · ')} — R$ ${VOLS.reduce((s,c)=>s+c.valor,0)} em disputa`]);
 
     const dRowH = 4.5 / desafios.length;
     desafios.forEach((d,i) => {
