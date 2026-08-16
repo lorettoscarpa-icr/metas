@@ -1626,8 +1626,8 @@ body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6
 .bn-tot-sep{width:1px;background:var(--oud2);}
 .bn-tot-blk{display:flex;flex-direction:column;gap:5px;}
 .bn-tot-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);}
-.bn-tot-val{font-family:'Cormorant Garamond',serif;font-size:32px;line-height:.9;color:var(--ou2);
-  font-variant-numeric:tabular-nums;}
+.bn-tot-val{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;line-height:.9;
+  color:var(--ou2);font-variant-numeric:tabular-nums;}
 .bn-tot-blk.ok .bn-tot-val{color:#9fd49f;}
 .bn-barra{height:5px;background:rgba(255,255,255,.07);margin-top:18px;overflow:hidden;}
 .bn-barra i{display:block;height:100%;background:linear-gradient(90deg,#7fbf7f,#9fd49f);transition:width .4s;}
@@ -1646,7 +1646,7 @@ body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6
 .bn-grupo-sub{font-size:11px;color:var(--cr3);padding:11px 16px 3px;line-height:1.5;}
 
 /* Linha: faixa de estado à esquerda, texto no meio, valor à direita */
-.bn-linha{display:grid;grid-template-columns:3px 1fr auto;align-items:center;gap:14px;
+.bn-linha{display:grid;grid-template-columns:3px auto 1fr auto;align-items:center;gap:13px;
   padding:12px 16px 12px 0;border-bottom:1px solid var(--oud2);}
 .bn-linha:last-child{border-bottom:none;}
 .bn-mark{align-self:stretch;background:var(--oud2);}
@@ -1654,9 +1654,11 @@ body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6
 .bn-linha.lidera .bn-mark{background:var(--ou);}
 .bn-linha.perto .bn-mark{background:rgba(212,180,90,.55);}
 .bn-nome{font-size:13px;color:var(--cr);letter-spacing:.2px;line-height:1.45;}
-.bn-ico{font-size:11px;color:var(--cr3);margin-right:7px;}
-.bn-linha.ok .bn-ico{color:#9fd49f;}
-.bn-linha.lidera .bn-ico,.bn-linha.perto .bn-ico{color:var(--ou);}
+.bn-ico{margin-left:3px;line-height:0;}
+.bn-ico svg{width:19px;height:19px;stroke:var(--ou);stroke-width:1.5;fill:none;opacity:.65;
+  stroke-linecap:round;stroke-linejoin:round;}
+.bn-linha.ok .bn-ico svg{stroke:#9fd49f;opacity:.85;}
+.bn-linha.lidera .bn-ico svg{stroke:var(--ou2);opacity:.95;}
 .bn-chip{display:inline-block;margin-left:8px;font-size:8.5px;letter-spacing:1.2px;
   text-transform:uppercase;color:var(--ou2);border:1px solid var(--oud);padding:2px 6px;
   white-space:nowrap;vertical-align:1px;}
@@ -1666,8 +1668,8 @@ body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6
 .bn-prog{height:3px;background:rgba(255,255,255,.06);margin-top:9px;max-width:260px;overflow:hidden;}
 .bn-prog i{display:block;height:100%;background:linear-gradient(90deg,var(--ou),var(--ou2));transition:width .4s;}
 .bn-linha.ok .bn-prog i{background:linear-gradient(90deg,#7fbf7f,#9fd49f);}
-.bn-val{font-family:'Cormorant Garamond',serif;font-size:21px;line-height:1;color:var(--ou2);
-  white-space:nowrap;padding-left:14px;font-variant-numeric:tabular-nums;}
+.bn-val{font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:300;line-height:1;
+  color:var(--ou2);white-space:nowrap;padding-left:14px;font-variant-numeric:tabular-nums;}
 .bn-val em{font-style:normal;font-size:11px;color:var(--cr3);}
 .bn-linha.ok .bn-val{color:#9fd49f;}
 .bn-linha.aberto{opacity:.55;}
@@ -1675,19 +1677,21 @@ body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6
 /* No creme o verde claro some — mesmo verde escuro do resto do modo claro */
 body.light-mode .bn-tot-blk.ok .bn-tot-val,
 body.light-mode .bn-barra-lbl b,
-body.light-mode .bn-linha.ok .bn-ico,
 body.light-mode .bn-linha.ok .bn-val,
 body.light-mode .bn-linha.ok .bn-sit{color:#2e6e2e;}
 body.light-mode .bn-barra{background:rgba(14,26,8,.10);}
 body.light-mode .bn-prog{background:rgba(14,26,8,.10);}
 body.light-mode .bn-grupo{background:rgba(255,255,255,.35);}
+body.light-mode .bn-linha.ok .bn-ico svg{stroke:#2e6e2e;}
 
 @media(max-width:640px){
   .bn-head{padding:16px 16px 15px;}
   .bn-head-top{flex-direction:column;gap:14px;}
   .bn-tot{width:100%;justify-content:space-between;}
   .bn-tot-val{font-size:28px;}
-  .bn-linha{gap:11px;padding:12px 13px 12px 0;align-items:start;}
+  .bn-linha{gap:10px;padding:12px 13px 12px 0;align-items:start;}
+  .bn-ico{margin-top:2px;}
+  .bn-ico svg{width:17px;height:17px;}
   .bn-nome{font-size:12.5px;}
   .bn-chip{margin-left:6px;}
   .bn-sit{font-size:11px;}
@@ -3649,21 +3653,29 @@ function renderBonusVendedora(){
   const ord=n=>n+'º';
 
   let garantido=0, emJogo=0, liderando=0, nLinhas=0;
-  // o = {pct} desenha a barra de progresso · {chip} carimba a posição na disputa
+  // Desenhos das categorias, os mesmos do card de Metas da Equipe
+  const SVG=Object.fromEntries(CATS.map(c=>[c.id,c.svg]));
+  // Desenhos das linhas que não são de uma categoria
+  const SVG_ALVO='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>';
+  const SVG_MIX='<svg viewBox="0 0 24 24"><path d="M12 3l8 4.5-8 4.5-8-4.5L12 3z"/><path d="M4 12l8 4.5 8-4.5"/><path d="M4 16.5L12 21l8-4.5"/></svg>';
+  const SVG_VENDA='<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6L12 16.8 6.7 19.6l1.1-6L3.4 9.4l6-.8L12 3z"/></svg>';
+  const SVG_ULTRA='<svg viewBox="0 0 24 24"><path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z"/></svg>';
+
+  // o = {pct} barra de progresso · {chip} posição na disputa · {svg} desenho
   //     {valorHtml} troca o lado direito (usado na escada, que mostra "de 200")
   function linha(st,nome,situacao,valor,o){
     o=o||{};
     if(st==='ok') garantido+=valor; else emJogo+=valor;
     if(st==='lidera') liderando++;
     nLinhas++;
-    const ico={ok:'✓',lidera:'🏆',perto:'▲',aberto:'○'}[st];
     const barra = o.pct!=null
       ? `<div class="bn-prog"><i style="width:${Math.max(2,Math.min(100,Math.round(o.pct)))}%"></i></div>` : '';
     const chip = o.chip ? `<span class="bn-chip">${o.chip}</span>` : '';
     return `<div class="bn-linha ${st}">
       <div class="bn-mark"></div>
+      <div class="bn-ico">${o.svg||SVG_ALVO}</div>
       <div class="bn-txt">
-        <div class="bn-nome"><span class="bn-ico">${ico}</span>${nome}${chip}</div>
+        <div class="bn-nome">${nome}${chip}</div>
         <div class="bn-sit">${situacao}</div>
         ${barra}
       </div>
@@ -3677,10 +3689,10 @@ function renderBonusVendedora(){
   // Metas individuais: superar o próprio mês do ano passado
   const h25=(HIST_2025[usuario]||{})[mesAtivo];
   const metasInd = h25 ? [
-    {nome:'Sapatos', atu:eu.sapatos||0, alvo:h25.sap||0},
-    {nome:'Meias',   atu:eu.meias||0,   alvo:h25.mei||0},
-    {nome:'Cintos',  atu:(eu.cintos||0)+(eu.carteiras||0)+(eu.prendedor||0), alvo:h25.ace||0},
-    {nome:'Limpeza', atu:eu.limpeza||0, alvo:h25.lim||0}
+    {nome:'Sapatos', id:'sapatos', atu:eu.sapatos||0, alvo:h25.sap||0},
+    {nome:'Meias',   id:'meias',   atu:eu.meias||0,   alvo:h25.mei||0},
+    {nome:'Cintos',  id:'cintos',  atu:(eu.cintos||0)+(eu.carteiras||0)+(eu.prendedor||0), alvo:h25.ace||0},
+    {nome:'Limpeza', id:'limpeza', atu:eu.limpeza||0, alvo:h25.lim||0}
   ].filter(m=>m.alvo>0) : [];
 
   if(MI.porMeta>0){
@@ -3690,7 +3702,7 @@ function renderBonusVendedora(){
         `${m.nome} · superar ${m.alvo}`,
         bateu?`Você fez ${m.atu} — ${m.atu-m.alvo} acima`
              :`Você fez ${m.atu} · faltam ${m.alvo-m.atu+1}`,
-        MI.porMeta, {pct:bateu?100:pct});
+        MI.porMeta, {pct:bateu?100:pct, svg:SVG[m.id]});
     });
   }
   if(MI.todas>0 && metasInd.length){
@@ -3714,11 +3726,11 @@ function renderBonusVendedora(){
   };
 
   // Volume — o mix inteiro e as competições por item
-  function linhaVol(nome,cats,valor,unidade){
+  function linhaVol(nome,cats,valor,unidade,svg){
     const r=rankVolGrupo(pv,cats);
     const i=r.findIndex(x=>x.id===usuario);
-    if(i<0) return linha('aberto',nome,'Sem registro no mês',valor);
-    const gap=r[0].val-r[i].val, posto={chip:`${ord(i+1)} de ${r.length}`};
+    if(i<0) return linha('aberto',nome,'Sem registro no mês',valor,{svg});
+    const gap=r[0].val-r[i].val, posto={chip:`${i===0?'🏆 ':''}${ord(i+1)} de ${r.length}`, svg};
     if(i===0){
       const e=cotaEmpate(r.map(x=>x.val),valor);
       return linha('lidera',nome, e.n>1
@@ -3729,19 +3741,19 @@ function renderBonusVendedora(){
       `Você está com ${r[i].val} ${unidade} · faltam ${gap} pra líder`,valor,posto);
   }
   if((cfgB.maiorMix||0)>0)
-    rank+=linhaVol('Maior vendedora de mix',ACESS.map(c=>c.id),cfgB.maiorMix,'acessórios');
+    rank+=linhaVol('Maior vendedora de mix',ACESS.map(c=>c.id),cfgB.maiorMix,'acessórios',SVG_MIX);
   COMP_ITENS.forEach(cc=>{
     const v=bVolComp(cfgB,cc.id);
-    if(v>0) rank+=linhaVol(`Maior vendedora de ${cc.label.toLowerCase()}`,cc.cats,v,'un');
+    if(v>0) rank+=linhaVol(`Maior vendedora de ${cc.label.toLowerCase()}`,cc.cats,v,'un',SVG[cc.cats[0]]);
   });
 
   // Conversão — a geral e as competições ligadas no mês
-  function linhaConv(nome,cats,valor){
+  function linhaConv(nome,cats,valor,svg){
     const r=rankConvGrupo(pv,cats);
     const i=r.findIndex(x=>x.id===usuario);
-    if(i<0) return linha('aberto',nome,'Sem sapatos registrados no mês',valor);
+    if(i<0) return linha('aberto',nome,'Sem sapatos registrados no mês',valor,{svg});
     const minha=Math.round(r[i].pct), gap=Math.round(r[0].pct)-minha;
-    const posto={chip:`${ord(i+1)} de ${r.length}`};
+    const posto={chip:`${i===0?'🏆 ':''}${ord(i+1)} de ${r.length}`, svg};
     if(i===0){
       const e=cotaEmpate(r.map(x=>x.pct),valor);
       return linha('lidera',nome, e.n>1
@@ -3751,10 +3763,10 @@ function renderBonusVendedora(){
     return linha(gap<=5?'perto':'aberto',nome,
       `Você está com ${minha}% · faltam ${gap} pts pra líder`,valor,posto);
   }
-  if((cfgB.melhorConv||0)>0) rank+=linhaConv('Melhor conversão de mix',ACESS.map(c=>c.id),cfgB.melhorConv);
+  if((cfgB.melhorConv||0)>0) rank+=linhaConv('Melhor conversão de mix',ACESS.map(c=>c.id),cfgB.melhorConv,SVG_MIX);
   COMP_ITENS.forEach(cc=>{
     const v=bConvComp(cfgB,cc.id);
-    if(v>0) rank+=linhaConv(`Maior conversão de ${cc.label.toLowerCase()}`,cc.cats,v);
+    if(v>0) rank+=linhaConv(`Maior conversão de ${cc.label.toLowerCase()}`,cc.cats,v,SVG[cc.cats[0]]);
   });
 
   // Maior venda do mês
@@ -3779,7 +3791,7 @@ function renderBonusVendedora(){
     else if(minha>0){ st='aberto'; sit=`Sua maior: R$ ${nf(minha)} · a líder tem R$ ${nf(maxGeral)}`; }
     else { st='aberto'; sit=`Nenhuma venda acima de R$ ${nf(cfgB.maiorVendaMin||0)} registrada`; }
     const pos=todas.filter(v=>v>minha).length+1;
-    rank+=linha(st,'Maior venda do mês',sit,val, minha>0?{chip:`${ord(pos)} de ${todas.length}`}:null);
+    rank+=linha(st,'Maior venda do mês',sit,val, minha>0?{chip:`${pos===1?'🏆 ':''}${ord(pos)} de ${todas.length}`, svg:SVG_VENDA}:{svg:SVG_VENDA});
   }
 
   const g2=garantido-g1, j2=emJogo-j1, n2=nLinhas-n1;  // fecha o subtotal do bloco 2
@@ -3806,8 +3818,9 @@ function renderBonusVendedora(){
     const alvoBarra=proximo?proximo.q:niveis[niveis.length-1].q;
     eq+=`<div class="bn-linha ${st}">
       <div class="bn-mark"></div>
+      <div class="bn-ico">${SVG.sapatos}</div>
       <div class="bn-txt">
-        <div class="bn-nome"><span class="bn-ico">${jaVale>0?'✓':'○'}</span>Sapatos · escada da equipe
+        <div class="bn-nome">Sapatos · escada da equipe
           <span class="bn-chip">${batidos.length} de ${niveis.length} níveis</span></div>
         <div class="bn-sit">${proximo
           ? `Equipe em ${nf(feito)} pares · faltam ${nf(proximo.q-feito)} pra ${proximo.n} (R$ ${nf(proximo.v)})`
@@ -3825,7 +3838,7 @@ function renderBonusVendedora(){
     const feito=ag[c.id]||0, bateu=feito>=alvo, pct=Math.round(feito/alvo*100);
     eq+=linha(bateu?'ok':(pct>=80?'perto':'aberto'), `${c.nome} · equipe`,
       bateu?`${nf(feito)} de ${nf(alvo)} — batida`
-           :`${nf(feito)} de ${nf(alvo)} · faltam ${nf(alvo-feito)}`, val, {pct:bateu?100:pct});
+           :`${nf(feito)} de ${nf(alvo)} · faltam ${nf(alvo-feito)}`, val, {pct:bateu?100:pct, svg:SVG[c.id]});
   });
 
   // Extra por bater TODAS as ultrametas ⚡ — mesma regra da folha e da Lista
@@ -3836,10 +3849,10 @@ function renderBonusVendedora(){
     if(ativas.length){
       const faltou=ativas.filter(c=>(ag[c.id]||0)<U[c.id]);
       eq+=linha(!faltou.length?'ok':(faltou.length===1?'perto':'aberto'),
-        `Todas as ultrametas ⚡ · equipe`,
+        `Todas as ultrametas · equipe`,
         !faltou.length ? `As ${ativas.length} batidas`
                        : `${ativas.length-faltou.length} de ${ativas.length} · falta ${faltou.slice(0,2).map(c=>c.nome).join(', ')}${faltou.length>2?` e mais ${faltou.length-2}`:''}`,
-        ultraTodas, {pct:(ativas.length-faltou.length)/ativas.length*100});
+        ultraTodas, {pct:(ativas.length-faltou.length)/ativas.length*100, svg:SVG_ULTRA});
     }
   }
 
@@ -3850,12 +3863,12 @@ function renderBonusVendedora(){
 
   // Resumo do bloco. No ranking não existe "garantido" — disputa vira até o fim
   // do mês —, então ali o número útil é quantas ela está segurando agora.
-  const grupo=(n,tit,sub,html,res)=>html?`<section class="bn-grupo">
+  const grupo=(n,tit,html,res)=>html?`<section class="bn-grupo">
     <div class="bn-grupo-tit">
       <span class="bn-grupo-nome"><i class="bn-grupo-n">${n}</i>${tit}</span>
       <span class="bn-grupo-res">${res}</span>
     </div>
-    <div class="bn-grupo-sub">${sub}</div>${html}</section>`:'';
+    ${html}</section>`:'';
   const resVal=(g,j)=>j>0
     ? `R$ ${nf(g)} garantido · R$ ${nf(j)} em jogo`
     : `R$ ${nf(g)} garantido · tudo fechado`;
@@ -3882,10 +3895,9 @@ function renderBonusVendedora(){
         ? `<b>${pctGar}%</b> dos R$ ${nf(possivel)} possíveis do mês já são seus`
         : `R$ ${nf(possivel)} em jogo neste mês — nada garantido ainda`}</div>
     </div>
-    ${grupo(1,'Depende de Você','metas que você bate sozinha — batida, ninguém tira',ind,resVal(g1,j1))}
-    ${grupo(2,'Ranking Individual','disputas com a equipe — vale quem estiver na frente quando o mês fechar',
-      rank,`${liderando} de ${n2} na sua mão · R$ ${nf(j2)} em disputa`)}
-    ${grupo(3,'Metas da Equipe','as quatro juntas — o seu esforço conta, mas não decide sozinho',eq,resVal(g3,j3))}
+    ${grupo(1,'Depende de Você',ind,resVal(g1,j1))}
+    ${grupo(2,'Ranking Individual',rank,`${liderando} de ${n2} na sua mão · R$ ${nf(j2)} em disputa`)}
+    ${grupo(3,'Metas da Equipe',eq,resVal(g3,j3))}
   </div>`;
 }
 
