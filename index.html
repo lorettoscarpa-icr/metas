@@ -1612,51 +1612,89 @@ body.light-mode .mi-val.feito.superada{color:#2e6e2e;}
 body.light-mode .mi-foot-falta.superada{color:#2e6e2e;}
 body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6e2e);}
 
-/* ── Card "Seus bônus" · placar do que as metas valem (só vendedora) ── */
-.bn-card{background:linear-gradient(135deg,rgba(201,168,76,.06),rgba(201,168,76,.02));border:1px solid var(--oud);padding:18px 18px 14px;margin-bottom:18px;position:relative;}
-.bn-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--ou);}
-.bn-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
-.bn-tit{font-family:'Playfair Display',serif;font-size:19px;color:var(--ou2);letter-spacing:.5px;line-height:1.2;}
-.bn-sub{font-size:11px;color:var(--cr3);letter-spacing:.5px;margin-top:4px;}
-.bn-tot{display:flex;gap:8px;}
-.bn-tot-blk{display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding:8px 14px;border:1px solid var(--oud2);background:rgba(255,255,255,.025);min-width:110px;}
-.bn-tot-blk.ok{border-color:rgba(78,158,78,.45);background:rgba(78,158,78,.06);}
-.bn-tot-lbl{font-size:8px;letter-spacing:1.8px;text-transform:uppercase;color:var(--cr3);}
-.bn-tot-val{font-family:'Cormorant Garamond',serif;font-size:24px;line-height:1;color:var(--ou2);}
+/* ── Aba "Bônus Mensal" · placar do que as metas valem (só vendedora) ── */
+.bn-card{display:flex;flex-direction:column;gap:14px;}
+
+/* Cabeçalho: os dois números do mês e a proporção entre eles */
+.bn-head{background:linear-gradient(135deg,rgba(201,168,76,.09),rgba(201,168,76,.02));
+  border:1px solid var(--oud);padding:20px 22px 18px;position:relative;}
+.bn-head::before{content:'';position:absolute;left:0;top:0;width:3px;height:100%;background:var(--ou);}
+.bn-head-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;}
+.bn-tit{font-family:'Playfair Display',serif;font-size:21px;color:var(--ou2);letter-spacing:.4px;line-height:1.2;}
+.bn-sub{font-size:11px;color:var(--cr3);letter-spacing:.4px;margin-top:4px;}
+.bn-tot{display:flex;align-items:stretch;gap:20px;}
+.bn-tot-sep{width:1px;background:var(--oud2);}
+.bn-tot-blk{display:flex;flex-direction:column;gap:5px;}
+.bn-tot-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);}
+.bn-tot-val{font-family:'Cormorant Garamond',serif;font-size:32px;line-height:.9;color:var(--ou2);
+  font-variant-numeric:tabular-nums;}
 .bn-tot-blk.ok .bn-tot-val{color:#9fd49f;}
+.bn-barra{height:5px;background:rgba(255,255,255,.07);margin-top:18px;overflow:hidden;}
+.bn-barra i{display:block;height:100%;background:linear-gradient(90deg,#7fbf7f,#9fd49f);transition:width .4s;}
+.bn-barra-lbl{font-size:11px;color:var(--cr3);margin-top:8px;}
+.bn-barra-lbl b{color:#9fd49f;font-weight:600;}
 
-.bn-grupo{margin-top:22px;}
-.bn-grupo-tit{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;
-  font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ou2);
-  padding-bottom:7px;border-bottom:1px solid var(--oud);}
-.bn-grupo-res{font-size:9px;letter-spacing:1px;color:var(--cr3);text-transform:none;white-space:nowrap;}
-.bn-grupo-sub{font-size:11px;color:var(--cr3);padding:8px 2px 2px;line-height:1.5;}
-.bn-linha{display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--oud2);}
+/* Cada bloco é um painel fechado, com o próprio subtotal */
+.bn-grupo{border:1px solid var(--oud2);background:rgba(255,255,255,.016);}
+.bn-grupo-tit{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;
+  padding:13px 16px 11px;border-bottom:1px solid var(--oud2);background:rgba(201,168,76,.045);}
+.bn-grupo-nome{display:flex;align-items:center;gap:9px;font-size:10px;letter-spacing:2.2px;
+  text-transform:uppercase;color:var(--ou2);}
+.bn-grupo-n{font-style:normal;font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:0;
+  color:var(--ou);opacity:.75;line-height:1;}
+.bn-grupo-res{font-size:9.5px;letter-spacing:.6px;color:var(--cr3);white-space:nowrap;}
+.bn-grupo-sub{font-size:11px;color:var(--cr3);padding:11px 16px 3px;line-height:1.5;}
+
+/* Linha: faixa de estado à esquerda, texto no meio, valor à direita */
+.bn-linha{display:grid;grid-template-columns:3px 1fr auto;align-items:center;gap:14px;
+  padding:12px 16px 12px 0;border-bottom:1px solid var(--oud2);}
 .bn-linha:last-child{border-bottom:none;}
-.bn-ico{font-size:12px;line-height:1;text-align:center;color:var(--cr3);}
-.bn-nome{font-size:12.5px;color:var(--cr);letter-spacing:.3px;}
-.bn-sit{font-size:11px;color:var(--cr3);margin-top:3px;}
-.bn-val{font-family:'Cormorant Garamond',serif;font-size:19px;line-height:1;color:var(--ou2);white-space:nowrap;}
-.bn-val em{font-style:normal;font-size:11px;color:var(--cr3);}
-.bn-linha.ok .bn-ico,.bn-linha.ok .bn-val{color:#9fd49f;}
+.bn-mark{align-self:stretch;background:var(--oud2);}
+.bn-linha.ok .bn-mark{background:#6dbf6d;}
+.bn-linha.lidera .bn-mark{background:var(--ou);}
+.bn-linha.perto .bn-mark{background:rgba(212,180,90,.55);}
+.bn-nome{font-size:13px;color:var(--cr);letter-spacing:.2px;line-height:1.45;}
+.bn-ico{font-size:11px;color:var(--cr3);margin-right:7px;}
+.bn-linha.ok .bn-ico{color:#9fd49f;}
+.bn-linha.lidera .bn-ico,.bn-linha.perto .bn-ico{color:var(--ou);}
+.bn-chip{display:inline-block;margin-left:8px;font-size:8.5px;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--ou2);border:1px solid var(--oud);padding:2px 6px;
+  white-space:nowrap;vertical-align:1px;}
+.bn-sit{font-size:11.5px;color:var(--cr3);margin-top:4px;line-height:1.45;}
 .bn-linha.ok .bn-sit{color:#8fc98f;}
-.bn-linha.lidera .bn-ico,.bn-linha.lidera .bn-sit{color:var(--ou2);}
-.bn-linha.perto .bn-ico{color:var(--ou);}
-.bn-linha.aberto{opacity:.6;}
+.bn-linha.lidera .bn-sit{color:var(--ou2);}
+.bn-prog{height:3px;background:rgba(255,255,255,.06);margin-top:9px;max-width:260px;overflow:hidden;}
+.bn-prog i{display:block;height:100%;background:linear-gradient(90deg,var(--ou),var(--ou2));transition:width .4s;}
+.bn-linha.ok .bn-prog i{background:linear-gradient(90deg,#7fbf7f,#9fd49f);}
+.bn-val{font-family:'Cormorant Garamond',serif;font-size:21px;line-height:1;color:var(--ou2);
+  white-space:nowrap;padding-left:14px;font-variant-numeric:tabular-nums;}
+.bn-val em{font-style:normal;font-size:11px;color:var(--cr3);}
+.bn-linha.ok .bn-val{color:#9fd49f;}
+.bn-linha.aberto{opacity:.55;}
 
-/* No creme, o verde claro some — mesmo verde escuro do resto do modo claro */
+/* No creme o verde claro some — mesmo verde escuro do resto do modo claro */
 body.light-mode .bn-tot-blk.ok .bn-tot-val,
+body.light-mode .bn-barra-lbl b,
 body.light-mode .bn-linha.ok .bn-ico,
 body.light-mode .bn-linha.ok .bn-val,
 body.light-mode .bn-linha.ok .bn-sit{color:#2e6e2e;}
+body.light-mode .bn-barra{background:rgba(14,26,8,.10);}
+body.light-mode .bn-prog{background:rgba(14,26,8,.10);}
+body.light-mode .bn-grupo{background:rgba(255,255,255,.35);}
 
 @media(max-width:640px){
-  .bn-head{flex-direction:column;gap:12px;}
-  .bn-tot{width:100%;}
-  .bn-tot-blk{flex:1;min-width:0;}
-  .bn-linha{grid-template-columns:18px 1fr auto;gap:9px;}
-  .bn-nome{font-size:12px;}
-  .bn-val{font-size:17px;}
+  .bn-head{padding:16px 16px 15px;}
+  .bn-head-top{flex-direction:column;gap:14px;}
+  .bn-tot{width:100%;justify-content:space-between;}
+  .bn-tot-val{font-size:28px;}
+  .bn-linha{gap:11px;padding:12px 13px 12px 0;align-items:start;}
+  .bn-nome{font-size:12.5px;}
+  .bn-chip{margin-left:6px;}
+  .bn-sit{font-size:11px;}
+  .bn-val{font-size:19px;padding-left:10px;padding-top:1px;}
+  .bn-prog{max-width:none;}
+  .bn-grupo-sub{padding:10px 13px 3px;}
+  .bn-grupo-tit{padding:12px 13px 10px;}
 }
 
 /* "Você → Meta" lado a lado */
@@ -3611,15 +3649,25 @@ function renderBonusVendedora(){
   const ord=n=>n+'º';
 
   let garantido=0, emJogo=0, liderando=0, nLinhas=0;
-  function linha(st,nome,situacao,valor,valorHtml){
+  // o = {pct} desenha a barra de progresso · {chip} carimba a posição na disputa
+  //     {valorHtml} troca o lado direito (usado na escada, que mostra "de 200")
+  function linha(st,nome,situacao,valor,o){
+    o=o||{};
     if(st==='ok') garantido+=valor; else emJogo+=valor;
     if(st==='lidera') liderando++;
     nLinhas++;
     const ico={ok:'✓',lidera:'🏆',perto:'▲',aberto:'○'}[st];
+    const barra = o.pct!=null
+      ? `<div class="bn-prog"><i style="width:${Math.max(2,Math.min(100,Math.round(o.pct)))}%"></i></div>` : '';
+    const chip = o.chip ? `<span class="bn-chip">${o.chip}</span>` : '';
     return `<div class="bn-linha ${st}">
-      <div class="bn-ico">${ico}</div>
-      <div class="bn-txt"><div class="bn-nome">${nome}</div><div class="bn-sit">${situacao}</div></div>
-      <div class="bn-val">${valorHtml||('R$ '+nf(valor))}</div>
+      <div class="bn-mark"></div>
+      <div class="bn-txt">
+        <div class="bn-nome"><span class="bn-ico">${ico}</span>${nome}${chip}</div>
+        <div class="bn-sit">${situacao}</div>
+        ${barra}
+      </div>
+      <div class="bn-val">${o.valorHtml||('R$ '+nf(valor))}</div>
     </div>`;
   }
 
@@ -3642,7 +3690,7 @@ function renderBonusVendedora(){
         `${m.nome} · superar ${m.alvo}`,
         bateu?`Você fez ${m.atu} — ${m.atu-m.alvo} acima`
              :`Você fez ${m.atu} · faltam ${m.alvo-m.atu+1}`,
-        MI.porMeta);
+        MI.porMeta, {pct:bateu?100:pct});
     });
   }
   if(MI.todas>0 && metasInd.length){
@@ -3651,7 +3699,7 @@ function renderBonusVendedora(){
     ind+=linha(todas?'ok':(batidas>=total-1?'perto':'aberto'),
       'Bater todas as suas metas',
       todas?`As ${total} superadas`:`${batidas} de ${total} superadas`,
-      MI.todas);
+      MI.todas, {pct:batidas/total*100});
   }
 
   const g1=garantido, j1=emJogo, n1=nLinhas;  // fecha o subtotal do bloco 1
@@ -3670,15 +3718,15 @@ function renderBonusVendedora(){
     const r=rankVolGrupo(pv,cats);
     const i=r.findIndex(x=>x.id===usuario);
     if(i<0) return linha('aberto',nome,'Sem registro no mês',valor);
-    const gap=r[0].val-r[i].val;
+    const gap=r[0].val-r[i].val, posto={chip:`${ord(i+1)} de ${r.length}`};
     if(i===0){
       const e=cotaEmpate(r.map(x=>x.val),valor);
       return linha('lidera',nome, e.n>1
         ? `Empatada em 1º com ${r[i].val} ${unidade} · dividido entre ${e.n}`
-        : `Você lidera com ${r[i].val} ${unidade}`, e.valor);
+        : `Você lidera com ${r[i].val} ${unidade}`, e.valor, posto);
     }
     return linha(gap<=5?'perto':'aberto',nome,
-      `Você está em ${ord(i+1)} com ${r[i].val} ${unidade} · faltam ${gap}`,valor);
+      `Você está com ${r[i].val} ${unidade} · faltam ${gap} pra líder`,valor,posto);
   }
   if((cfgB.maiorMix||0)>0)
     rank+=linhaVol('Maior vendedora de mix',ACESS.map(c=>c.id),cfgB.maiorMix,'acessórios');
@@ -3693,14 +3741,15 @@ function renderBonusVendedora(){
     const i=r.findIndex(x=>x.id===usuario);
     if(i<0) return linha('aberto',nome,'Sem sapatos registrados no mês',valor);
     const minha=Math.round(r[i].pct), gap=Math.round(r[0].pct)-minha;
+    const posto={chip:`${ord(i+1)} de ${r.length}`};
     if(i===0){
       const e=cotaEmpate(r.map(x=>x.pct),valor);
       return linha('lidera',nome, e.n>1
         ? `Empatada em 1º com ${minha}% · dividido entre ${e.n}`
-        : `Você lidera com ${minha}%`, e.valor);
+        : `Você lidera com ${minha}%`, e.valor, posto);
     }
     return linha(gap<=5?'perto':'aberto',nome,
-      `Você está em ${ord(i+1)} com ${minha}% · faltam ${gap} pts`,valor);
+      `Você está com ${minha}% · faltam ${gap} pts pra líder`,valor,posto);
   }
   if((cfgB.melhorConv||0)>0) rank+=linhaConv('Melhor conversão de mix',ACESS.map(c=>c.id),cfgB.melhorConv);
   COMP_ITENS.forEach(cc=>{
@@ -3729,7 +3778,8 @@ function renderBonusVendedora(){
     }
     else if(minha>0){ st='aberto'; sit=`Sua maior: R$ ${nf(minha)} · a líder tem R$ ${nf(maxGeral)}`; }
     else { st='aberto'; sit=`Nenhuma venda acima de R$ ${nf(cfgB.maiorVendaMin||0)} registrada`; }
-    rank+=linha(st,'Maior venda do mês',sit,val);
+    const pos=todas.filter(v=>v>minha).length+1;
+    rank+=linha(st,'Maior venda do mês',sit,val, minha>0?{chip:`${ord(pos)} de ${todas.length}`}:null);
   }
 
   const g2=garantido-g1, j2=emJogo-j1, n2=nLinhas-n1;  // fecha o subtotal do bloco 2
@@ -3751,13 +3801,19 @@ function renderBonusVendedora(){
     const teto=Math.max(...niveis.map(x=>x.v));
     const proximo=niveis.find(x=>feito<x.q);
     garantido+=jaVale; emJogo+=Math.max(0,teto-jaVale);
-    const st=jaVale>0?'ok':'aberto';
+    nLinhas++;
+    const st=jaVale>0?(proximo?'perto':'ok'):'aberto';
+    const alvoBarra=proximo?proximo.q:niveis[niveis.length-1].q;
     eq+=`<div class="bn-linha ${st}">
-      <div class="bn-ico">${jaVale>0?'✓':'○'}</div>
-      <div class="bn-txt"><div class="bn-nome">Sapatos · escada da equipe</div>
+      <div class="bn-mark"></div>
+      <div class="bn-txt">
+        <div class="bn-nome"><span class="bn-ico">${jaVale>0?'✓':'○'}</span>Sapatos · escada da equipe
+          <span class="bn-chip">${batidos.length} de ${niveis.length} níveis</span></div>
         <div class="bn-sit">${proximo
           ? `Equipe em ${nf(feito)} pares · faltam ${nf(proximo.q-feito)} pra ${proximo.n} (R$ ${nf(proximo.v)})`
-          : `Equipe em ${nf(feito)} pares · todos os níveis batidos`}</div></div>
+          : `Equipe em ${nf(feito)} pares · todos os níveis batidos`}</div>
+        <div class="bn-prog"><i style="width:${Math.max(2,Math.min(100,Math.round(feito/alvoBarra*100)))}%"></i></div>
+      </div>
       <div class="bn-val">R$ ${nf(jaVale>0?jaVale:teto)}${(jaVale>0&&teto>jaVale)?` <em>de ${nf(teto)}</em>`:''}</div>
     </div>`;
   }
@@ -3769,7 +3825,7 @@ function renderBonusVendedora(){
     const feito=ag[c.id]||0, bateu=feito>=alvo, pct=Math.round(feito/alvo*100);
     eq+=linha(bateu?'ok':(pct>=80?'perto':'aberto'), `${c.nome} · equipe`,
       bateu?`${nf(feito)} de ${nf(alvo)} — batida`
-           :`${nf(feito)} de ${nf(alvo)} · faltam ${nf(alvo-feito)}`, val);
+           :`${nf(feito)} de ${nf(alvo)} · faltam ${nf(alvo-feito)}`, val, {pct:bateu?100:pct});
   });
 
   // Extra por bater TODAS as ultrametas ⚡ — mesma regra da folha e da Lista
@@ -3782,8 +3838,8 @@ function renderBonusVendedora(){
       eq+=linha(!faltou.length?'ok':(faltou.length===1?'perto':'aberto'),
         `Todas as ultrametas ⚡ · equipe`,
         !faltou.length ? `As ${ativas.length} batidas`
-                       : `${ativas.length-faltou.length} de ${ativas.length} · falta ${faltou.map(c=>c.nome).join(', ')}`,
-        ultraTodas);
+                       : `${ativas.length-faltou.length} de ${ativas.length} · falta ${faltou.slice(0,2).map(c=>c.nome).join(', ')}${faltou.length>2?` e mais ${faltou.length-2}`:''}`,
+        ultraTodas, {pct:(ativas.length-faltou.length)/ativas.length*100});
     }
   }
 
@@ -3794,26 +3850,42 @@ function renderBonusVendedora(){
 
   // Resumo do bloco. No ranking não existe "garantido" — disputa vira até o fim
   // do mês —, então ali o número útil é quantas ela está segurando agora.
-  const grupo=(tit,sub,html,res)=>html?`<div class="bn-grupo">
-    <div class="bn-grupo-tit"><span>${tit}</span><span class="bn-grupo-res">${res}</span></div>
-    <div class="bn-grupo-sub">${sub}</div>${html}</div>`:'';
-  const resVal=(g,j)=>`R$ ${nf(g)} garantido · R$ ${nf(j)} em jogo`;
+  const grupo=(n,tit,sub,html,res)=>html?`<section class="bn-grupo">
+    <div class="bn-grupo-tit">
+      <span class="bn-grupo-nome"><i class="bn-grupo-n">${n}</i>${tit}</span>
+      <span class="bn-grupo-res">${res}</span>
+    </div>
+    <div class="bn-grupo-sub">${sub}</div>${html}</section>`:'';
+  const resVal=(g,j)=>j>0
+    ? `R$ ${nf(g)} garantido · R$ ${nf(j)} em jogo`
+    : `R$ ${nf(g)} garantido · tudo fechado`;
+
+  // Barra do topo: quanto do total possível do mês já está garantido
+  const possivel=garantido+emJogo;
+  const pctGar=possivel>0?Math.round(garantido/possivel*100):0;
 
   card.innerHTML=`<div class="bn-card">
     <div class="bn-head">
-      <div>
-        <div class="bn-tit">Seus bônus de ${MESES_NOMES[mesAtivo-1]}</div>
-        <div class="bn-sub">o que você já garantiu e o que ainda está em jogo</div>
+      <div class="bn-head-top">
+        <div>
+          <div class="bn-tit">Seus bônus de ${MESES_NOMES[mesAtivo-1]}</div>
+          <div class="bn-sub">o que você já garantiu e o que ainda está em jogo</div>
+        </div>
+        <div class="bn-tot">
+          <div class="bn-tot-blk ok"><span class="bn-tot-lbl">Garantido</span><span class="bn-tot-val">R$ ${nf(garantido)}</span></div>
+          <div class="bn-tot-sep"></div>
+          <div class="bn-tot-blk"><span class="bn-tot-lbl">Em jogo</span><span class="bn-tot-val">R$ ${nf(emJogo)}</span></div>
+        </div>
       </div>
-      <div class="bn-tot">
-        <div class="bn-tot-blk ${garantido>0?'ok':''}"><span class="bn-tot-lbl">Garantido</span><span class="bn-tot-val">R$ ${nf(garantido)}</span></div>
-        <div class="bn-tot-blk"><span class="bn-tot-lbl">Em jogo</span><span class="bn-tot-val">R$ ${nf(emJogo)}</span></div>
-      </div>
+      <div class="bn-barra"><i style="width:${pctGar}%"></i></div>
+      <div class="bn-barra-lbl">${garantido>0
+        ? `<b>${pctGar}%</b> dos R$ ${nf(possivel)} possíveis do mês já são seus`
+        : `R$ ${nf(possivel)} em jogo neste mês — nada garantido ainda`}</div>
     </div>
-    ${grupo('Depende de Você','metas que você bate sozinha — batida, ninguém tira',ind,resVal(g1,j1))}
-    ${grupo('Ranking Individual','disputas com a equipe — vale quem estiver na frente quando o mês fechar',
+    ${grupo(1,'Depende de Você','metas que você bate sozinha — batida, ninguém tira',ind,resVal(g1,j1))}
+    ${grupo(2,'Ranking Individual','disputas com a equipe — vale quem estiver na frente quando o mês fechar',
       rank,`${liderando} de ${n2} na sua mão · R$ ${nf(j2)} em disputa`)}
-    ${grupo('Metas da Equipe','as quatro juntas — o seu esforço conta, mas não decide sozinho',eq,resVal(g3,j3))}
+    ${grupo(3,'Metas da Equipe','as quatro juntas — o seu esforço conta, mas não decide sozinho',eq,resVal(g3,j3))}
   </div>`;
 }
 
