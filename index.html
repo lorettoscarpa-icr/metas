@@ -1060,11 +1060,16 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .inp-data:focus{border-bottom-color:var(--ou);}
 
 /* ── Calendário do mês · confere o que já foi lançado ── */
-.btn-cal{background:transparent;border:1px solid var(--oud);color:var(--ou2);font-family:inherit;
-  font-size:10px;letter-spacing:1.2px;text-transform:uppercase;padding:6px 12px;cursor:pointer;
-  transition:border-color .2s,background .2s;white-space:nowrap;}
-.btn-cal:hover{border-color:var(--ou);background:rgba(201,168,76,.08);}
-.cal-lanc{border:1px solid var(--oud);background:rgba(255,255,255,.02);padding:14px 16px 12px;margin-bottom:10px;}
+.data-campo{position:relative;}
+.inp-data-btn{display:flex;align-items:center;gap:10px;background:transparent;border:none;
+  border-bottom:1px solid var(--oud);color:var(--ou2);font-family:'Cormorant Garamond',serif;
+  font-size:18px;padding:2px 8px 3px;cursor:pointer;transition:border-color .2s;}
+.inp-data-btn:hover,.inp-data-btn.aberto{border-bottom-color:var(--ou);}
+.inp-data-btn:focus-visible{outline:2px solid var(--ou);outline-offset:2px;}
+.inp-data-btn .cal-ico{font-size:13px;line-height:1;opacity:.85;}
+.cal-lanc{position:absolute;top:calc(100% + 8px);left:0;z-index:120;width:300px;
+  max-width:calc(100vw - 44px);border:1px solid var(--oud);background:var(--v1);
+  box-shadow:0 12px 32px rgba(0,0,0,.45);padding:14px 16px 12px;}
 .cal-topo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;
   padding-bottom:10px;border-bottom:1px solid var(--oud2);margin-bottom:10px;}
 .cal-mes{font-family:'Playfair Display',serif;font-size:15px;color:var(--ou2);letter-spacing:.4px;}
@@ -1100,7 +1105,7 @@ body.light-mode .cal-leg i.pend{background:rgba(14,26,8,.06);}
 body.light-mode .cal-resumo.ok{color:#2e6e2e;}
 
 @media(max-width:640px){
-  .cal-lanc{padding:12px 12px 10px;}
+  .cal-lanc{padding:12px 12px 10px;width:290px;}
   .cal-grade{gap:4px;} .cal-dia{font-size:11px;}
   .cal-leg{gap:10px;font-size:9px;}
 }
@@ -2043,11 +2048,18 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
         </div>
         <div class="sel-data-wrap">
           <label>Data do lançamento</label>
-          <input class="inp-data" type="date" id="inp-lancamento" onchange="atualizarDataLancamento()">
-          <button class="btn-cal" id="btn-cal" onclick="toggleCalendarioLanc()" title="Ver o mês e conferir o que já foi lançado">📅 Ver o mês</button>
+          <div class="data-campo">
+            <!-- O input nativo vira só depósito do valor: o seletor visível é o
+                 nosso, porque o calendário do navegador não aceita cor por dia. -->
+            <input type="date" id="inp-lancamento" style="display:none;" onchange="atualizarDataLancamento()">
+            <button type="button" class="inp-data-btn" id="btn-data" onclick="toggleCalendarioLanc(event)"
+                    aria-haspopup="dialog" aria-expanded="false" title="Abrir o calendário do mês">
+              <span id="lbl-data-sel">—</span><span class="cal-ico">📅</span>
+            </button>
+            <div id="cal-lanc" class="cal-lanc" style="display:none;" role="dialog" aria-label="Calendário do mês"></div>
+          </div>
           <span style="font-size:10px;color:var(--cr3);margin-left:auto;" id="lbl-dia-semana"></span>
         </div>
-        <div id="cal-lanc" class="cal-lanc" style="display:none;"></div>
         <div class="dia-especial-sel">
           <div class="det">Dia especial?</div>
           <button class="tag-opcao ativo" id="tag-nenhum" onclick="setEspecial(this,'')">Normal</button>
@@ -5241,6 +5253,8 @@ function atualizarDataLancamento(){
   const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   const d=new Date(inp.value+'T12:00:00');
   document.getElementById('lbl-dia-semana').textContent=dias[d.getDay()];
+  const lbl=document.getElementById('lbl-data-sel');
+  if(lbl) lbl.textContent=d.toLocaleDateString('pt-BR');
   const jaExiste=jaRegistrouHoje();
   const badge=document.getElementById('badge-dt');
   if(badge){
@@ -5254,19 +5268,34 @@ function atualizarDataLancamento(){
 // ══ CALENDÁRIO DO MÊS · quais dias já foram lançados ══
 // Ideia da Ialey: abrir o mês e ver de relance o que ficou pra trás. Verde =
 // lançado, vazio = falta lançar. Clicar num dia joga a data no campo acima.
-function toggleCalendarioLanc(){
+function toggleCalendarioLanc(ev){
+  if(ev) ev.stopPropagation();
   const c=document.getElementById('cal-lanc'); if(!c) return;
   const abrir = c.style.display==='none';
   c.style.display = abrir ? 'block' : 'none';
-  const b=document.getElementById('btn-cal');
-  if(b) b.textContent = abrir ? '📅 Fechar' : '📅 Ver o mês';
+  const b=document.getElementById('btn-data');
+  if(b){ b.classList.toggle('aberto', abrir); b.setAttribute('aria-expanded', abrir?'true':'false'); }
   if(abrir) renderCalendarioLanc();
 }
+function fecharCalendarioLanc(){
+  const c=document.getElementById('cal-lanc');
+  if(!c || c.style.display==='none') return;
+  c.style.display='none';
+  const b=document.getElementById('btn-data');
+  if(b){ b.classList.remove('aberto'); b.setAttribute('aria-expanded','false'); }
+}
+// Clique fora e Esc fecham o calendário
+document.addEventListener('click',e=>{
+  const campo=document.querySelector('.data-campo');
+  if(campo && !campo.contains(e.target)) fecharCalendarioLanc();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') fecharCalendarioLanc(); });
+
 function selecionarDiaLanc(dia){
   const inp=document.getElementById('inp-lancamento'); if(!inp) return;
   inp.value=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
   atualizarDataLancamento();
-  renderCalendarioLanc();
+  fecharCalendarioLanc();
 }
 function renderCalendarioLanc(){
   const c=document.getElementById('cal-lanc');
