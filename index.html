@@ -1029,6 +1029,52 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .inp-data{background:transparent;border:none;border-bottom:1px solid var(--oud);color:var(--ou2);font-family:'Cormorant Garamond',serif;font-size:18px;padding:2px 8px;outline:none;cursor:pointer;color-scheme:dark;}
 .inp-data:focus{border-bottom-color:var(--ou);}
 
+/* ── Calendário do mês · confere o que já foi lançado ── */
+.btn-cal{background:transparent;border:1px solid var(--oud);color:var(--ou2);font-family:inherit;
+  font-size:10px;letter-spacing:1.2px;text-transform:uppercase;padding:6px 12px;cursor:pointer;
+  transition:border-color .2s,background .2s;white-space:nowrap;}
+.btn-cal:hover{border-color:var(--ou);background:rgba(201,168,76,.08);}
+.cal-lanc{border:1px solid var(--oud);background:rgba(255,255,255,.02);padding:14px 16px 12px;margin-bottom:10px;}
+.cal-topo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;
+  padding-bottom:10px;border-bottom:1px solid var(--oud2);margin-bottom:10px;}
+.cal-mes{font-family:'Playfair Display',serif;font-size:15px;color:var(--ou2);letter-spacing:.4px;}
+.cal-resumo{font-size:10.5px;letter-spacing:.3px;color:var(--cr3);}
+.cal-resumo.alerta{color:var(--ou);} .cal-resumo.alerta b{color:var(--ou2);font-weight:600;}
+.cal-resumo.ok{color:#8fc98f;}
+.cal-grade{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+.cal-cab{font-size:8px;letter-spacing:1.4px;color:var(--cr3);text-align:center;padding-bottom:3px;}
+.cal-vazio{aspect-ratio:1;}
+.cal-dia{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:2px;
+  font-family:'Barlow',sans-serif;font-size:12px;cursor:pointer;padding:0;transition:all .15s;
+  border:1px solid var(--oud2);background:transparent;color:var(--cr3);}
+.cal-dia.ok{background:rgba(78,158,78,.45);border-color:rgba(109,191,109,.6);color:#eaf6ea;font-weight:600;}
+.cal-dia.esp{background:rgba(201,168,76,.22);border-color:var(--oud);color:var(--ou2);}
+.cal-dia.pend{background:rgba(255,255,255,.06);border-color:var(--oud2);color:var(--cr2);}
+.cal-dia.fut{opacity:.28;cursor:default;}
+.cal-dia.sel{outline:2px solid var(--ou);outline-offset:1px;}
+.cal-dia:not(:disabled):hover{border-color:var(--ou);transform:translateY(-1px);}
+.cal-dia:focus-visible{outline:2px solid var(--ou);outline-offset:1px;}
+.cal-leg{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;padding-top:10px;
+  border-top:1px solid var(--oud2);font-size:9.5px;color:var(--cr3);}
+.cal-leg span{display:flex;align-items:center;gap:6px;}
+.cal-leg i{width:10px;height:10px;border-radius:2px;border:1px solid var(--oud2);flex-shrink:0;}
+.cal-leg i.ok{background:rgba(78,158,78,.45);border-color:rgba(109,191,109,.6);}
+.cal-leg i.esp{background:rgba(201,168,76,.22);border-color:var(--oud);}
+.cal-leg i.pend{background:rgba(255,255,255,.06);}
+
+body.light-mode .cal-lanc{background:rgba(255,255,255,.4);}
+body.light-mode .cal-dia.ok{background:#2e6e2e;border-color:#2e6e2e;color:#fff;}
+body.light-mode .cal-leg i.ok{background:#2e6e2e;border-color:#2e6e2e;}
+body.light-mode .cal-dia.pend{background:rgba(14,26,8,.06);}
+body.light-mode .cal-leg i.pend{background:rgba(14,26,8,.06);}
+body.light-mode .cal-resumo.ok{color:#2e6e2e;}
+
+@media(max-width:640px){
+  .cal-lanc{padding:12px 12px 10px;}
+  .cal-grade{gap:4px;} .cal-dia{font-size:11px;}
+  .cal-leg{gap:10px;font-size:9px;}
+}
+
 /* ── DIAS ESPECIAIS ── */
 .dia-especial-sel{background:rgba(255,255,255,.015);border:1px dashed rgba(240,234,216,.12);padding:10px 16px;margin-bottom:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .dia-especial-sel .det{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--cr3);}
@@ -1968,8 +2014,10 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
         <div class="sel-data-wrap">
           <label>Data do lançamento</label>
           <input class="inp-data" type="date" id="inp-lancamento" onchange="atualizarDataLancamento()">
+          <button class="btn-cal" id="btn-cal" onclick="toggleCalendarioLanc()" title="Ver o mês e conferir o que já foi lançado">📅 Ver o mês</button>
           <span style="font-size:10px;color:var(--cr3);margin-left:auto;" id="lbl-dia-semana"></span>
         </div>
+        <div id="cal-lanc" class="cal-lanc" style="display:none;"></div>
         <div class="dia-especial-sel">
           <div class="det">Dia especial?</div>
           <button class="tag-opcao ativo" id="tag-nenhum" onclick="setEspecial(this,'')">Normal</button>
@@ -2808,7 +2856,7 @@ function render(){
   renderCards(ag,cfg);renderCats(ag,cfg,isG);
   document.getElementById('bloco-reg').style.display=isG?'none':'block';
   if(!isG){renderReg(ag,cfg);renderHist();}
-  renderMetasIndividuais();renderBonusVendedora();renderDestaques();renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();atualizarResumoHistInline();
+  renderMetasIndividuais();renderBonusVendedora();renderCalendarioLanc();renderDestaques();renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();atualizarResumoHistInline();
 }
 
 function renderCards(ag,cfg){
@@ -5171,7 +5219,79 @@ function atualizarDataLancamento(){
     badge.style.borderColor=jaExiste?'rgba(78,158,78,.4)':'var(--oud)';
     badge.style.color=jaExiste?'#6dbf6d':'var(--ou)';
   }
+  renderCalendarioLanc();
 }
+// ══ CALENDÁRIO DO MÊS · quais dias já foram lançados ══
+// Ideia da Ialey: abrir o mês e ver de relance o que ficou pra trás. Verde =
+// lançado, vazio = falta lançar. Clicar num dia joga a data no campo acima.
+function toggleCalendarioLanc(){
+  const c=document.getElementById('cal-lanc'); if(!c) return;
+  const abrir = c.style.display==='none';
+  c.style.display = abrir ? 'block' : 'none';
+  const b=document.getElementById('btn-cal');
+  if(b) b.textContent = abrir ? '📅 Fechar' : '📅 Ver o mês';
+  if(abrir) renderCalendarioLanc();
+}
+function selecionarDiaLanc(dia){
+  const inp=document.getElementById('inp-lancamento'); if(!inp) return;
+  inp.value=`${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+  atualizarDataLancamento();
+  renderCalendarioLanc();
+}
+function renderCalendarioLanc(){
+  const c=document.getElementById('cal-lanc');
+  if(!c || c.style.display==='none' || usuario==='__gestor__') return;
+
+  const hist = cacheHist[keyHist(usuario,anoAtivo,mesAtivo)] || [];
+  // 'DD/MM' → registro do dia
+  const porDia={};
+  hist.forEach(r=>{ if(r.data){ const d=parseInt(r.data.split('/')[0],10); if(d) porDia[d]=r; } });
+
+  const totalDias=new Date(anoAtivo,mesAtivo,0).getDate();
+  const primeiroDiaSem=new Date(anoAtivo,mesAtivo-1,1).getDay();
+  const h=new Date();
+  const mesCorrente = (anoAtivo===h.getFullYear() && mesAtivo===h.getMonth()+1);
+  const ultimoClicavel = mesCorrente ? h.getDate() : totalDias;
+
+  const inp=document.getElementById('inp-lancamento');
+  const diaSel = inp && inp.value ? parseInt(inp.value.split('-')[2],10) : null;
+
+  let cels='';
+  for(let i=0;i<primeiroDiaSem;i++) cels+='<div class="cal-vazio"></div>';
+  let lancados=0, especiais=0, pendentes=0;
+  for(let d=1;d<=totalDias;d++){
+    const reg=porDia[d], futuro=d>ultimoClicavel;
+    let cls='pend', titulo='ainda não lançado';
+    if(reg && reg.especial){ cls='esp'; especiais++; titulo=reg.especial.toLowerCase(); }
+    else if(reg){ cls='ok'; lancados++; titulo='lançado'; }
+    else if(futuro){ cls='fut'; titulo='ainda não chegou'; }
+    else pendentes++;
+    if(d===diaSel) cls+=' sel';
+    cels+=`<button class="cal-dia ${cls}" ${futuro?'disabled':`onclick="selecionarDiaLanc(${d})"`}
+      title="${String(d).padStart(2,'0')}/${String(mesAtivo).padStart(2,'0')} · ${titulo}">${d}</button>`;
+  }
+
+  const nomeMes=MESES_NOMES[mesAtivo-1];
+  const resumo = pendentes>0
+    ? `<b>${pendentes}</b> ${pendentes===1?'dia sem lançamento':'dias sem lançamento'} até aqui`
+    : `Tudo lançado até aqui em ${nomeMes}`;
+
+  c.innerHTML=`
+    <div class="cal-topo">
+      <span class="cal-mes">${nomeMes} de ${anoAtivo}</span>
+      <span class="cal-resumo ${pendentes>0?'alerta':'ok'}">${resumo}</span>
+    </div>
+    <div class="cal-grade">
+      ${['D','S','T','Q','Q','S','S'].map(d=>`<div class="cal-cab">${d}</div>`).join('')}
+      ${cels}
+    </div>
+    <div class="cal-leg">
+      <span><i class="ok"></i>Lançado (${lancados})</span>
+      <span><i class="esp"></i>Dia especial (${especiais})</span>
+      <span><i class="pend"></i>Falta lançar (${pendentes})</span>
+    </div>`;
+}
+
 function inicializarDataLancamento(){
   const inp=document.getElementById('inp-lancamento');
   if(!inp)return;
