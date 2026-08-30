@@ -5487,34 +5487,15 @@ function renderTutorial(){
 }
 function verificarPrimeiroAcesso(){if(!localStorage.getItem('ls5_tut_visto'))setTimeout(abrirTutorial,600);}
 
-// ══ SETUP INICIAL — CONTAS + HISTÓRICO (roda uma vez automaticamente) ══
-// Credenciais das vendedoras
-const CONTAS_SETUP = [
-  {email:'ialeylorettoscarpa@gmail.com',     senha:'ialey2026',     nome:'Ialey'},
-  {email:'jhenniferlorettoscarpa@gmail.com', senha:'jhennifer2026', nome:'Jhennifer'},
-  {email:'michellylorettoscarpa@gmail.com',  senha:'michelly2026',  nome:'Michelly'},
-  {email:'natalialorettoscarpa@gmail.com',   senha:'natalia2026',   nome:'Natália'},
-  {email:'lorettoscarpa@gmail.com',          senha:'loretto280996', nome:'Gestor'},
-];
-
-// Cria conta via REST API — sem afetar o estado de autenticação atual
-async function criarContaREST(email, senha){
-  const API_KEY = 'AIzaSyCogQoTSULCdC1JhTb0IUilWAIA1itBJ8U';
-  try{
-    const r = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`,
-      { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({email, password:senha, returnSecureToken:false}) }
-    );
-    const data = await r.json();
-    if(data.error){
-      // EMAIL_EXISTS = já criada, tudo certo
-      if(data.error.message === 'EMAIL_EXISTS') return 'exists';
-      return 'error:' + data.error.message;
-    }
-    return 'created';
-  }catch(e){ return 'error:' + e.message; }
-}
+// ══ SETUP INICIAL — HISTÓRICO (roda uma vez automaticamente) ══
+//
+// Aqui existiam a constante CONTAS_SETUP, com e-mail e senha de cinco contas, e a
+// função criarContaREST() que as criava. As contas já foram criadas há muito tempo:
+// o bloco não tinha mais função, e deixava cinco senhas reais legíveis no código-fonte
+// de uma página pública. Foi removido.
+//
+// Conta nova daqui em diante se cria pelo console do Firebase Authentication, nunca
+// por credencial escrita no código.
 
 const SEED_DADOS = [
   { ano:2026, mes:1,
@@ -5563,9 +5544,7 @@ async function runSeedSeNecessario() {
 
     console.log('[Loretto] Primeiro acesso — rodando setup inicial...');
 
-    // 1. Criar contas (REST API, sem afetar auth state)
-    console.log('[Loretto] Criando contas...');
-    await Promise.all(CONTAS_SETUP.map(c => criarContaREST(c.email, c.senha)));
+    // 1. (a criação de contas saiu daqui — ver comentário em SETUP INICIAL)
 
     // 2. Injetar histórico
     console.log('[Loretto] Injetando dados históricos...');
