@@ -1969,6 +1969,22 @@ body.light-mode .mi-conv-nota{color:rgba(14,26,8,.6);}
 <body>
 
 <!-- SELEÇÃO -->
+<!-- Abertura: enquanto o Firebase não diz quem está logado, ninguém precisa ver
+     "Quem está entrando?" — quem já tem sessão nunca escolhe nada. -->
+<style>
+  html.checando #tela-sel{display:none!important}
+  #splashM{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:20px;background:#0f1508}
+  html.checando #splashM{display:flex}
+  #splashM .marca{font-family:Georgia,serif;font-size:24px;letter-spacing:3px;text-transform:uppercase;
+    color:#c9a84c;opacity:.9}
+  #splashM .ring{width:32px;height:32px;border-radius:50%;border:3px solid rgba(201,168,76,.22);
+    border-top-color:#c9a84c;animation:girandoM .8s linear infinite}
+  @keyframes girandoM{to{transform:rotate(360deg)}}
+</style>
+<div id="splashM"><span class="marca">Loretto Scarpa</span><span class="ring"></span></div>
+<script>document.documentElement.classList.add('checando');</script>
+
 <div id="tela-sel">
   <div class="sel-hero">
     <div class="sel-eyebrow">Bem-Vindas</div>
@@ -2737,20 +2753,28 @@ async function entrarComUsuario(u){
 }
 
 // Listener de estado de autenticação
+/* Tira a tela de abertura. Chamada assim que se sabe o que mostrar — e por um prazo,
+   para rede ruim não deixar ninguém olhando o logo para sempre. */
+function decidiu(){ document.documentElement.classList.remove('checando'); }
+setTimeout(decidiu, 4000);
+
 auth.onAuthStateChanged(async (user) => {
   const selTela  = document.getElementById('tela-sel');
   const dashTela = document.getElementById('tela-dash');
   if(user){
     const u = EMAIL_MAP[user.email];
     if(!u){
+      decidiu();                       /* conta que este painel não conhece: mostra a escolha */
       await auth.signOut(); return;
     }
     selTela.style.display='none';
+    decidiu();
     await entrarComUsuario(u);
   } else {
     unsubscribers.forEach(fn=>fn()); unsubscribers=[];
     dashTela.style.display='none';
     selTela.style.display='flex';
+    decidiu();
   }
 });
 
