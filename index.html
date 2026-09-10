@@ -1665,9 +1665,22 @@ svg{display:inline-block;vertical-align:middle;}
 /* ── Metas Individuais · Card de topo ── */
 .mi-card{background:linear-gradient(135deg,rgba(201,168,76,.06),rgba(201,168,76,.02));border:1px solid var(--oud);padding:18px 18px 16px;margin-bottom:18px;position:relative;}
 .mi-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--ou);}
-.mi-header{margin-bottom:16px;}
+.mi-header{margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;}
+.mi-header-txt{min-width:0;}
 .mi-titulo{font-family:'Playfair Display',serif;font-size:19px;color:var(--ou2);letter-spacing:.5px;line-height:1.2;}
 .mi-subtitulo{font-size:11px;color:var(--cr3);letter-spacing:.5px;margin-top:4px;}
+/* Quanto tempo ainda resta pra virar o mês — a mesma contagem que alimenta o
+   "Precisa de X/dia" de cada célula, pra não dar dois números diferentes. */
+.mi-dias{display:flex;align-items:center;gap:10px;border:1px solid var(--oud2);background:var(--bg2);
+  padding:8px 14px;white-space:nowrap;flex-shrink:0;}
+.mi-dias-n{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:31px;line-height:1;
+  color:var(--ou2);font-variant-numeric:lining-nums tabular-nums;}
+.mi-dias-lb{font-size:9px;letter-spacing:1.4px;text-transform:uppercase;color:var(--cr3);line-height:1.35;}
+.mi-dias-lb i{display:block;font-style:normal;font-size:8.5px;letter-spacing:.7px;text-transform:none;opacity:.75;}
+.mi-dias.urg{border-color:var(--ou);background:rgba(201,168,76,.08);}
+.mi-dias.urg .mi-dias-n{color:var(--ou);}
+@media(max-width:640px){.mi-header{gap:12px;}.mi-dias{width:100%;padding:8px 12px;}}
+.mi-selbar-dias{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
 .mi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
 .mi-grid.cols-5{grid-template-columns:repeat(5,1fr);}
 @media(max-width:980px){.mi-grid.cols-5{grid-template-columns:repeat(3,1fr);}}
@@ -1743,6 +1756,12 @@ body.light-mode .mi-bar-f.superada{background:linear-gradient(90deg,#4a9a4a,#2e6
 .bn-chip{display:inline-block;margin-left:8px;font-size:8.5px;letter-spacing:1.2px;
   text-transform:uppercase;color:var(--ou2);border:1px solid var(--oud);padding:2px 6px;
   white-space:nowrap;vertical-align:1px;}
+/* Quanto precisa pra ganhar o bônus — o número fica no chip, não só no texto */
+.bn-alvo{display:inline-block;margin-left:8px;font-size:9px;letter-spacing:1.1px;font-weight:600;
+  text-transform:uppercase;color:var(--ou2);border:1px solid var(--ou);background:rgba(201,168,76,.13);
+  padding:2px 7px;white-space:nowrap;vertical-align:1px;}
+.bn-linha.ok .bn-alvo{color:#9fd49f;border-color:rgba(159,212,159,.55);background:rgba(159,212,159,.10);}
+body.light-mode .bn-linha.ok .bn-alvo{color:#2e6e2e;border-color:rgba(46,110,46,.45);background:rgba(46,110,46,.08);}
 .bn-sit{font-size:11.5px;color:var(--cr3);margin-top:4px;line-height:1.45;}
 .bn-linha.ok .bn-sit{color:#8fc98f;}
 .bn-linha.lidera .bn-sit{color:var(--ou2);}
@@ -1774,7 +1793,7 @@ body.light-mode .bn-linha.ok .bn-ico svg{stroke:#2e6e2e;}
   .bn-ico{margin-top:2px;}
   .bn-ico svg{width:17px;height:17px;}
   .bn-nome{font-size:12.5px;}
-  .bn-chip{margin-left:6px;}
+  .bn-chip,.bn-alvo{margin-left:6px;}
   .bn-sit{font-size:11px;}
   .bn-val{font-size:19px;padding-left:10px;padding-top:1px;}
   .bn-prog{max-width:none;}
@@ -3490,6 +3509,15 @@ function renderMetasIndividuais(){
   const diasPassados = mesEhAtual ? Math.min(diasTrabalhadosGlobal(),diasUteis) : diasUteis;
   const diasRestantes = Math.max(diasUteis - diasPassados, 1);
 
+  // Selo "quantos dias ainda faltam". O de exibição pode ser 0 — o diasRestantes
+  // acima é travado em 1 só pra não dividir por zero no cálculo de ritmo.
+  const diasFaltam = Math.max(diasUteis - diasPassados, 0);
+  const seloDias = !mesEhAtual ? '' : `<div class="mi-dias${diasFaltam<=3?' urg':''}">
+    <span class="mi-dias-n">${diasFaltam}</span>
+    <span class="mi-dias-lb">${diasFaltam===1?'dia útil<br>restante':'dias úteis<br>restantes'}
+      <i>${diasPassados} de ${diasUteis} já trabalhados</i></span>
+  </div>`;
+
   // Coleta {ant*, atu*} para um alvo:
   // 'equipe' = soma de todas vendedoras | id de vendedora = só ela.
   function coletaDados(modo){
@@ -3645,14 +3673,17 @@ function renderMetasIndividuais(){
 
   // Monta um card completo (.mi-card) para um alvo. Retorna '' se não houver
   // base 2025 nenhuma (mantém o comportamento de esconder, ex: Janeiro).
-  function bloco(titulo, sub, modo){
+  function bloco(titulo, sub, modo, selo){
     const d = coletaDados(modo);
     if(d.antSap===0 && d.antMei===0 && d.antAce===0 && d.antLim===0) return '';
     const convHtml = celulaConv(d);
     return `<div class="mi-card">
       <div class="mi-header">
-        <div class="mi-titulo">${titulo}</div>
-        <div class="mi-subtitulo">${sub}</div>
+        <div class="mi-header-txt">
+          <div class="mi-titulo">${titulo}</div>
+          <div class="mi-subtitulo">${sub}</div>
+        </div>
+        ${selo||''}
       </div>
       <div class="mi-grid ${convHtml?'cols-5':'cols-4'}">
         ${celula('Sapatos', ICONS.sapatos, d.atuSap, d.antSap)}
@@ -3669,7 +3700,8 @@ function renderMetasIndividuais(){
     card.innerHTML = bloco(
       `Metas Individuais · ${nomeMes}`,
       `O mínimo pra você superar seu ${nomeMes} de ${anoAtivo-1}`,
-      usuario
+      usuario,
+      seloDias
     );
     return;
   }
@@ -3711,7 +3743,11 @@ function renderMetasIndividuais(){
       `O mínimo pra ${nm} superar ${nomeMes} de ${anoAtivo-1}`, view);
   }
 
-  card.innerHTML = `<div class="mi-selbar">${chipsHtml}</div>${blocosHtml}`;
+  // Na visão do gestor o selo aparece uma vez só, ao lado dos chips — repetido
+  // em cada um dos cinco cards ficaria poluído.
+  card.innerHTML = seloDias
+    ? `<div class="mi-selbar-dias"><div class="mi-selbar" style="margin-bottom:0;">${chipsHtml}</div>${seloDias}</div>${blocosHtml}`
+    : `<div class="mi-selbar">${chipsHtml}</div>${blocosHtml}`;
 }
 
 // ══ CARD "SEUS BÔNUS" · só pra vendedora ══
@@ -3752,7 +3788,8 @@ function renderBonusVendedora(){
   const SVG_ULTRA='<svg viewBox="0 0 24 24"><path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z"/></svg>';
 
   // o = {pct} barra de progresso · {chip} posição na disputa · {svg} desenho
-  //     {valorHtml} troca o lado direito (usado na escada, que mostra "de 200")
+  //     {alvo} quanto precisa pra ganhar o bônus · {valorHtml} troca o lado
+  //     direito (usado na escada, que mostra "de 200")
   function linha(st,nome,situacao,valor,o){
     o=o||{};
     if(st==='ok') garantido+=valor; else emJogo+=valor;
@@ -3761,11 +3798,12 @@ function renderBonusVendedora(){
     const barra = o.pct!=null
       ? `<div class="bn-prog"><i style="width:${Math.max(2,Math.min(100,Math.round(o.pct)))}%"></i></div>` : '';
     const chip = o.chip ? `<span class="bn-chip">${o.chip}</span>` : '';
+    const alvo = o.alvo ? `<span class="bn-alvo">${o.alvo}</span>` : '';
     return `<div class="bn-linha ${st}">
       <div class="bn-mark"></div>
       <div class="bn-ico">${o.svg||SVG_ALVO}</div>
       <div class="bn-txt">
-        <div class="bn-nome">${nome}${chip}</div>
+        <div class="bn-nome">${nome}${alvo}${chip}</div>
         <div class="bn-sit">${situacao}</div>
         ${barra}
       </div>
@@ -3787,21 +3825,23 @@ function renderBonusVendedora(){
 
   if(MI.porMeta>0){
     metasInd.forEach(m=>{
-      const bateu=m.atu>m.alvo, pct=Math.round(m.atu/m.alvo*100);
+      // A meta é SUPERAR o ano passado, então o número a alcançar é alvo+1.
+      const bateu=m.atu>m.alvo, pct=Math.round(m.atu/m.alvo*100), precisa=m.alvo+1;
       ind+=linha(bateu?'ok':(pct>=80?'perto':'aberto'),
-        `${m.nome} · superar ${m.alvo}`,
-        bateu?`Você fez ${m.atu} — ${m.atu-m.alvo} acima`
-             :`Você fez ${m.atu} · faltam ${m.alvo-m.atu+1}`,
-        MI.porMeta, {pct:bateu?100:pct, svg:SVG[m.id]});
+        m.nome,
+        bateu?`Você fez ${nf(m.atu)} — ${nf(m.atu-m.alvo)} acima dos ${nf(m.alvo)} do ano passado`
+             :`Você fez ${nf(m.atu)} · faltam ${nf(precisa-m.atu)} pra passar dos ${nf(m.alvo)} do ano passado`,
+        MI.porMeta, {pct:bateu?100:pct, svg:SVG[m.id], alvo:`meta ${nf(precisa)}`});
     });
   }
   if(MI.todas>0 && metasInd.length){
-    const batidas=metasInd.filter(m=>m.atu>m.alvo).length, total=metasInd.length;
-    const todas=batidas===total;
-    ind+=linha(todas?'ok':(batidas>=total-1?'perto':'aberto'),
+    const faltando=metasInd.filter(m=>m.atu<=m.alvo), total=metasInd.length;
+    const batidas=total-faltando.length, todas=!faltando.length;
+    ind+=linha(todas?'ok':(faltando.length===1?'perto':'aberto'),
       'Bater todas as suas metas',
-      todas?`As ${total} superadas`:`${batidas} de ${total} superadas`,
-      MI.todas, {pct:batidas/total*100});
+      todas?`As ${total} superadas`
+           :`${batidas} de ${total} superadas · falta ${faltando.map(m=>`${m.nome} (+${nf(m.alvo-m.atu+1)})`).join(', ')}`,
+      MI.todas, {pct:batidas/total*100, alvo:`as ${total} metas`});
   }
 
   const g1=garantido, j1=emJogo, n1=nLinhas;  // fecha o subtotal do bloco 1
@@ -3821,14 +3861,19 @@ function renderBonusVendedora(){
     const i=r.findIndex(x=>x.id===usuario);
     if(i<0) return linha('aberto',nome,'Sem registro no mês',valor,{svg});
     const gap=r[0].val-r[i].val, posto={chip:`${i===0?'🏆 ':''}${ord(i+1)} de ${r.length}`, svg};
+    // Numa disputa a "meta" é o número da líder — quem vem atrás precisa passar
+    // dele; quem lidera precisa se manter acima da segunda colocada.
+    const seg=r.find(x=>x.val<r[i].val);
     if(i===0){
       const e=cotaEmpate(r.map(x=>x.val),valor);
+      posto.alvo=`manter acima de ${nf(seg?seg.val:0)} ${unidade}`;
       return linha('lidera',nome, e.n>1
-        ? `Empatada em 1º com ${r[i].val} ${unidade} · dividido entre ${e.n}`
-        : `Você lidera com ${r[i].val} ${unidade}`, e.valor, posto);
+        ? `Empatada em 1º com ${nf(r[i].val)} ${unidade} · dividido entre ${e.n}`
+        : `Você lidera com ${nf(r[i].val)} ${unidade}${seg?` · a 2ª tem ${nf(seg.val)}`:''}`, e.valor, posto);
     }
+    posto.alvo=`meta ${nf(r[0].val+1)} ${unidade}`;
     return linha(gap<=5?'perto':'aberto',nome,
-      `Você está com ${r[i].val} ${unidade} · faltam ${gap} pra líder`,valor,posto);
+      `Você está com ${nf(r[i].val)} ${unidade} · precisa de ${nf(r[0].val+1)} pra assumir (faltam ${nf(gap+1)})`,valor,posto);
   }
   if((cfgB.maiorMix||0)>0)
     rank+=linhaVol('Maior vendedora de mix',ACESS.map(c=>c.id),cfgB.maiorMix,'acessórios',SVG_MIX);
@@ -3842,16 +3887,20 @@ function renderBonusVendedora(){
     const r=rankConvGrupo(pv,cats);
     const i=r.findIndex(x=>x.id===usuario);
     if(i<0) return linha('aberto',nome,'Sem sapatos registrados no mês',valor,{svg});
-    const minha=Math.round(r[i].pct), gap=Math.round(r[0].pct)-minha;
+    const minha=Math.round(r[i].pct), lider=Math.round(r[0].pct), gap=lider-minha;
     const posto={chip:`${i===0?'🏆 ':''}${ord(i+1)} de ${r.length}`, svg};
+    const seg=r.find(x=>x.pct<r[i].pct);
     if(i===0){
       const e=cotaEmpate(r.map(x=>x.pct),valor);
+      posto.alvo=`manter acima de ${seg?Math.round(seg.pct):0}%`;
       return linha('lidera',nome, e.n>1
         ? `Empatada em 1º com ${minha}% · dividido entre ${e.n}`
-        : `Você lidera com ${minha}%`, e.valor, posto);
+        : `Você lidera com ${minha}%${seg?` · a 2ª tem ${Math.round(seg.pct)}%`:''}`, e.valor, posto);
     }
+    const pts=gap+1;
+    posto.alvo=`meta ${lider+1}%`;
     return linha(gap<=5?'perto':'aberto',nome,
-      `Você está com ${minha}% · faltam ${gap} pts pra líder`,valor,posto);
+      `Você está com ${minha}% · precisa de ${lider+1}% pra assumir (faltam ${pts} ponto${pts>1?'s':''})`,valor,posto);
   }
   if((cfgB.melhorConv||0)>0) rank+=linhaConv('Melhor conversão de mix',ACESS.map(c=>c.id),cfgB.melhorConv,SVG_MIX);
   COMP_ITENS.forEach(cc=>{
@@ -3871,17 +3920,29 @@ function renderBonusVendedora(){
     };
     const todas=VENDEDORAS.map(v=>maiorDe(v.id)).sort((a,b)=>b-a);
     const minha=maiorDe(usuario), maxGeral=todas[0]||0;
-    let st,sit,val=cfgB.maiorVenda;
+    const segunda=todas.find(v=>v<minha)||0;
+    let st,sit,val=cfgB.maiorVenda,alvo;
     if(minha>0 && minha>=maxGeral){
       const e=cotaEmpate(todas,cfgB.maiorVenda); val=e.valor;
       st='lidera';
       sit=e.n>1 ? `Empatada em 1º com R$ ${nf(minha)} · dividido entre ${e.n}`
-                : `Você lidera com R$ ${nf(minha)}`;
+                : `Você lidera com R$ ${nf(minha)}${segunda?` · a 2ª tem R$ ${nf(segunda)}`:''}`;
+      alvo=`manter acima de R$ ${nf(segunda)}`;
     }
-    else if(minha>0){ st='aberto'; sit=`Sua maior: R$ ${nf(minha)} · a líder tem R$ ${nf(maxGeral)}`; }
-    else { st='aberto'; sit=`Nenhuma venda acima de R$ ${nf(cfgB.maiorVendaMin||0)} registrada`; }
+    else if(minha>0){
+      st='aberto';
+      sit=`Sua maior: R$ ${nf(minha)} · precisa passar dos R$ ${nf(maxGeral)} da líder`;
+      alvo=`passar de R$ ${nf(maxGeral)}`;
+    }
+    else {
+      st='aberto';
+      sit=`Nenhuma venda acima de R$ ${nf(minVenda)} registrada`;
+      alvo=maxGeral>0?`passar de R$ ${nf(maxGeral)}`:`mínimo R$ ${nf(minVenda)}`;
+    }
     const pos=todas.filter(v=>v>minha).length+1;
-    rank+=linha(st,'Maior venda do mês',sit,val, minha>0?{chip:`${pos===1?'🏆 ':''}${ord(pos)} de ${todas.length}`, svg:SVG_VENDA}:{svg:SVG_VENDA});
+    rank+=linha(st,'Maior venda do mês',sit,val,
+      minha>0?{chip:`${pos===1?'🏆 ':''}${ord(pos)} de ${todas.length}`, svg:SVG_VENDA, alvo}
+             :{svg:SVG_VENDA, alvo});
   }
 
   const g2=garantido-g1, j2=emJogo-j1, n2=nLinhas-n1;  // fecha o subtotal do bloco 2
@@ -3911,6 +3972,7 @@ function renderBonusVendedora(){
       <div class="bn-ico">${SVG.sapatos}</div>
       <div class="bn-txt">
         <div class="bn-nome">Sapatos · escada da equipe
+          <span class="bn-alvo">${proximo?`meta ${nf(proximo.q)} pares`:`teto ${nf(alvoBarra)} pares`}</span>
           <span class="bn-chip">${batidos.length} de ${niveis.length} níveis</span></div>
         <div class="bn-sit">${proximo
           ? `Equipe em ${nf(feito)} pares · faltam ${nf(proximo.q-feito)} pra ${proximo.n} (R$ ${nf(proximo.v)})`
@@ -3928,7 +3990,8 @@ function renderBonusVendedora(){
     const feito=ag[c.id]||0, bateu=feito>=alvo, pct=Math.round(feito/alvo*100);
     eq+=linha(bateu?'ok':(pct>=80?'perto':'aberto'), `${c.nome} · equipe`,
       bateu?`${nf(feito)} de ${nf(alvo)} — batida`
-           :`${nf(feito)} de ${nf(alvo)} · faltam ${nf(alvo-feito)}`, val, {pct:bateu?100:pct, svg:SVG[c.id]});
+           :`${nf(feito)} de ${nf(alvo)} · faltam ${nf(alvo-feito)}`,
+      val, {pct:bateu?100:pct, svg:SVG[c.id], alvo:`meta ${nf(alvo)}`});
   });
 
   // Extra por bater TODAS as ultrametas ⚡ — mesma regra da folha e da Lista
@@ -3941,8 +4004,9 @@ function renderBonusVendedora(){
       eq+=linha(!faltou.length?'ok':(faltou.length===1?'perto':'aberto'),
         `Todas as ultrametas · equipe`,
         !faltou.length ? `As ${ativas.length} batidas`
-                       : `${ativas.length-faltou.length} de ${ativas.length} · falta ${faltou.slice(0,2).map(c=>c.nome).join(', ')}${faltou.length>2?` e mais ${faltou.length-2}`:''}`,
-        ultraTodas, {pct:(ativas.length-faltou.length)/ativas.length*100, svg:SVG_ULTRA});
+                       : `${ativas.length-faltou.length} de ${ativas.length} · falta ${faltou.slice(0,2).map(c=>`${c.nome} ${nf(ag[c.id]||0)} de ${nf(U[c.id])}`).join(', ')}${faltou.length>2?` e mais ${faltou.length-2}`:''}`,
+        ultraTodas, {pct:(ativas.length-faltou.length)/ativas.length*100, svg:SVG_ULTRA,
+                     alvo:`as ${ativas.length} ultrametas`});
     }
   }
 
