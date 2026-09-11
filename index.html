@@ -1039,7 +1039,10 @@ main{max-width:960px;margin:0 auto;padding:32px 24px 80px;}
 .slbl-dias i{font-style:normal;opacity:.6;letter-spacing:.8px;text-transform:none;}
 .slbl-dias.urg{border-color:var(--ou);background:rgba(201,168,76,.08);}
 .slbl-dias.urg b{color:var(--ou);}
+.slbl-dias .curto{display:none;}
 @media(max-width:640px){.slbl-dias{letter-spacing:1.1px;padding:4px 8px;}.slbl-dias i{display:none;}}
+/* Em tela estreita o rótulo da seção precisa do espaço — encurta o do selo. */
+@media(max-width:480px){.slbl-dias .longo{display:none;}.slbl-dias .curto{display:inline;}}
 .cat-card{background:rgba(255,255,255,.025);border:1px solid var(--oud);padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:border-color .2s;}
 .cat-card:hover{border-color:rgba(201,168,76,.4);}
 .cat-ico{flex-shrink:0;margin-top:2px;}
@@ -1646,6 +1649,15 @@ svg{display:inline-block;vertical-align:middle;}
   main{padding:24px 14px 60px;}
   header{padding:12px 14px;flex-wrap:wrap;}
   .mes-selector{order:-1;width:100%;justify-content:center;}
+  /* A barra de botões do gestor (Gerar Apresentação + ⚙ Metas + Sair) não cabia
+     numa linha no celular e, como não encolhia nem quebrava, empurrava a página
+     inteira pro lado — dava pra arrastar a tela na horizontal. */
+  .h-esq{min-width:0;}
+  .h-dir{flex-wrap:wrap;justify-content:flex-end;flex-shrink:1;min-width:0;row-gap:8px;}
+  #wrap-gerar-pptx{flex:1 1 100%;}
+  #btn-gerar-pptx{width:100%;}
+  #menu-pptx{max-width:calc(100vw - 28px);}
+  .bsm{padding:6px 11px;letter-spacing:1.4px;}
 }
 /* ── Modal de login ── */
 .login-modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:300;align-items:center;justify-content:center;padding:24px;}
@@ -3027,9 +3039,10 @@ function renderCats(ag,cfg,isG){
   if(elDias){
     const diasFaltam=Math.max(diasUteis-diasPassados,0);
     elDias.innerHTML = mesEhAtual
-      ? `<span class="slbl-dias${diasFaltam<=3?' urg':''}"><b>${diasFaltam}</b> ${
-          diasFaltam===1?'dia útil restante':'dias úteis restantes'
-        } <i>· ${diasPassados} de ${diasUteis} já trabalhados</i></span>`
+      ? `<span class="slbl-dias${diasFaltam<=3?' urg':''}"><b>${diasFaltam}</b>`
+        +`<span class="longo">${diasFaltam===1?'dia útil restante':'dias úteis restantes'}</span>`
+        +`<span class="curto">${diasFaltam===1?'dia restante':'dias restantes'}</span>`
+        +`<i>· ${diasPassados} de ${diasUteis} já trabalhados</i></span>`
       : '';
   }
 
