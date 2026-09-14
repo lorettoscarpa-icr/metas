@@ -6421,6 +6421,31 @@ function gerarFolhaBonus(){
 // ══ LISTA DE BÔNUS (impressa) ══
 // Relatório de pagamento do mês: quem ganhou o quê, por quê, e quanto a loja
 // paga a cada uma. É o documento que o financeiro usa pra fechar a folha.
+// Publica o bônus apurado pra Central de Pagamentos ler. O cálculo mora aqui,
+// que é onde estão as regras; a Central só exibe. Assim não existem duas contas
+// de bônus em lugares diferentes pra divergirem com o tempo.
+async function publicarBonusApurado(lista, naoPagos, empates, total, emAndamento){
+  try{
+    const premiadas = lista.filter(r=>r.total>0).map(r=>({
+      nome: r.nome,
+      total: r.total,
+      linhas: (r.linhas||[]).map(l=>({grupo:l.grupo, desc:l.desc, valor:l.valor}))
+    }));
+    await db.collection('ls_bonus_apurado').doc(keyMes(anoAtivo, mesAtivo)).set({
+      ano: anoAtivo,
+      mes: mesAtivo,                  // 1-12
+      premiadas,
+      total,
+      empates: (empates||[]).map(e=>({nome:e.nome, quem:e.quem, valor:e.valor, cota:e.cota})),
+      naoPagos: (naoPagos||[]).map(n=>({nome:n.nome, motivo:n.motivo, valor:n.valor})),
+      emAndamento: !!emAndamento,     // mês ainda aberto = número é prévia
+      emitidoEm: new Date().toISOString()
+    });
+  }catch(e){
+    console.warn('Não consegui publicar o bônus apurado pra Central:', e);
+  }
+}
+
 function gerarListaBonus(){
   const {lista, naoPagos, empates, total} = apurarBonus();
   const MES = MESES_NOMES[mesAtivo-1].toUpperCase(), ANO = anoAtivo;
@@ -6436,6 +6461,9 @@ function gerarListaBonus(){
                   h.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 
   const premiadas = lista.filter(r=>r.total>0);
+
+  // Manda o mesmo resultado pra Central de Pagamentos
+  publicarBonusApurado(lista, naoPagos, empates, total, emAndamento);
 
   let corpo = '';
   if(emAndamento) corpo += `<div class="alerta">
