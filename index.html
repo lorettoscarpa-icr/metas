@@ -2813,6 +2813,7 @@ async function carregarMes(){
   await Promise.all(todos.map(vid=>getHistMes(vid,anoAtivo,mesAtivo)));
   await carregarMaiorVendas();
   iniciarListeners();
+  finalizarMesAnterior();   // fecha o mês passado sem ninguém precisar navegar até ele
 }
 
 // Checa se TODOS os dados de um mês já estão no cache em memória
@@ -6425,16 +6426,17 @@ function gerarFolhaBonus(){
 // Publica o bônus apurado pra Central de Pagamentos ler. O cálculo mora aqui,
 // que é onde estão as regras; a Central só exibe. Assim não existem duas contas
 // de bônus em lugares diferentes pra divergirem com o tempo.
-async function publicarBonusApurado(lista, naoPagos, empates, total, emAndamento){
+async function publicarBonusApurado(lista, naoPagos, empates, total, emAndamento, anoAlvo, mesAlvo){
+  const ano = anoAlvo || anoAtivo, mes = mesAlvo || mesAtivo;
   try{
     const premiadas = lista.filter(r=>r.total>0).map(r=>({
       nome: r.nome,
       total: r.total,
       linhas: (r.linhas||[]).map(l=>({grupo:l.grupo, desc:l.desc, valor:l.valor}))
     }));
-    await db.collection('ls_bonus_apurado').doc(keyMes(anoAtivo, mesAtivo)).set({
-      ano: anoAtivo,
-      mes: mesAtivo,                  // 1-12
+    await db.collection('ls_bonus_apurado').doc(keyMes(ano, mes)).set({
+      ano,
+      mes,                            // 1-12
       premiadas,
       total,
       empates: (empates||[]).map(e=>({nome:e.nome, quem:e.quem, valor:e.valor, cota:e.cota})),
@@ -6473,6 +6475,55 @@ function sincronizarBonusAuto(){
     publicarBonusApurado(lista, naoPagos, empates, total, emAndamento);
   }catch(e){
     console.warn('Não consegui sincronizar o bônus com a Central:', e);
+  }
+}
+
+// O app abre sempre no mês corrente, então a sincronização automática nunca
+// alcançaria o mês que acabou de fechar. Esta função cuida disso: ao entrar,
+// se o mês anterior ainda não subiu como definitivo, ela carrega os dados
+// daquele mês, apura e publica — sem mexer na tela de quem está usando.
+let _finalizouMesAnterior = false;
+
+async function finalizarMesAnterior(){
+  if(_finalizouMesAnterior || !usuario) return;
+  _finalizouMesAnterior = true;
+  try{
+    const h = new Date();
+    const ant = new Date(h.getFullYear(), h.getMonth() - 1, 1);
+    const ano = ant.getFullYear(), mes = ant.getMonth() + 1;
+
+    // Já está publicado como definitivo? então não há o que fazer
+    const doc = await db.collection('ls_bonus_apurado').doc(keyMes(ano, mes)).get();
+    if(doc.exists && doc.data() && doc.data().emAndamento === false) return;
+
+    // Carrega os dados daquele mês (leitura pontual, sem listeners)
+    await getCfgMes(ano, mes);
+    const todos = [...VENDEDORAS.map(v=>v.id), ...ARQUIVADAS];
+    await Promise.all(todos.map(vid => getHistMes(vid, ano, mes)));
+    await Promise.all(VENDEDORAS.map(async v => {
+      const k = keyMV(v.id, ano, mes);
+      if(cacheHist[k] !== undefined) return;
+      try{
+        const d = await db.collection('ls_maior_venda').doc(k).get();
+        cacheHist[k] = d.exists ? normalizarRegistroMV(d.data()) : null;
+      }catch(e){ cacheHist[k] = null; }
+    }));
+
+    // apurarBonus lê o mês ativo. A troca é só durante a conta, que é
+    // síncrona — nada assíncrono roda no meio e vê o mês trocado.
+    const gAno = anoAtivo, gMes = mesAtivo;
+    let r;
+    try{
+      anoAtivo = ano; mesAtivo = mes;
+      r = apurarBonus();
+    } finally {
+      anoAtivo = gAno; mesAtivo = gMes;
+    }
+
+    await publicarBonusApurado(r.lista, r.naoPagos, r.empates, r.total, false, ano, mes);
+    console.log(`Bônus de ${mes}/${ano} publicado como definitivo.`);
+  }catch(e){
+    console.warn('Não consegui finalizar o mês anterior:', e);
   }
 }
 
