@@ -2999,6 +2999,7 @@ function render(){
   document.getElementById('bloco-reg').style.display=isG?'none':'block';
   if(!isG){renderReg(ag,cfg);renderHist();}
   renderMetasIndividuais();renderBonusVendedora();renderCalendarioLanc();renderDestaques();renderStatusAtualizacao();renderMaiorVenda();renderRanking();renderConversao();atualizarResumoHistInline();
+  sincronizarBonusAuto();
 }
 
 function renderCards(ag,cfg){
@@ -6443,6 +6444,35 @@ async function publicarBonusApurado(lista, naoPagos, empates, total, emAndamento
     });
   }catch(e){
     console.warn('Não consegui publicar o bônus apurado pra Central:', e);
+  }
+}
+
+// Publica o bônus sozinho, sem ninguém clicar em nada.
+// Roda a cada render do mês: como as vendedoras lançam venda todo dia, a
+// Central de Pagamentos fica sempre com o número atual, e no primeiro
+// lançamento depois que o mês vira, o mês fechado já sobe como definitivo.
+// Só grava quando o resultado MUDOU — senão seria uma escrita por render.
+let _ultimoBonusPublicado = '';
+
+function sincronizarBonusAuto(){
+  try{
+    if(!usuario) return;                 // sem login não escreve
+    const {lista, naoPagos, empates, total} = apurarBonus();
+
+    const h = new Date();
+    const emAndamento = (anoAtivo > h.getFullYear()) ||
+                        (anoAtivo === h.getFullYear() && mesAtivo >= h.getMonth()+1);
+
+    const assinatura = JSON.stringify({
+      k: keyMes(anoAtivo, mesAtivo), total, emAndamento,
+      l: lista.filter(r=>r.total>0).map(r=>[r.nome, r.total, (r.linhas||[]).length])
+    });
+    if(assinatura === _ultimoBonusPublicado) return;
+    _ultimoBonusPublicado = assinatura;
+
+    publicarBonusApurado(lista, naoPagos, empates, total, emAndamento);
+  }catch(e){
+    console.warn('Não consegui sincronizar o bônus com a Central:', e);
   }
 }
 
